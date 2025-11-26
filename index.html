@@ -194,6 +194,10 @@
             font-size: 16px;
             font-weight: 500;
         }
+        
+        .hint-text {
+            color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px;
+        }
     </style>
 </head>
 <body>
@@ -218,11 +222,9 @@
             </div>
         </div>
 
-        <!-- 列表區域 -->
         <div id="assetsContainer"></div>
         <div style="height: 60px;"></div>
 
-        <!-- 底部選單 -->
         <div class="tab-bar">
             <button class="tab-item active">
                 <i class="fas fa-wallet"></i>
@@ -248,19 +250,19 @@
                 <span class="form-label">類型</span>
                 <select id="inpType" class="form-input" onchange="handleTypeChange()">
                     <option value="bank">銀行 / 現金</option>
+                    <option value="crypto">OKX 加密貨幣</option>
                     <option value="stock">美股 (API)</option>
-                    <option value="crypto">加密貨幣 (API)</option>
                     <option value="debt">借入 / 負債</option>
                 </select>
             </div>
             <div class="form-row">
                 <span class="form-label">名稱</span>
-                <input type="text" id="inpName" class="form-input" placeholder="例如: 台新 / NVDA">
+                <input type="text" id="inpName" class="form-input" placeholder="例如: Bitcoin">
             </div>
             
             <div class="form-row" id="rowSymbol" style="display:none;">
-                <span class="form-label">代碼</span>
-                <input type="text" id="inpSymbol" class="form-input" placeholder="例如: AAPL">
+                <span class="form-label" id="lblSymbol">代碼</span>
+                <input type="text" id="inpSymbol" class="form-input" placeholder="例如: BTC">
             </div>
 
             <div class="form-row">
@@ -277,9 +279,9 @@
             </div>
         </div>
         
-        <p style="text-align:center; color:#555; font-size:12px; margin-top:10px;">
-            * Crypto代碼請加交易所 (例: BINANCE:BTCUSDT)
-        </p>
+        <div id="symbolHint" class="hint-text" style="display:none;">
+            * 輸入簡碼即可，系統會自動轉換為 OKX 格式 (例如: BTC → OKEX:BTC-USDT)
+        </div>
 
         <div class="delete-btn-area">
             <button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除此帳戶</button>
@@ -288,72 +290,48 @@
 
 <script>
     // --- 資料結構 ---
-    let accounts = JSON.parse(localStorage.getItem('myAssets_v2')) || [
+    // 舊資料若有格式不同，這裡會自動相容
+    let accounts = JSON.parse(localStorage.getItem('myAssets_v3')) || [
         { id: 1, type: 'bank', name: '中國信託', symbol: '', currency: 'TWD', balance: 5000, isAuto: false },
         { id: 2, type: 'stock', name: 'NVDA', symbol: 'NVDA', currency: 'USD', balance: 10, isAuto: true, currentPrice: 0 },
-        { id: 3, type: 'debt', name: '房貸', symbol: '', currency: 'TWD', balance: 2000000, isAuto: false }
+        { id: 3, type: 'crypto', name: 'USDT', symbol: 'USDT', currency: 'USD', balance: 1000, isAuto: true, currentPrice: 1 } // 範例 USDT
     ];
 
     let settings = JSON.parse(localStorage.getItem('myAssets_settings_v2')) || {
         apiKey: '',
-        usdRate: 32.5 // 預設值，之後會被 API 覆蓋
+        usdRate: 32.5 
     };
 
     let editingId = null;
 
-    // --- 初始化 ---
     async function init() {
         renderAssets();
-        
-        // 先抓匯率，再抓股價
         await fetchExchangeRate(); 
-        
-        if(settings.apiKey) {
-            fetchPrices();
-        }
-
-        // 自動循環: 每一分鐘更新一次
-        setInterval(() => {
-            refreshAllData();
-        }, 60000);
+        if(settings.apiKey) fetchPrices();
+        setInterval(() => { refreshAllData(); }, 60000);
     }
 
-    // --- 核心更新邏輯 ---
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
-
-        await fetchExchangeRate(); // 1. 更新匯率
-        if(settings.apiKey) {
-            await fetchPrices();   // 2. 更新股價
-        }
-        
-        setTimeout(() => {
-            icon.classList.remove('fa-spin-fast');
-        }, 500);
+        await fetchExchangeRate();
+        if(settings.apiKey) await fetchPrices();
+        setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
-    // 1. 抓匯率 (使用免費公開 API)
     async function fetchExchangeRate() {
         try {
-            // 使用 ExchangeRate-API (免費、無需Key)
             const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             const data = await res.json();
             if(data.rates && data.rates.TWD) {
                 settings.usdRate = data.rates.TWD;
                 localStorage.setItem('myAssets_settings_v2', JSON.stringify(settings));
-                
-                // 更新顯示
                 document.getElementById('exchangeRateDisplay').innerText = `1 USD ≈ ${settings.usdRate.toFixed(2)} TWD`;
-                renderAssets(); // 匯率變了，重新計算總值
+                renderAssets();
             }
-        } catch(e) {
-            console.error("匯率更新失敗", e);
-            document.getElementById('exchangeRateDisplay').innerText = `匯率更新失敗 (目前: ${settings.usdRate})`;
-        }
+        } catch(e) { console.error("匯率更新失敗", e); }
     }
 
-    // 2. 抓股價 (使用 Finnhub)
     async function fetchPrices() {
         if(!settings.apiKey) return;
 
@@ -361,9 +339,24 @@
         
         for (let acc of autoAccounts) {
             try {
-                // 微小延遲避免 API 限制
+                // 特殊處理: 如果是 USDT，直接定價為 1，不走 API
+                if(acc.type === 'crypto' && acc.symbol === 'USDT') {
+                    acc.currentPrice = 1;
+                    continue;
+                }
+
+                // 組合 API 代碼
+                let apiSymbol = acc.symbol;
+                if(acc.type === 'crypto') {
+                    // 如果用戶只輸入了 BTC，自動幫他加上 OKEX:BTC-USDT
+                    // 防止用戶已經手動輸入了完整格式，這裡做個簡單判斷
+                    if(!apiSymbol.includes(':')) {
+                        apiSymbol = `OKEX:${apiSymbol}-USDT`;
+                    }
+                }
+
                 await new Promise(r => setTimeout(r, 150));
-                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${acc.symbol}&token=${settings.apiKey}`);
+                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${apiSymbol}&token=${settings.apiKey}`);
                 const json = await res.json();
                 
                 if (json.c) {
@@ -375,15 +368,14 @@
         renderAssets();
     }
 
-    // --- 渲染畫面 ---
     function renderAssets() {
         const container = document.getElementById('assetsContainer');
         container.innerHTML = '';
 
         const groups = [
             { key: 'bank', title: '銀行 / 現金', icon: 'fa-university', style: 'icon-bank' },
-            { key: 'stock', title: '投資理財', icon: 'fa-chart-line', style: 'icon-stock' },
-            { key: 'crypto', title: '加密貨幣', icon: 'fa-bitcoin', style: 'icon-crypto' },
+            { key: 'stock', title: '投資理財 (美股)', icon: 'fa-chart-line', style: 'icon-stock' },
+            { key: 'crypto', title: '加密貨幣 (OKX)', icon: 'fa-bitcoin', style: 'icon-crypto' },
             { key: 'debt', title: '負債', icon: 'fa-hand-holding-usd', style: 'icon-debt' }
         ];
 
@@ -397,34 +389,25 @@
             let htmlList = '';
 
             groupItems.forEach(acc => {
-                // 計算邏輯
-                // 自動更新項目: 用 currentPrice * balance(股數)
-                // 手動更新項目: 用 balance(金額)
                 let rawVal = (acc.isAuto && acc.currentPrice) ? (acc.currentPrice * acc.balance) : acc.balance;
-                
-                // 匯率換算
                 let finalValTWD = (acc.currency === 'USD') ? (rawVal * settings.usdRate) : rawVal;
 
-                // 總資產加減
-                if (group.key === 'debt') {
-                    netWorth -= finalValTWD;
-                } else {
-                    netWorth += finalValTWD;
-                }
+                if (group.key === 'debt') netWorth -= finalValTWD;
+                else netWorth += finalValTWD;
+                
                 groupSumTWD += finalValTWD;
 
-                // 顯示細節
                 const displayVal = Math.round(finalValTWD).toLocaleString();
                 let subText = '';
                 
                 if(acc.isAuto) {
-                    subText = `${acc.symbol} • ${acc.balance}單位`;
-                    if(acc.currentPrice) subText += ` @ $${acc.currentPrice}`;
+                    // 顯示時，只顯示簡潔的代碼 (去掉 OKEX: 等字樣)
+                    let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
+                    subText = `${displaySymbol} • ${acc.balance}`;
                 } else {
                     subText = acc.currency;
                 }
 
-                // 數字顏色
                 const colorClass = group.key === 'debt' ? 'amount-red' : 'amount-green';
 
                 htmlList += `
@@ -458,7 +441,6 @@
         document.getElementById('totalNetWorth').innerText = `NT$ ${Math.round(netWorth).toLocaleString()}`;
     }
 
-    // --- Modal 操作 ---
     function openModal() {
         editingId = null;
         document.getElementById('modalTitle').innerText = '新增帳戶';
@@ -478,7 +460,7 @@
         document.getElementById('modalTitle').innerText = '編輯帳戶';
         document.getElementById('inpType').value = acc.type;
         document.getElementById('inpName').value = acc.name;
-        document.getElementById('inpSymbol').value = acc.symbol;
+        document.getElementById('inpSymbol').value = acc.symbol; // 這裡直接顯示純代碼(如BTC)較好，但為了相容先顯示原值
         document.getElementById('inpBalance').value = acc.balance;
         document.getElementById('inpCurrency').value = acc.currency;
         document.getElementById('btnDelete').style.display = 'block';
@@ -492,7 +474,16 @@
         const t = document.getElementById('inpType').value;
         const isAuto = (t === 'stock' || t === 'crypto');
         document.getElementById('rowSymbol').style.display = isAuto ? 'flex' : 'none';
+        document.getElementById('symbolHint').style.display = (t === 'crypto') ? 'block' : 'none';
         document.getElementById('lblBalance').innerText = isAuto ? '持有數量' : '目前餘額';
+        document.getElementById('lblSymbol').innerText = (t === 'crypto') ? '幣名' : '代碼';
+        
+        if(t === 'crypto') {
+            document.getElementById('inpSymbol').placeholder = '例如: BTC';
+        } else if (t === 'stock') {
+             document.getElementById('inpSymbol').placeholder = '例如: AAPL';
+        }
+
         if(isAuto && document.getElementById('inpCurrency').value === 'TWD') {
             document.getElementById('inpCurrency').value = 'USD';
         }
@@ -501,12 +492,17 @@
     function saveAccount() {
         const type = document.getElementById('inpType').value;
         const name = document.getElementById('inpName').value;
-        const symbol = document.getElementById('inpSymbol').value.toUpperCase();
+        let symbol = document.getElementById('inpSymbol').value.trim().toUpperCase();
         const currency = document.getElementById('inpCurrency').value;
         const balance = parseFloat(document.getElementById('inpBalance').value) || 0;
         
         if(!name) return alert("請輸入名稱");
         const isAuto = (type === 'stock' || type === 'crypto');
+
+        // 自動清理輸入：如果使用者是Crypto且輸入了OKEX:前綴，幫他拿掉存簡碼，API呼叫時再組裝
+        if (type === 'crypto') {
+            symbol = symbol.replace('OKEX:', '').replace('-USDT', '');
+        }
 
         const newAcc = { 
             id: editingId || Date.now(), 
@@ -523,8 +519,6 @@
         
         saveData();
         closeModal();
-        
-        // 立即更新一次資料
         if(isAuto) refreshAllData();
         else renderAssets();
     }
@@ -548,12 +542,10 @@
     }
 
     function saveData() {
-        localStorage.setItem('myAssets_v2', JSON.stringify(accounts));
+        localStorage.setItem('myAssets_v3', JSON.stringify(accounts));
     }
 
-    // 啟動程式
     init();
-
 </script>
 </body>
 </html>
