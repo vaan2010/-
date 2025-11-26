@@ -20,6 +20,8 @@
             --color-stock: #bf5af2;
             --color-crypto: #ff9f0a;
             --color-debt: #ff453a;
+            --color-up: #30d158;   /* 綠漲 */
+            --color-down: #ff453a; /* 紅跌 */
             --border-color: #2c2c2e;
         }
 
@@ -38,9 +40,18 @@
         .navbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 17px; cursor: pointer; }
 
+        /* Summary Card */
         .summary-card { padding: 10px 20px 0 20px; text-align: center; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 5px 0; font-family: 'Roboto', sans-serif; }
+        
+        .pnl-badge {
+            font-size: 14px; font-weight: 600; margin-bottom: 10px; display: inline-block;
+            padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1);
+        }
+        .pnl-up { color: var(--color-up); }
+        .pnl-down { color: var(--color-down); }
+
         .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 5px; margin-bottom: 10px; }
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
@@ -67,7 +78,10 @@
             padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary);
             background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase;
         }
-        .group-total { color: var(--text-primary); font-weight: 600; }
+        .group-total-block { text-align: right; }
+        .group-total { color: var(--text-primary); font-weight: 600; display: block;}
+        .group-pnl { font-size: 11px; display: block; margin-top: 2px; }
+
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
         .list-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
         .list-item:last-child { border-bottom: none; }
@@ -82,10 +96,13 @@
         .item-content { flex: 1; min-width: 0; }
         .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-sub { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
         .item-amount { text-align: right; margin-left: 10px; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; }
-        .amount-green { color: #30d158; }
-        .amount-red { color: #ff453a; }
+        .amount-pnl { font-size: 12px; margin-top: 2px; font-weight: 500; }
+        .amount-green { color: var(--color-up); }
+        .amount-red { color: var(--color-down); }
+        .amount-neutral { color: var(--text-primary); }
 
         .tab-bar {
             position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95);
@@ -130,6 +147,10 @@
         <div class="summary-card">
             <div class="total-label">總淨資產 (TWD)</div>
             <div class="total-amount" id="totalNetWorth">NT$ --</div>
+            <!-- 總盈虧顯示 -->
+            <div id="totalPnLBlock" style="display:none;">
+                <div class="pnl-badge" id="totalPnLBadge">今日: +0</div>
+            </div>
             <div class="rate-info">
                 <div class="rate-badge"><i class="fas fa-coins"></i><span id="rateUsdt">USDT ...</span></div>
                 <div class="rate-badge"><i class="fas fa-exchange-alt"></i><span id="rateUsd">USD ...</span></div>
@@ -228,10 +249,18 @@
     }
     tryMigrateOldData();
 
+    // Load data (with backward compatibility for dayChange)
     let rawAccounts = JSON.parse(localStorage.getItem(STORAGE_KEY_DATA)) || [];
-    let accounts = rawAccounts.map(a => ({ ...a, balance: safeParseFloat(a.balance), currentPrice: safeParseFloat(a.currentPrice) }));
+    let accounts = rawAccounts.map(a => ({ 
+        ...a, 
+        balance: safeParseFloat(a.balance), 
+        currentPrice: safeParseFloat(a.currentPrice),
+        dayChange: safeParseFloat(a.dayChange || 0) // 新增：當日漲跌金額
+    }));
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', usdRate: 32.5, usdtRate: 1.0 };
     let editingId = null;
+    
+    // Chart Globals
     let chartInstance = null;
     let clickTimer = null; 
     let currentDetails = {};
@@ -248,6 +277,7 @@
         setInterval(() => { refreshAllData(); }, 60000);
     }
 
+    // --- Chart Logic ---
     function initChart() {
         if (typeof Highcharts === 'undefined') {
             document.getElementById('chartLoading').innerText = "圖表載入失敗";
@@ -256,12 +286,27 @@
         document.getElementById('chartLoading').style.display = 'none';
 
         Highcharts.setOptions({
-            chart: { style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' } },
+            chart: { 
+                style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+                events: {
+                    // Click background to reset
+                    click: function(e) {
+                        if(!e.target.point) {
+                            // Clear selection
+                            if(this.series[0]) {
+                                this.series[0].points.forEach(p => p.slice(false));
+                            }
+                            this.tooltip.hide();
+                        }
+                    }
+                }
+            },
             title: { text: '' },
             tooltip: {
                 backgroundColor: 'rgba(28, 28, 30, 0.95)',
                 style: { color: '#fff', fontSize: '14px' },
                 borderRadius: 12, borderWidth: 0, shadow: false,
+                valueDecimals: 0, // 整數顯示
                 pointFormat: '<b>{point.name}</b><br>{point.percentage:.1f}%<br>NT$ {point.y:,.0f}'
             }
         });
@@ -315,19 +360,22 @@
                                     if (clickTimer) {
                                         clearTimeout(clickTimer);
                                         clickTimer = null;
+                                        
                                         // Double Click: Drilldown
                                         if(chartLevel === 'root' && currentDetails[this.drilldown]) {
+                                            // Close tooltip first
+                                            if(chartInstance.tooltip) chartInstance.tooltip.hide();
                                             enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
                                         }
                                     } else {
                                         let that = this;
                                         clickTimer = setTimeout(function() {
                                             clickTimer = null;
-                                            // Single Click: Exclusive Highlight Logic (FIXED)
+                                            // Single Click: Exclusive Highlight
                                             if (that.sliced) {
                                                 that.slice(false);
                                             } else {
-                                                // Cleanly reset all others
+                                                // Reset others
                                                 if(that.series && that.series.data) {
                                                     that.series.data.forEach(p => {
                                                         if(p !== that && p.sliced) p.slice(false);
@@ -335,7 +383,7 @@
                                                 }
                                                 that.slice(true);
                                             }
-                                        }, 300);
+                                        }, 250); // Slightly faster
                                     }
                                 }
                             }
@@ -352,22 +400,30 @@
     function enterDetailLevel(categoryKey, data) {
         chartLevel = 'detail';
         document.getElementById('chartBackBtn').style.display = 'block';
-        // Update chart with details
+        
+        // Animation: Update series
         chartInstance.series[0].update({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data
-        });
+        }, true); // True for animation
+        
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
     }
 
     function resetChartLevel() {
         chartLevel = 'root';
         document.getElementById('chartBackBtn').style.display = 'none';
+        
+        // Clear drilldown title
         chartInstance.setTitle({ text: '' });
+        
+        // Hide tooltip to prevent stuck tooltip
+        if(chartInstance.tooltip) chartInstance.tooltip.hide();
+        
         updateChartData();
     }
 
-    // --- Logic ---
+    // --- API & PNL Logic ---
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
@@ -402,14 +458,26 @@
         for (let acc of autos) {
             try {
                 let sym = acc.symbol;
+                let isUsdt = false;
                 if(acc.type === 'crypto') {
-                    if(acc.symbol==='USDT'||acc.symbol==='USDC') { acc.currentPrice=1; continue; }
+                    if(acc.symbol==='USDT'||acc.symbol==='USDC') { 
+                        acc.currentPrice=1; acc.dayChange=0; 
+                        isUsdt = true;
+                        continue; 
+                    }
                     if(!sym.includes(':')) sym = `OKEX:${sym}-USDT`;
                 }
                 await new Promise(r=>setTimeout(r,150));
+                
+                // Fetch Quote (Price + Change)
                 const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`);
                 const j = await res.json();
-                if(j.c) acc.currentPrice = j.c;
+                
+                if (j.c) {
+                    acc.currentPrice = j.c; // Current Price
+                    // Finnhub returns 'd' as change in quote currency (USD or USDT)
+                    acc.dayChange = j.d || 0; 
+                }
             } catch(e){}
         }
         saveData();
@@ -429,6 +497,28 @@
         return safeParseFloat(val);
     }
 
+    // Calculate Daily PnL in TWD
+    function calculatePnL_TWD(acc) {
+        if(!acc.isAuto || !acc.dayChange) return 0;
+        
+        let pnl = 0;
+        // PnL formula: shares * dailyChange * FX
+        // Crypto Change is in USDT, Stock Change is in USD
+        if (acc.type === 'crypto') {
+            pnl = acc.balance * acc.dayChange * settings.usdtRate * settings.usdRate;
+        } else {
+            pnl = acc.balance * acc.dayChange * settings.usdRate;
+        }
+        return safeParseFloat(pnl);
+    }
+
+    function formatPnL(val) {
+        if(!val) return '';
+        const sign = val > 0 ? '+' : '';
+        const cls = val > 0 ? 'pnl-up' : (val < 0 ? 'pnl-down' : '');
+        return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()}</span>`;
+    }
+
     function renderAssets() {
         const c = document.getElementById('assetsContainer'); c.innerHTML = '';
         const groups = [
@@ -437,25 +527,74 @@
             { key:'crypto', t:'加密貨幣 (OKX)', i:'fa-bitcoin', s:'icon-crypto' },
             { key:'debt', t:'負債', i:'fa-hand-holding-usd', s:'icon-debt' }
         ];
+        
         let net = 0;
+        let totalDailyPnL = 0;
+
         groups.forEach(g => {
             let items = accounts.filter(a => a.type === g.key);
             if(items.length===0) return;
-            let sum = 0; let html = '';
+            
+            let sum = 0; 
+            let groupDailyPnL = 0;
+            let html = '';
+
             items.forEach(acc => {
                 let val = calculateTWD(acc);
+                let pnl = calculatePnL_TWD(acc);
+                
                 if(g.key==='debt') net-=val; else net+=val;
                 sum+=val;
+                groupDailyPnL += pnl;
+                totalDailyPnL += pnl;
+
                 let sub = acc.isAuto ? `${acc.symbol.replace('OKEX:','').replace('-USDT','')} • ${acc.balance}` : acc.currency;
                 let color = g.key==='debt'?'amount-red':'amount-green';
-                html += `<div class="list-item" onclick="editAccount(${acc.id})"><div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-sub">${sub}</div></div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div><div class="item-sub">TWD</div></div></div>`;
+                
+                // Item HTML
+                html += `
+                    <div class="list-item" onclick="editAccount(${acc.id})">
+                        <div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>
+                        <div class="item-content"><div class="item-name">${acc.name}</div><div class="item-sub">${sub}</div></div>
+                        <div class="item-amount">
+                            <div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>
+                            ${ pnl !== 0 ? `<div class="amount-pnl">${formatPnL(pnl)}</div>` : '<div class="item-sub">TWD</div>' }
+                        </div>
+                    </div>`;
             });
-            c.innerHTML += `<div class="group-header"><span>${g.t}</span><span class="group-total">${Math.round(sum).toLocaleString()}</span></div><div class="list-container">${html}</div>`;
+
+            // Group Header with PnL
+            let pnlHtml = groupDailyPnL !== 0 ? `<span class="group-pnl">${formatPnL(groupDailyPnL)}</span>` : '';
+            
+            c.innerHTML += `
+                <div class="group-header">
+                    <span>${g.t}</span>
+                    <div class="group-total-block">
+                        <span class="group-total">${Math.round(sum).toLocaleString()}</span>
+                        ${pnlHtml}
+                    </div>
+                </div>
+                <div class="list-container">${html}</div>`;
         });
+
         document.getElementById('totalNetWorth').innerText = `NT$ ${Math.round(net).toLocaleString()}`;
+        
+        // Show Total PnL if exists
+        const pnlBlock = document.getElementById('totalPnLBlock');
+        const pnlBadge = document.getElementById('totalPnLBadge');
+        if(Math.abs(totalDailyPnL) > 1) {
+            pnlBlock.style.display = 'block';
+            const sign = totalDailyPnL > 0 ? '+' : '';
+            const cls = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
+            pnlBadge.innerHTML = `今日: <span class="${cls}">${sign}NT$ ${Math.round(totalDailyPnL).toLocaleString()}</span>`;
+        } else {
+            pnlBlock.style.display = 'none';
+        }
+
         updateChartData();
     }
 
+    // Modal
     function openModal() {
         editingId=null;
         document.getElementById('modalTitle').innerText='新增帳戶';
@@ -503,7 +642,11 @@
         if(t==='crypto'){ s=s.replace('OKEX:','').replace('-USDT',''); c='USDT'; }
         else if(t==='stock') c='USD';
         
-        const newA = { id: editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0 };
+        const newA = { 
+            id: editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, isAuto:auto, 
+            currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0,
+            dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0 
+        };
         if(editingId) accounts[accounts.findIndex(x=>x.id===editingId)]=newA;
         else accounts.push(newA);
         saveData(); closeModal();
