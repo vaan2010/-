@@ -48,15 +48,20 @@
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 5px 0; font-family: 'Roboto', sans-serif; }
         
+        .rate-info {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
         .rate-badge {
             display: inline-flex;
             align-items: center;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
             background: #1c1c1e;
             padding: 4px 10px;
             border-radius: 12px;
-            margin-top: 5px;
         }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
@@ -115,7 +120,6 @@
         .amount-green { color: var(--accent-green); }
         .amount-red { color: var(--accent-red); }
         
-        /* Tab Bar */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -139,7 +143,6 @@
         .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; }
         .tab-item.active { color: #0a84ff; }
         
-        /* Spin Animation */
         .fa-spin-fast { animation: fa-spin 1s infinite linear; }
 
         /* Modal */
@@ -194,7 +197,6 @@
             font-size: 16px;
             font-weight: 500;
         }
-        
         .hint-text {
             color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px;
         }
@@ -202,7 +204,6 @@
 </head>
 <body>
 
-    <!-- 主畫面 -->
     <div id="app">
         <div class="navbar">
             <button class="btn-icon" onclick="setApiKey()">設定 API</button>
@@ -216,9 +217,15 @@
             <div class="total-label">總淨資產 (TWD)</div>
             <div class="total-amount" id="totalNetWorth">NT$ --</div>
             
-            <div class="rate-badge">
-                <i class="fas fa-exchange-alt"></i>
-                <span id="exchangeRateDisplay">匯率更新中...</span>
+            <div class="rate-info">
+                <div class="rate-badge">
+                    <i class="fas fa-coins"></i>
+                    <span id="rateUsdt">USDT ...</span>
+                </div>
+                <div class="rate-badge">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span id="rateUsd">USD ...</span>
+                </div>
             </div>
         </div>
 
@@ -265,7 +272,7 @@
                 <input type="text" id="inpSymbol" class="form-input" placeholder="例如: BTC">
             </div>
 
-            <div class="form-row">
+            <div class="form-row" id="rowCurrency">
                 <span class="form-label">幣別</span>
                 <select id="inpCurrency" class="form-input">
                     <option value="TWD">TWD (新台幣)</option>
@@ -274,13 +281,13 @@
             </div>
             
             <div class="form-row">
-                <span class="form-label" id="lblBalance">金額 / 股數</span>
+                <span class="form-label" id="lblBalance">金額 / 顆數</span>
                 <input type="number" id="inpBalance" class="form-input" placeholder="0">
             </div>
         </div>
         
         <div id="symbolHint" class="hint-text" style="display:none;">
-            * 輸入簡碼即可，系統會自動轉換為 OKX 格式 (例如: BTC → OKEX:BTC-USDT)
+            * 輸入簡碼 (如 BTC)，系統自動抓取 OKX 價格
         </div>
 
         <div class="delete-btn-area">
@@ -290,23 +297,23 @@
 
 <script>
     // --- 資料結構 ---
-    // 舊資料若有格式不同，這裡會自動相容
-    let accounts = JSON.parse(localStorage.getItem('myAssets_v3')) || [
+    let accounts = JSON.parse(localStorage.getItem('myAssets_v6')) || [
         { id: 1, type: 'bank', name: '中國信託', symbol: '', currency: 'TWD', balance: 5000, isAuto: false },
         { id: 2, type: 'stock', name: 'NVDA', symbol: 'NVDA', currency: 'USD', balance: 10, isAuto: true, currentPrice: 0 },
-        { id: 3, type: 'crypto', name: 'USDT', symbol: 'USDT', currency: 'USD', balance: 1000, isAuto: true, currentPrice: 1 } // 範例 USDT
+        { id: 3, type: 'crypto', name: 'Bitcoin', symbol: 'BTC', currency: 'USDT', balance: 0.005, isAuto: true, currentPrice: 0 }
     ];
 
-    let settings = JSON.parse(localStorage.getItem('myAssets_settings_v2')) || {
+    let settings = JSON.parse(localStorage.getItem('myAssets_settings_v3')) || {
         apiKey: '',
-        usdRate: 32.5 
+        usdRate: 32.5, 
+        usdtRate: 1.0  
     };
 
     let editingId = null;
 
     async function init() {
         renderAssets();
-        await fetchExchangeRate(); 
+        await updateRates(); 
         if(settings.apiKey) fetchPrices();
         setInterval(() => { refreshAllData(); }, 60000);
     }
@@ -314,22 +321,40 @@
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
-        await fetchExchangeRate();
+        
+        await updateRates();
         if(settings.apiKey) await fetchPrices();
+        
         setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
-    async function fetchExchangeRate() {
+    async function updateRates() {
+        // 1. 抓 USD -> TWD
         try {
             const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             const data = await res.json();
             if(data.rates && data.rates.TWD) {
                 settings.usdRate = data.rates.TWD;
-                localStorage.setItem('myAssets_settings_v2', JSON.stringify(settings));
-                document.getElementById('exchangeRateDisplay').innerText = `1 USD ≈ ${settings.usdRate.toFixed(2)} TWD`;
-                renderAssets();
             }
-        } catch(e) { console.error("匯率更新失敗", e); }
+        } catch(e) { console.error("USD匯率更新失敗", e); }
+
+        // 2. 抓 USDT -> USD (Coinbase 報價)
+        if(settings.apiKey) {
+            try {
+                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);
+                const json = await res.json();
+                if(json.c) {
+                    settings.usdtRate = json.c;
+                }
+            } catch(e) { console.error("USDT匯率更新失敗", e); }
+        }
+
+        localStorage.setItem('myAssets_settings_v3', JSON.stringify(settings));
+        
+        document.getElementById('rateUsd').innerText = `USD ≈ ${settings.usdRate.toFixed(2)}`;
+        document.getElementById('rateUsdt').innerText = `USDT ≈ ${settings.usdtRate.toFixed(3)} USD`;
+        
+        renderAssets();
     }
 
     async function fetchPrices() {
@@ -339,17 +364,16 @@
         
         for (let acc of autoAccounts) {
             try {
-                // 特殊處理: 如果是 USDT，直接定價為 1，不走 API
-                if(acc.type === 'crypto' && acc.symbol === 'USDT') {
-                    acc.currentPrice = 1;
-                    continue;
-                }
-
-                // 組合 API 代碼
                 let apiSymbol = acc.symbol;
+                
                 if(acc.type === 'crypto') {
-                    // 如果用戶只輸入了 BTC，自動幫他加上 OKEX:BTC-USDT
-                    // 防止用戶已經手動輸入了完整格式，這裡做個簡單判斷
+                    // 如果是 USDT 本身，價格設為 1 (相對於 USDT)
+                    if(acc.symbol === 'USDT' || acc.symbol === 'USDC') {
+                        acc.currentPrice = 1; 
+                        continue;
+                    }
+                    
+                    // 其他加密貨幣：抓 OKX 報價 (例如 OKEX:BTC-USDT)
                     if(!apiSymbol.includes(':')) {
                         apiSymbol = `OKEX:${apiSymbol}-USDT`;
                     }
@@ -360,7 +384,7 @@
                 const json = await res.json();
                 
                 if (json.c) {
-                    acc.currentPrice = json.c;
+                    acc.currentPrice = json.c; // 這裡存的是 BTC/USDT 的價格
                 }
             } catch (e) { console.error(e); }
         }
@@ -389,8 +413,32 @@
             let htmlList = '';
 
             groupItems.forEach(acc => {
-                let rawVal = (acc.isAuto && acc.currentPrice) ? (acc.currentPrice * acc.balance) : acc.balance;
-                let finalValTWD = (acc.currency === 'USD') ? (rawVal * settings.usdRate) : rawVal;
+                let finalValTWD = 0;
+
+                // --- 核心計算邏輯 ---
+                if (acc.isAuto) {
+                    let price = acc.currentPrice || 0;
+                    
+                    if (acc.type === 'crypto') {
+                        // 1. 算出 USDT 總值: (顆數 * 單價)
+                        let valInUsdt = acc.balance * price;
+                        // 2. 轉成 USD: (USDT總值 * USDT匯率)
+                        let valInUsd = valInUsdt * settings.usdtRate;
+                        // 3. 轉成 TWD: (USD總值 * 台幣匯率)
+                        finalValTWD = valInUsd * settings.usdRate;
+                    } else {
+                        // 美股: (股數 * 單價 * 台幣匯率)
+                        let valInUsd = acc.balance * price;
+                        finalValTWD = valInUsd * settings.usdRate;
+                    }
+                } else {
+                    // 手動項目
+                    if (acc.currency === 'USD') {
+                        finalValTWD = acc.balance * settings.usdRate;
+                    } else {
+                        finalValTWD = acc.balance; // TWD
+                    }
+                }
 
                 if (group.key === 'debt') netWorth -= finalValTWD;
                 else netWorth += finalValTWD;
@@ -401,9 +449,12 @@
                 let subText = '';
                 
                 if(acc.isAuto) {
-                    // 顯示時，只顯示簡潔的代碼 (去掉 OKEX: 等字樣)
                     let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
                     subText = `${displaySymbol} • ${acc.balance}`;
+                    // 顯示目前市價 (方便核對)
+                    if(acc.currentPrice > 0) {
+                         subText += ` @ ${acc.currentPrice}`;
+                    }
                 } else {
                     subText = acc.currency;
                 }
@@ -421,7 +472,7 @@
                         </div>
                         <div class="item-amount">
                             <div class="amount-val ${colorClass}">${displayVal}</div>
-                            <div class="item-sub">${acc.currency}</div>
+                            <div class="item-sub">TWD</div>
                         </div>
                     </div>
                 `;
@@ -460,7 +511,7 @@
         document.getElementById('modalTitle').innerText = '編輯帳戶';
         document.getElementById('inpType').value = acc.type;
         document.getElementById('inpName').value = acc.name;
-        document.getElementById('inpSymbol').value = acc.symbol; // 這裡直接顯示純代碼(如BTC)較好，但為了相容先顯示原值
+        document.getElementById('inpSymbol').value = acc.symbol; 
         document.getElementById('inpBalance').value = acc.balance;
         document.getElementById('inpCurrency').value = acc.currency;
         document.getElementById('btnDelete').style.display = 'block';
@@ -473,9 +524,18 @@
     function handleTypeChange() {
         const t = document.getElementById('inpType').value;
         const isAuto = (t === 'stock' || t === 'crypto');
+        
         document.getElementById('rowSymbol').style.display = isAuto ? 'flex' : 'none';
+        const rowCurrency = document.getElementById('rowCurrency');
+        
+        if (isAuto) {
+            rowCurrency.style.display = 'none';
+        } else {
+            rowCurrency.style.display = 'flex';
+        }
+
         document.getElementById('symbolHint').style.display = (t === 'crypto') ? 'block' : 'none';
-        document.getElementById('lblBalance').innerText = isAuto ? '持有數量' : '目前餘額';
+        document.getElementById('lblBalance').innerText = isAuto ? (t==='crypto'?'持有顆數':'持有股數') : '目前餘額';
         document.getElementById('lblSymbol').innerText = (t === 'crypto') ? '幣名' : '代碼';
         
         if(t === 'crypto') {
@@ -483,25 +543,23 @@
         } else if (t === 'stock') {
              document.getElementById('inpSymbol').placeholder = '例如: AAPL';
         }
-
-        if(isAuto && document.getElementById('inpCurrency').value === 'TWD') {
-            document.getElementById('inpCurrency').value = 'USD';
-        }
     }
 
     function saveAccount() {
         const type = document.getElementById('inpType').value;
         const name = document.getElementById('inpName').value;
         let symbol = document.getElementById('inpSymbol').value.trim().toUpperCase();
-        const currency = document.getElementById('inpCurrency').value;
+        let currency = document.getElementById('inpCurrency').value;
         const balance = parseFloat(document.getElementById('inpBalance').value) || 0;
         
         if(!name) return alert("請輸入名稱");
         const isAuto = (type === 'stock' || type === 'crypto');
 
-        // 自動清理輸入：如果使用者是Crypto且輸入了OKEX:前綴，幫他拿掉存簡碼，API呼叫時再組裝
         if (type === 'crypto') {
             symbol = symbol.replace('OKEX:', '').replace('-USDT', '');
+            currency = 'USDT'; 
+        } else if (type === 'stock') {
+            currency = 'USD';
         }
 
         const newAcc = { 
@@ -536,16 +594,17 @@
         const key = prompt("請輸入 Finnhub API Key:", settings.apiKey);
         if(key !== null) {
             settings.apiKey = key.trim();
-            localStorage.setItem('myAssets_settings_v2', JSON.stringify(settings));
+            localStorage.setItem('myAssets_settings_v3', JSON.stringify(settings));
             refreshAllData();
         }
     }
 
     function saveData() {
-        localStorage.setItem('myAssets_v3', JSON.stringify(accounts));
+        localStorage.setItem('myAssets_v6', JSON.stringify(accounts));
     }
 
     init();
 </script>
 </body>
 </html>
+
