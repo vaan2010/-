@@ -12,7 +12,11 @@
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Highcharts -->
     <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- SortableJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
     <style>
         :root {
@@ -42,9 +46,11 @@
             position: sticky; top: 0; z-index: 100;
         }
         .navbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
+        .btn-group { display: flex; gap: 15px; }
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .btn-icon.active { color: var(--color-up); }
 
-        /* Sidebar Styles */
+        /* Sidebar */
         .sidebar-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 998;
@@ -52,38 +58,24 @@
             backdrop-filter: blur(2px);
         }
         .sidebar-overlay.active { opacity: 1; visibility: visible; }
-        
         .sidebar {
             position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
             background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 2px 0 15px rgba(0,0,0,0.5);
-            padding-top: max(20px, env(safe-area-inset-top));
-            display: flex; flex-direction: column;
+            padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column;
         }
         .sidebar.active { left: 0; }
-        
-        .sidebar-header {
-            padding: 20px 25px; border-bottom: 1px solid #2c2c2e;
-        }
+        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; }
         .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
-        
         .sidebar-menu { padding: 10px 0; flex: 1; }
         .menu-item {
             padding: 15px 25px; display: flex; align-items: center;
-            font-size: 17px; color: #fff; cursor: pointer;
-            transition: background 0.2s;
+            font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s;
         }
         .menu-item:active { background: #2c2c2e; }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
-        
-        /* 分隔線 */
-        .menu-divider {
-            height: 1px; background: #2c2c2e; margin: 10px 25px;
-        }
-        .menu-label {
-            padding: 10px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase;
-        }
+        .menu-label { padding: 10px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; }
 
         .summary-card { padding: 10px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -105,43 +97,24 @@
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; 
-            z-index: 80;
+            overflow: visible; z-index: 80;
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
         
-        /* 自製 Tooltip */
+        /* Tooltip */
         #customTooltip {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.95);
-            color: #000;
-            padding: 10px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            pointer-events: none;
-            z-index: 200; 
-            display: none;
-            white-space: nowrap;
-            top: 0; left: 0;
-            transform: translate(-50%, -100%);
-            transition: opacity 0.15s, top 0.15s, left 0.15s;
-            margin-top: -15px;
+            position: absolute; background: rgba(255, 255, 255, 0.95); color: #000;
+            padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            pointer-events: none; z-index: 200; display: none; white-space: nowrap;
+            top: 0; left: 0; transform: translate(-50%, -100%);
+            transition: opacity 0.15s; margin-top: -15px;
         }
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
-            border-width: 6px; border-style: solid;
-            border-color: rgba(255,255,255,0.95) transparent transparent transparent;
+            border-width: 6px; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent;
         }
-        
-        /* 翻轉樣式 */
-        #customTooltip.bottom {
-            transform: translate(-50%, 0);
-            margin-top: 20px;
-        }
-        #customTooltip.bottom::after {
-            top: -12px;
-            border-color: transparent transparent rgba(255,255,255,0.95) transparent;
-        }
+        #customTooltip.bottom { transform: translate(-50%, 0); margin-top: 20px; }
+        #customTooltip.bottom::after { top: -12px; border-color: transparent transparent rgba(255,255,255,0.95) transparent; }
         
         .tt-header { font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; }
         .tt-body { font-size: 15px; color: #000; font-weight: 700; display: flex; align-items: center; }
@@ -165,40 +138,29 @@
         .group-pnl { font-size: 11px; display: block; margin-top: 2px; }
 
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
-        .list-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .list-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
         .list-item:last-child { border-bottom: none; }
         .list-item:active { background-color: #2c2c2e; }
-        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; }
         
+        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); }
         .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); }
         .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); }
         .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
 
-        /* Item Content Layout */
-        .item-content { 
-            flex: 1; min-width: 0; 
-            display: flex; flex-direction: column; justify-content: center; 
-        }
-        .item-name { 
-            font-size: 17px; font-weight: 500; margin-bottom: 2px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            line-height: 1.2;
-        }
-        .item-row { 
-            font-size: 13px; color: var(--text-secondary); 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            line-height: 1.35;
-        }
+        .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-row { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; }
 
         .item-amount { text-align: right; margin-left: 10px; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; }
         .amount-pnl { font-size: 12px; margin-top: 2px; font-weight: 500; }
         .amount-green { color: var(--color-up); }
         .amount-red { color: var(--color-down); }
-        
         .sub-green { color: var(--color-up); }
         .sub-red { color: var(--color-down); }
+        
+        .drag-handle { display: none; color: #666; font-size: 20px; padding-left: 15px; cursor: grab; }
 
         .tab-bar {
             position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95);
@@ -234,24 +196,12 @@
     <!-- Sidebar & Overlay -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h2>選單</h2>
-        </div>
+        <div class="sidebar-header"><h2>選單</h2></div>
         <div class="sidebar-menu">
-            <div class="menu-item" onclick="setApiKey(); toggleSidebar();">
-                <i class="fas fa-cog"></i>
-                <span class="menu-text">設定 API</span>
-            </div>
-            
+            <div class="menu-item" onclick="setApiKey(); toggleSidebar();"><i class="fas fa-cog"></i><span class="menu-text">設定 API</span></div>
             <div class="menu-label">資料管理</div>
-            <div class="menu-item" onclick="exportData(); toggleSidebar();">
-                <i class="fas fa-file-export"></i>
-                <span class="menu-text">匯出備份 (複製)</span>
-            </div>
-            <div class="menu-item" onclick="importData(); toggleSidebar();">
-                <i class="fas fa-file-import"></i>
-                <span class="menu-text">匯入還原 (貼上)</span>
-            </div>
+            <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份 (複製)</span></div>
+            <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原 (貼上)</span></div>
         </div>
     </div>
 
@@ -259,34 +209,26 @@
         <div class="navbar">
             <button class="btn-icon" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
             <h1>我的資產</h1>
-            <button class="btn-icon" onclick="openModal()">
-                <i class="fas fa-plus"></i>
-            </button>
+            <div class="btn-group">
+                <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
+                <button class="btn-icon" id="addBtn" onclick="openModal()"><i class="fas fa-plus"></i></button>
+            </div>
         </div>
 
         <div class="summary-card">
             <div class="total-label">總淨資產 (TWD)</div>
             <div class="total-amount" id="totalNetWorth">NT$ --</div>
-            <div id="totalPnLBlock" style="display:none;">
-                <div class="pnl-badge" id="totalPnLBadge">今日: +0</div>
-            </div>
+            <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge" id="totalPnLBadge">今日: +0</div></div>
             <div class="rate-info">
                 <div class="rate-badge"><i class="fas fa-coins"></i><span id="rateUsdt">USDT ...</span></div>
                 <div class="rate-badge"><i class="fas fa-exchange-alt"></i><span id="rateUsd">USD ...</span></div>
             </div>
         </div>
 
-        <!-- Chart Area -->
         <div id="chartWrapper">
             <div id="chartLoading">圖表準備中...</div>
-            <!-- 自製 Tooltip -->
-            <div id="customTooltip">
-                <div class="tt-header">類別</div>
-                <div class="tt-body"><span class="tt-dot"></span>資產: 0</div>
-            </div>
-            <button class="chart-back-btn" id="chartBackBtn" onclick="resetChartLevel()">
-                <i class="fas fa-chevron-left"></i> 返回總覽
-            </button>
+            <div id="customTooltip"><div class="tt-header">類別</div><div class="tt-body"><span class="tt-dot"></span>資產: 0</div></div>
+            <button class="chart-back-btn" id="chartBackBtn" onclick="resetChartLevel()"><i class="fas fa-chevron-left"></i> 返回總覽</button>
             <div id="assetChart" style="width:100%; height:100%;"></div>
         </div>
 
@@ -294,18 +236,12 @@
         <div style="height: 60px;"></div>
 
         <div class="tab-bar">
-            <button class="tab-item active">
-                <i class="fas fa-wallet"></i>
-                資產列表
-            </button>
-            <button class="tab-item" id="refreshBtn" onclick="refreshAllData()">
-                <i id="refreshIcon" class="fas fa-sync-alt"></i>
-                立即更新
-            </button>
+            <button class="tab-item active"><i class="fas fa-wallet"></i>資產列表</button>
+            <button class="tab-item" id="refreshBtn" onclick="refreshAllData()"><i id="refreshIcon" class="fas fa-sync-alt"></i>立即更新</button>
         </div>
     </div>
 
-    <!-- Modal (內容略) -->
+    <!-- Modal -->
     <div id="accountModal" class="modal">
         <div class="modal-header">
             <button class="btn-icon" onclick="closeModal()">取消</button>
@@ -342,7 +278,7 @@
                 <input type="number" id="inpBalance" class="form-input" placeholder="0">
             </div>
         </div>
-        <div id="symbolHint" class="hint-text" style="display:none;">* 輸入簡碼 (如 BTC)，系統自動抓取 OKX 價格</div>
+        <div id="symbolHint" class="hint-text" style="display:none;">* 輸入代碼 (如 BTC)，預設使用 Coinbase USD 報價</div>
         <div class="delete-btn-area"><button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除此帳戶</button></div>
     </div>
 
@@ -350,34 +286,12 @@
     const STORAGE_KEY_DATA = 'my_assets_stable_data';
     const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
 
-    function safeParseFloat(val) {
-        let v = parseFloat(val); return isNaN(v) ? 0 : v;
-    }
+    function safeParseFloat(val) { let v = parseFloat(val); return isNaN(v) ? 0 : v; }
 
-    function tryMigrateOldData() {
-        if (localStorage.getItem(STORAGE_KEY_DATA)) return;
-        const oldKeys = ['myAssets_v6', 'myAssets_v5', 'myAssets_v4'];
-        let found = false;
-        for (let key of oldKeys) {
-            let d = localStorage.getItem(key);
-            if (d) { localStorage.setItem(STORAGE_KEY_DATA, d); found = true; break; }
-        }
-        let oldS = localStorage.getItem('myAssets_settings_v3');
-        if (oldS) localStorage.setItem(STORAGE_KEY_SETTINGS, oldS);
-        if (found) {
-            const t = document.getElementById('migrationToast');
-            t.style.display='block'; setTimeout(()=>t.style.display='none',3000);
-        }
-    }
-    tryMigrateOldData();
-
+    // Data & Init
     let rawAccounts = JSON.parse(localStorage.getItem(STORAGE_KEY_DATA)) || [];
-    let accounts = rawAccounts.map(a => ({ 
-        ...a, 
-        balance: safeParseFloat(a.balance), 
-        currentPrice: safeParseFloat(a.currentPrice),
-        dayChange: safeParseFloat(a.dayChange || 0),
-        dayChangePercent: safeParseFloat(a.dayChangePercent || 0) // Initialize
+    let accounts = rawAccounts.map((a, index) => ({ 
+        ...a, balance: safeParseFloat(a.balance), currentPrice: safeParseFloat(a.currentPrice), dayChange: safeParseFloat(a.dayChange||0), dayChangePercent: safeParseFloat(a.dayChangePercent||0), order: (a.order!==undefined)?a.order:index 
     }));
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', usdRate: 32.5, usdtRate: 1.0 };
     let editingId = null;
@@ -385,6 +299,8 @@
     let clickTimer = null; 
     let currentDetails = {};
     let chartLevel = 'root';
+    let isEditMode = false;
+    let sortables = [];
 
     const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
     const TYPE_NAMES = { 'bank': '銀行', 'stock': '投資理財', 'crypto': '加密貨幣', 'debt': '負債' };
@@ -398,200 +314,91 @@
     }
 
     function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        if (sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        } else {
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-        }
+        const s = document.getElementById('sidebar');
+        const o = document.getElementById('sidebarOverlay');
+        if(s.classList.contains('active')) { s.classList.remove('active'); o.classList.remove('active'); }
+        else { s.classList.add('active'); o.classList.add('active'); }
     }
-    
-    // 備份功能
     function exportData() {
-        const backupObj = {
-            data: JSON.parse(localStorage.getItem(STORAGE_KEY_DATA) || '[]'),
-            settings: JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS) || '{}')
-        };
-        const str = JSON.stringify(backupObj);
-        
-        // 複製到剪貼簿
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(str).then(() => {
-                alert("備份代碼已複製！\n請貼到備忘錄保存。");
-            }).catch(err => {
-                console.error(err);
-                prompt("請全選複製以下代碼：", str);
-            });
-        } else {
-            prompt("請全選複製以下代碼：", str);
-        }
+        const d = { data: JSON.parse(localStorage.getItem(STORAGE_KEY_DATA)||'[]'), settings: JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)||'{}') };
+        const s = JSON.stringify(d);
+        if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(s).then(()=>{alert("已複製！");}).catch(()=>{prompt("複製：",s);}); else prompt("複製：",s);
     }
-
-    // 還原功能
     function importData() {
-        const str = prompt("請貼上備份代碼：");
-        if (str) {
-            try {
-                const backupObj = JSON.parse(str);
-                if (backupObj.data && Array.isArray(backupObj.data)) {
-                    localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(backupObj.data));
-                    if (backupObj.settings) {
-                        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(backupObj.settings));
-                    }
-                    alert("還原成功！即將重整頁面...");
-                    location.reload();
-                } else {
-                    alert("格式錯誤，無法還原。");
-                }
-            } catch (e) {
-                alert("代碼無效，請檢查是否複製完整。");
-            }
-        }
+        const s = prompt("貼上備份代碼：");
+        if(s) { try { const d=JSON.parse(s); if(d.data) { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data)); if(d.settings) localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings)); alert("還原成功！"); location.reload(); } } catch(e){alert("無效代碼");} }
+    }
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        document.getElementById('sortBtn').classList.toggle('active', isEditMode);
+        document.getElementById('addBtn').style.display = isEditMode ? 'none' : 'block';
+        renderAssets();
     }
 
-    // 補回的函式：處理點擊事件
     function onPointClick(e) {
         e.stopPropagation(); 
-        
         if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            // 雙擊：鑽取 (Drilldown)
+            clearTimeout(clickTimer); clickTimer = null;
             if(chartLevel === 'root' && currentDetails[this.drilldown]) {
-                hideCustomTooltip();
-                enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
+                hideCustomTooltip(); enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
             }
         } else {
-            // 單擊動作：凸出 (Highlight)
-            let that = this;
-            let chartX = e.chartX;
-            let chartY = e.chartY;
-            let clientX = e.clientX;
-            let clientY = e.clientY;
-            
-            clickTimer = setTimeout(function() {
-                clickTimer = null;
-                if (that.sliced) {
-                    that.slice(false);
-                    hideCustomTooltip();
-                } else {
-                    // Reset others
-                    if(that.series && that.series.data) {
-                        that.series.data.forEach(p => {
-                            if(p !== that && p.sliced) p.slice(false);
-                        });
-                    }
-                    that.slice(true);
-                    showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
+            let that = this; let chartX = e.chartX; let chartY = e.chartY; let clientX = e.clientX; let clientY = e.clientY;
+            clickTimer = setTimeout(function() { clickTimer = null;
+                if (that.sliced) { that.slice(false); hideCustomTooltip(); } 
+                else {
+                    if(that.series.data) that.series.data.forEach(p => { if(p!==that && p.sliced) p.slice(false); });
+                    that.slice(true); showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
                 }
             }, 250);
         }
     }
 
     function initChart() {
-        if (typeof Highcharts === 'undefined') {
-            document.getElementById('chartLoading').innerText = "圖表載入失敗";
-            return;
-        }
+        if (typeof Highcharts === 'undefined') { document.getElementById('chartLoading').innerText = "圖表失敗"; return; }
         document.getElementById('chartLoading').style.display = 'none';
-
         Highcharts.setOptions({
-            chart: { 
-                style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-                events: {
-                    click: function(e) {
-                        if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
-                        if(this.series[0]) {
-                            this.series[0].points.forEach(p => p.slice(false));
-                        }
-                        hideCustomTooltip();
-                    }
-                }
-            },
-            title: { text: '' },
-            tooltip: { enabled: false } 
+            chart: { style: { fontFamily: '-apple-system, sans-serif' }, events: { click: function(e) { if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; } if(this.series[0]) this.series[0].points.forEach(p => p.slice(false)); hideCustomTooltip(); } } },
+            title: { text: '' }, tooltip: { enabled: false } 
         });
-        
         updateChartData();
-
         document.getElementById('chartWrapper').addEventListener('click', function(e) {
-            const target = e.target;
-            const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
-            const isButton = target.closest('#chartBackBtn');
-
-            if (!isChartElement && !isButton && chartInstance) {
+            const t = e.target;
+            if (!t.tagName === 'path' && !t.closest('#chartBackBtn') && chartInstance) {
                 if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
-                if(chartInstance.series && chartInstance.series[0]) {
-                    chartInstance.series[0].points.forEach(p => p.slice(false));
-                    hideCustomTooltip();
-                }
+                if(chartInstance.series[0]) chartInstance.series[0].points.forEach(p => p.slice(false));
+                hideCustomTooltip();
             }
         });
     }
 
     function showCustomTooltip(point, eventObj) {
-        const tooltip = document.getElementById('customTooltip');
-        const wrapper = document.getElementById('chartWrapper');
-        const titleDiv = tooltip.querySelector('.tt-header');
-        const bodyDiv = tooltip.querySelector('.tt-body');
-        
-        titleDiv.innerText = point.name;
-        bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()} TWD`;
-        
-        tooltip.className = ''; 
-        tooltip.style.display = 'block';
-        
-        let chartX = eventObj.chartX;
-        let chartY = eventObj.chartY;
-        
-        if(!chartX && eventObj.clientX) {
-            const rect = wrapper.getBoundingClientRect();
-            chartX = eventObj.clientX - rect.left;
-            chartY = eventObj.clientY - rect.top;
-        }
-
-        const tW = tooltip.offsetWidth;
-        const tH = tooltip.offsetHeight;
-        
-        let topPos = chartY - tH - 20;
-        let leftPos = chartX; 
-        
-        if (chartY < 160) { 
-            topPos = chartY + 30;
-            tooltip.classList.add('bottom');
-        }
-        
-        if(leftPos < tW/2) leftPos = tW/2 + 10;
-        if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
-
-        tooltip.style.top = topPos + 'px';
-        tooltip.style.left = leftPos + 'px';
+        const t = document.getElementById('customTooltip');
+        const w = document.getElementById('chartWrapper');
+        t.querySelector('.tt-header').innerText = point.name;
+        t.querySelector('.tt-body').innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()} TWD`;
+        t.className = ''; t.style.display = 'block';
+        let cx = eventObj.chartX; let cy = eventObj.chartY;
+        if(!cx && eventObj.clientX) { const r = w.getBoundingClientRect(); cx = eventObj.clientX - r.left; cy = eventObj.clientY - r.top; }
+        const tw = t.offsetWidth; const th = t.offsetHeight;
+        let top = cy - th - 20; let left = cx;
+        if (cy < 120 || top < 0) { top = cy + 30; t.classList.add('bottom'); }
+        if(left < tw/2) left = tw/2 + 10; if(left > w.offsetWidth - tw/2) left = w.offsetWidth - tw/2 - 10;
+        t.style.top = top + 'px'; t.style.left = left + 'px';
     }
-
-    function hideCustomTooltip() {
-        document.getElementById('customTooltip').style.display = 'none';
-    }
+    function hideCustomTooltip() { document.getElementById('customTooltip').style.display = 'none'; }
 
     function updateChartData() {
         if (typeof Highcharts === 'undefined') return;
-
         let groups = { 'bank': 0, 'stock': 0, 'crypto': 0 };
         currentDetails = { 'bank': [], 'stock': [], 'crypto': [] };
-
         accounts.forEach(acc => {
             if(acc.type === 'debt') return;
             let val = calculateTWD(acc);
             if(val > 0) {
-                if(groups[acc.type] !== undefined) {
-                    groups[acc.type] += val;
-                    currentDetails[acc.type].push({ name: acc.name, y: Math.round(val) });
-                }
+                if(groups[acc.type] !== undefined) { groups[acc.type] += val; currentDetails[acc.type].push({ name: acc.name, y: Math.round(val) }); }
             }
         });
-
         let rootData = [
             { name: TYPE_NAMES['bank'], y: Math.round(groups.bank), drilldown: 'bank', color: TYPE_COLORS.bank },
             { name: TYPE_NAMES['stock'], y: Math.round(groups.stock), drilldown: 'stock', color: TYPE_COLORS.stock },
@@ -600,29 +407,15 @@
 
         if (!chartInstance) {
             chartInstance = Highcharts.chart('assetChart', {
-                chart: {
-                    type: 'pie', backgroundColor: 'transparent',
-                    spacing: [30, 0, 30, 0], 
-                    height: '100%'
-                },
-                title: { text: null }, credits: { enabled: false },
-                tooltip: { enabled: false }, 
+                chart: { type: 'pie', backgroundColor: 'transparent', spacing: [30, 0, 20, 0], height: '100%' },
+                title: { text: null }, credits: { enabled: false }, tooltip: { enabled: false }, 
                 plotOptions: {
                     pie: {
                         innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
                         animation: { duration: 800, easing: 'easeOutQuart' },
-                        dataLabels: {
-                            enabled: true, distance: 5,
-                            format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
-                            connectorColor: '#666', softConnector: true
-                        },
+                        dataLabels: { enabled: true, distance: 5, format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>', style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' }, connectorColor: '#666', softConnector: true },
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-                        point: {
-                            events: {
-                                click: onPointClick 
-                            }
-                        }
+                        point: { events: { click: onPointClick } }
                     }
                 },
                 series: [{ name: '資產', data: rootData }]
@@ -634,88 +427,49 @@
                         name: '資產', data: rootData, type: 'pie',
                         innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
                         animation: { duration: 800, easing: 'easeOutQuart' },
-                        dataLabels: {
-                            enabled: true, distance: 5,
-                            format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
-                            connectorColor: '#666', softConnector: true
-                        },
+                        dataLabels: { enabled: true, distance: 5, format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>', style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' }, connectorColor: '#666', softConnector: true },
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-                        point: {
-                            events: {
-                                click: onPointClick 
-                            }
-                        }
+                        point: { events: { click: onPointClick } }
                     });
-                } else {
-                    chartInstance.series[0].setData(rootData);
-                }
+                } else { chartInstance.series[0].setData(rootData); }
             }
         }
     }
 
-    function enterDetailLevel(categoryKey, data) {
-        chartLevel = 'detail';
-        document.getElementById('chartBackBtn').style.display = 'block';
-        hideCustomTooltip(); 
-        
+    function enterDetailLevel(cat, data) {
+        chartLevel = 'detail'; document.getElementById('chartBackBtn').style.display = 'block'; hideCustomTooltip(); 
         if(chartInstance.series[0]) chartInstance.series[0].remove(false);
-        
         chartInstance.addSeries({
-            name: TYPE_NAMES[categoryKey] || categoryKey,
-            data: data,
-            type: 'pie',
+            name: TYPE_NAMES[cat] || cat, data: data, type: 'pie',
             innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
             animation: { duration: 800, easing: 'easeOutQuart' },
-            dataLabels: {
-                enabled: true, distance: 5,
-                format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
-                connectorColor: '#666', softConnector: true
-            },
+            dataLabels: { enabled: true, distance: 5, format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>', style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' }, connectorColor: '#666', softConnector: true },
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
             point: { events: { click: onPointClick } }
         }, true);
-        
-        chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
+        chartInstance.setTitle({ text: TYPE_NAMES[cat], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
     }
 
     function resetChartLevel() {
-        chartLevel = 'root';
-        document.getElementById('chartBackBtn').style.display = 'none';
-        chartInstance.setTitle({ text: '' });
-        hideCustomTooltip();
-        
-        while(chartInstance.series.length > 0) {
-            chartInstance.series[0].remove(false);
-        }
-        
+        chartLevel = 'root'; document.getElementById('chartBackBtn').style.display = 'none';
+        chartInstance.setTitle({ text: '' }); hideCustomTooltip();
+        while(chartInstance.series.length > 0) chartInstance.series[0].remove(false);
         updateChartData(); 
     }
 
-    // ... API & Logic ...
     async function refreshAllData() {
-        const icon = document.getElementById('refreshIcon');
-        icon.classList.add('fa-spin-fast');
-        await updateRates();
-        if(settings.apiKey) await fetchPrices();
+        const icon = document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast');
+        await updateRates(); if(settings.apiKey) await fetchPrices();
         if(chartLevel === 'root') updateChartData(); 
         setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
     async function updateRates() {
-        try {
-            const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-            const d = await r.json();
-            if(d.rates?.TWD) settings.usdRate = d.rates.TWD;
-        } catch(e){}
-        if(settings.apiKey) {
-            try {
-                const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);
-                const j = await r.json();
-                if(j.c) settings.usdtRate = j.c;
-            } catch(e){}
-        }
+        try { const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD'); const d = await r.json(); if(d.rates?.TWD) settings.usdRate = d.rates.TWD; } catch(e){}
+        // Remove USDT rate fetching since we are using direct USD pairs now, or keep it if user uses USDT symbol explicitly
+        // But user requested direct USD, so mostly usdRate is needed.
+        // We can still fetch USDT rate for display or legacy support.
+        if(settings.apiKey) { try { const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`); const j = await r.json(); if(j.c) settings.usdtRate = j.c; } catch(e){} }
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
         document.getElementById('rateUsd').innerText = `USD ≈ ${settings.usdRate.toFixed(2)}`;
         document.getElementById('rateUsdt').innerText = `USDT ≈ ${settings.usdtRate.toFixed(3)} USD`;
@@ -728,35 +482,36 @@
         for (let acc of autos) {
             try {
                 let sym = acc.symbol;
-                let isUsdt = false;
-                if(acc.type === 'crypto') {
-                    if(acc.symbol==='USDT'||acc.symbol==='USDC') { 
-                        acc.currentPrice=1; acc.dayChange=0; acc.dayChangePercent=0;
-                        isUsdt = true;
-                        continue; 
-                    }
-                    if(!sym.includes(':')) sym = `OKEX:${sym}-USDT`;
+                // V43 Logic: If Crypto, default to COINBASE:XXX-USD unless user specified otherwise
+                // Actually handle this in saveAccount, here just fetch what is stored.
+                // If it's USDT, handle special
+                if(acc.type === 'crypto' && (acc.symbol==='USDT'||acc.symbol==='USDC')) { 
+                    acc.currentPrice=1; acc.dayChange=0; acc.dayChangePercent=0; continue; 
                 }
+                // If symbol has no prefix, likely legacy data or manual input, try to be smart? 
+                // But V43 saveAccount handles adding prefix. 
+                // If legacy data "BTC", convert on the fly or fail? Let's add fallback
+                if(acc.type === 'crypto' && !sym.includes(':')) {
+                     sym = `COINBASE:${sym}-USD`;
+                }
+
                 await new Promise(r=>setTimeout(r,150));
                 const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`);
                 const j = await res.json();
-                if (j.c) {
-                    acc.currentPrice = j.c; 
-                    acc.dayChange = j.d || 0; 
-                    acc.dayChangePercent = j.dp || 0; // Store percent change
-                }
+                if (j.c) { acc.currentPrice = j.c; acc.dayChange = j.d || 0; acc.dayChangePercent = j.dp || 0; }
             } catch(e){}
         }
-        saveData();
-        renderAssets();
+        saveData(); renderAssets();
     }
 
     function calculateTWD(acc) {
         let val = 0;
         if (acc.isAuto) {
             let p = acc.currentPrice || 0;
-            if (acc.type === 'crypto') val = acc.balance * p * settings.usdtRate * settings.usdRate;
-            else val = acc.balance * p * settings.usdRate;
+            // V43: If currency is USD (Direct USD pair), don't use usdtRate
+            if (acc.currency === 'USD') val = acc.balance * p * settings.usdRate;
+            else if (acc.type === 'crypto') val = acc.balance * p * settings.usdtRate * settings.usdRate; // Fallback for USDT pairs
+            else val = acc.balance * p * settings.usdRate; // Stocks
         } else {
             if (acc.currency === 'USD') val = acc.balance * settings.usdRate;
             else val = acc.balance;
@@ -767,11 +522,10 @@
     function calculatePnL_TWD(acc) {
         if(!acc.isAuto || !acc.dayChange) return 0;
         let pnl = 0;
-        if (acc.type === 'crypto') {
-            pnl = acc.balance * acc.dayChange * settings.usdtRate * settings.usdRate;
-        } else {
-            pnl = acc.balance * acc.dayChange * settings.usdRate;
-        }
+        // V43: Same logic for PnL
+        if (acc.currency === 'USD') pnl = acc.balance * acc.dayChange * settings.usdRate;
+        else if (acc.type === 'crypto') pnl = acc.balance * acc.dayChange * settings.usdtRate * settings.usdRate;
+        else pnl = acc.balance * acc.dayChange * settings.usdRate;
         return safeParseFloat(pnl);
     }
 
@@ -784,90 +538,46 @@
 
     function renderAssets() {
         const c = document.getElementById('assetsContainer'); c.innerHTML = '';
-        const groups = [
-            { key:'bank', t:'銀行 / 現金', i:'fa-university', s:'icon-bank' },
-            { key:'stock', t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock' },
-            { key:'crypto', t:'加密貨幣 (OKX)', i:'fa-bitcoin', s:'icon-crypto' },
-            { key:'debt', t:'負債', i:'fa-hand-holding-usd', s:'icon-debt' }
-        ];
+        sortables.forEach(s => s.destroy()); sortables = [];
+        const groups = [ { key:'bank', t:'銀行 / 現金', i:'fa-university', s:'icon-bank' }, { key:'stock', t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock' }, { key:'crypto', t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto' }, { key:'debt', t:'負債', i:'fa-hand-holding-usd', s:'icon-debt' } ];
         
-        let net = 0;
-        let totalDailyPnL = 0;
-
+        let net = 0; let totalDailyPnL = 0;
         groups.forEach(g => {
-            let items = accounts.filter(a => a.type === g.key);
+            let items = accounts.filter(a => a.type === g.key).sort((a, b) => (a.order || 0) - (b.order || 0));
             if(items.length===0) return;
-            
-            let sum = 0; 
-            let groupDailyPnL = 0;
-            let html = '';
-
+            let sum = 0; let groupDailyPnL = 0; let html = '';
             items.forEach(acc => {
-                let val = calculateTWD(acc);
-                let pnl = calculatePnL_TWD(acc);
-                
+                let val = calculateTWD(acc); let pnl = calculatePnL_TWD(acc);
                 if(g.key==='debt') net-=val; else net+=val;
-                sum+=val;
-                groupDailyPnL += pnl;
-                totalDailyPnL += pnl;
+                sum+=val; groupDailyPnL += pnl; totalDailyPnL += pnl;
 
-                // V39 資訊分行邏輯
                 let htmlContent = '';
                 if (acc.isAuto) {
-                    let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
-                    let priceStr = acc.currentPrice ? `$${acc.currentPrice.toLocaleString()} USD` : '--'; // Add USD unit
+                    let displaySymbol = acc.symbol.replace('COINBASE:', '').replace('OKEX:', '').replace('-USD', '').replace('-USDT', '');
+                    let priceStr = acc.currentPrice ? `$${acc.currentPrice.toLocaleString()} USD` : '--';
                     let changeHtml = '';
-                    if (acc.dayChangePercent !== undefined && acc.dayChangePercent !== 0) {
+                    if (acc.dayChangePercent) {
                          let sign = acc.dayChangePercent > 0 ? '+' : '';
                          let cls = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
                          changeHtml = ` <span class="${cls}">(${sign}${acc.dayChangePercent.toFixed(2)}%)</span>`;
                     }
-                    
-                    // Line 1: Symbol + Change
                     let line1 = `${displaySymbol}${changeHtml}`;
-                    // Line 2: Price USD + Quantity
                     let line2 = `${priceStr} • ${acc.balance}`;
-                    
-                    htmlContent = `
-                        <div class="item-name">${acc.name}</div>
-                        <div class="item-row">${line1}</div>
-                        <div class="item-row">${line2}</div>
-                    `;
+                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${line1}</div><div class="item-row">${line2}</div>`;
                 } else {
-                    htmlContent = `
-                        <div class="item-name">${acc.name}</div>
-                        <div class="item-row">${acc.currency}</div>
-                    `;
+                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
                 }
-                
                 let color = g.key==='debt'?'amount-red':'amount-green';
-                
-                html += `
-                    <div class="list-item" onclick="editAccount(${acc.id})">
-                        <div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>
-                        <div class="item-content">${htmlContent}</div>
-                        <div class="item-amount">
-                            <div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>
-                            ${ pnl !== 0 ? `<div class="amount-pnl">${formatPnL(pnl)}</div>` : '<div class="item-sub">TWD</div>' }
-                        </div>
-                    </div>`;
+                let handleHtml = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
+                let clickAttr = isEditMode ? '' : `onclick="editAccount(${acc.id})"`;
+                html += `<div class="list-item" ${clickAttr} data-id="${acc.id}"><div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${ pnl !== 0 ? `<div class="amount-pnl">${formatPnL(pnl)}</div>` : '<div class="item-sub">TWD</div>' }</div>${handleHtml}</div>`;
             });
-
             let pnlHtml = groupDailyPnL !== 0 ? `<span class="group-pnl">${formatPnL(groupDailyPnL)}</span>` : '';
-            
-            c.innerHTML += `
-                <div class="group-header">
-                    <span>${g.t}</span>
-                    <div class="group-total-block">
-                        <span class="group-total">${Math.round(sum).toLocaleString()}</span>
-                        ${pnlHtml}
-                    </div>
-                </div>
-                <div class="list-container">${html}</div>`;
+            let containerId = `group-${g.key}`;
+            c.innerHTML += `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total">${Math.round(sum).toLocaleString()}</span>${pnlHtml}</div></div><div class="list-container" id="${containerId}">${html}</div>`;
         });
-
+        if (isEditMode) { groups.forEach(g => { let el = document.getElementById(`group-${g.key}`); if (el) sortables.push(Sortable.create(el, { handle: '.drag-handle', animation: 150, onEnd: function (evt) { updateOrder(g.key, evt.from); } })); }); document.querySelectorAll('.drag-handle').forEach(el => el.style.display = 'block'); }
         document.getElementById('totalNetWorth').innerText = `NT$ ${Math.round(net).toLocaleString()}`;
-        
         const pnlBlock = document.getElementById('totalPnLBlock');
         const pnlBadge = document.getElementById('totalPnLBadge');
         if(Math.abs(totalDailyPnL) > 1) {
@@ -875,78 +585,47 @@
             const sign = totalDailyPnL > 0 ? '+' : '';
             const cls = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
             pnlBadge.innerHTML = `今日: <span class="${cls}">${sign}NT$ ${Math.round(totalDailyPnL).toLocaleString()} TWD</span>`;
-        } else {
-            pnlBlock.style.display = 'none';
-        }
-
-        updateChartData(); // Ensure chart reflects latest data (if visible)
+        } else { pnlBlock.style.display = 'none'; }
+        updateChartData();
     }
 
-    function openModal() {
-        editingId=null;
-        document.getElementById('modalTitle').innerText='新增帳戶';
-        document.getElementById('inpType').value='bank';
-        document.getElementById('inpName').value='';
-        document.getElementById('inpSymbol').value='';
-        document.getElementById('inpBalance').value='';
-        document.getElementById('inpCurrency').value='TWD';
-        document.getElementById('btnDelete').style.display='none';
-        handleTypeChange();
-        document.getElementById('accountModal').style.display='block';
+    function updateOrder(type, container) {
+        let itemIds = Array.from(container.children).map(child => parseInt(child.getAttribute('data-id')));
+        itemIds.forEach((id, index) => { let acc = accounts.find(a => a.id === id); if (acc) acc.order = index; });
+        saveData();
     }
-    function editAccount(id) {
-        editingId=id;
-        const a = accounts.find(x=>x.id===id);
-        document.getElementById('modalTitle').innerText='編輯帳戶';
-        document.getElementById('inpType').value=a.type;
-        document.getElementById('inpName').value=a.name;
-        document.getElementById('inpSymbol').value=a.symbol;
-        document.getElementById('inpBalance').value=a.balance;
-        document.getElementById('inpCurrency').value=a.currency;
-        document.getElementById('btnDelete').style.display='block';
-        handleTypeChange();
-        document.getElementById('accountModal').style.display='block';
-    }
+
+    function openModal() { if(isEditMode)return; editingId=null; document.getElementById('modalTitle').innerText='新增帳戶'; document.getElementById('inpType').value='bank'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; document.getElementById('inpBalance').value=''; document.getElementById('inpCurrency').value='TWD'; document.getElementById('btnDelete').style.display='none'; handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
+    function editAccount(id) { if(isEditMode)return; editingId=id; const a = accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯帳戶'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCurrency').value=a.currency; document.getElementById('btnDelete').style.display='block'; handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
     function handleTypeChange() {
-        const t = document.getElementById('inpType').value;
-        const auto = (t==='stock'||t==='crypto');
-        document.getElementById('rowSymbol').style.display = auto?'flex':'none';
-        document.getElementById('rowCurrency').style.display = auto?'none':'flex';
+        const t = document.getElementById('inpType').value; const auto = (t==='stock'||t==='crypto');
+        document.getElementById('rowSymbol').style.display = auto?'flex':'none'; document.getElementById('rowCurrency').style.display = auto?'none':'flex';
         document.getElementById('symbolHint').style.display = (t==='crypto')?'block':'none';
         document.getElementById('lblBalance').innerText = auto?(t==='crypto'?'持有顆數':'持有股數'):'目前餘額';
-        if(t==='crypto') document.getElementById('inpSymbol').placeholder='例如: BTC';
-        else if(t==='stock') document.getElementById('inpSymbol').placeholder='例如: AAPL';
+        document.getElementById('lblSymbol').innerText = (t==='crypto')?'幣名':'代碼';
+        if(t==='crypto') document.getElementById('inpSymbol').placeholder='例如: BTC'; else if(t==='stock') document.getElementById('inpSymbol').placeholder='例如: AAPL';
     }
     function saveAccount() {
-        const t = document.getElementById('inpType').value;
-        const n = document.getElementById('inpName').value;
-        let s = document.getElementById('inpSymbol').value.trim().toUpperCase();
-        let c = document.getElementById('inpCurrency').value;
+        const t = document.getElementById('inpType').value; const n = document.getElementById('inpName').value;
+        let s = document.getElementById('inpSymbol').value.trim().toUpperCase(); let c = document.getElementById('inpCurrency').value;
         const b = parseFloat(document.getElementById('inpBalance').value)||0;
         if(!n) return alert("請輸入名稱");
         const auto = (t==='stock'||t==='crypto');
-        if(t==='crypto'){ s=s.replace('OKEX:','').replace('-USDT',''); c='USDT'; }
-        else if(t==='stock') c='USD';
         
-        const newA = { 
-            id: editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, isAuto:auto, 
-            currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0,
-            dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0,
-            dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0
-        };
-        if(editingId) accounts[accounts.findIndex(x=>x.id===editingId)]=newA;
-        else accounts.push(newA);
-        saveData(); closeModal();
-        if(auto) refreshAllData(); else { renderAssets(); updateChartData(); }
+        // V43 New Logic: Crypto Direct USD
+        if(t === 'crypto') {
+            // 如果沒有指定交易所，預設使用 Coinbase USD 
+            if (!s.includes(':')) s = `COINBASE:${s}-USD`;
+            c = 'USD'; // 強制使用 USD
+        } else if(t === 'stock') { c = 'USD'; }
+
+        const newA = { id: editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order: editingId?(accounts.find(x=>x.id===editingId).order||0):9999 };
+        if(editingId) accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA);
+        saveData(); closeModal(); if(auto) refreshAllData(); else { renderAssets(); updateChartData(); }
     }
-    function deleteAccount() {
-        if(confirm("確定刪除?")){ accounts=accounts.filter(x=>x.id!==editingId); saveData(); closeModal(); renderAssets(); }
-    }
-    function setApiKey() {
-        const k = prompt("請輸入 Finnhub API Key:", settings.apiKey);
-        if(k!==null) { settings.apiKey=k.trim(); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); refreshAllData(); }
-    }
+    function deleteAccount() { if(confirm("確定刪除?")){ accounts=accounts.filter(x=>x.id!==editingId); saveData(); closeModal(); renderAssets(); } }
+    function setApiKey() { const k = prompt("請輸入 Finnhub API Key:", settings.apiKey); if(k!==null) { settings.apiKey=k.trim(); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); refreshAllData(); } }
     function saveData() { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(accounts)); }
 
     init();
