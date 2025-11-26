@@ -59,10 +59,37 @@
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; 
+            overflow: hidden; 
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
         
+        /* 自製 Tooltip */
+        #customTooltip {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            white-space: nowrap;
+            top: 0; left: 0;
+            transform: translate(-50%, -100%);
+            transition: opacity 0.15s;
+            margin-top: -10px;
+        }
+        #customTooltip::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
+            border-width: 6px; border-style: solid;
+            border-color: rgba(255,255,255,0.95) transparent transparent transparent;
+        }
+        
+        .tt-header { font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; }
+        .tt-body { font-size: 15px; color: #000; font-weight: 700; display: flex; align-items: center; }
+        .tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
         .chart-back-btn {
             position: absolute; top: 10px; left: 20px; z-index: 10;
             background: rgba(44, 44, 46, 0.9); color: #0a84ff;
@@ -71,6 +98,7 @@
             backdrop-filter: blur(10px); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
+        /* Lists */
         .group-header {
             padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary);
             background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase;
@@ -154,6 +182,11 @@
         <!-- Chart Area -->
         <div id="chartWrapper">
             <div id="chartLoading">圖表準備中...</div>
+            <!-- 自製 Tooltip -->
+            <div id="customTooltip">
+                <div class="tt-header">類別</div>
+                <div class="tt-body"><span class="tt-dot"></span>資產: 0</div>
+            </div>
             <button class="chart-back-btn" id="chartBackBtn" onclick="resetChartLevel()">
                 <i class="fas fa-chevron-left"></i> 返回總覽
             </button>
@@ -250,6 +283,8 @@
     }));
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', usdRate: 32.5, usdtRate: 1.0 };
     let editingId = null;
+    
+    // Chart Globals
     let chartInstance = null;
     let clickTimer = null; 
     let currentDetails = {};
@@ -260,10 +295,31 @@
 
     async function init() {
         renderAssets();
-        setTimeout(() => { initChart(); }, 500);
+        setupChartListener(); // Setup Listener immediately
+        setTimeout(() => { initChart(); }, 500); // Chart load
         await updateRates(); 
         if(settings.apiKey) fetchPrices();
         setInterval(() => { refreshAllData(); }, 60000);
+    }
+
+    function setupChartListener() {
+        document.getElementById('chartWrapper').addEventListener('click', function(e) {
+            const target = e.target;
+            const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
+            const isButton = target.closest('#chartBackBtn');
+
+            if (!isChartElement && !isButton && chartInstance) {
+                if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; } // Stop pending open
+                
+                if(chartInstance.series && chartInstance.series[0]) {
+                    let hasSliced = false;
+                    chartInstance.series[0].points.forEach(p => {
+                        if(p.sliced) { p.slice(false); hasSliced = true; }
+                    });
+                    if(hasSliced) hideCustomTooltip();
+                }
+            }
+        });
     }
 
     function initChart() {
@@ -272,38 +328,44 @@
             return;
         }
         document.getElementById('chartLoading').style.display = 'none';
-
-        Highcharts.setOptions({
-            chart: { 
-                style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-                events: {
-                    click: function(e) {
-                        // 點擊圖表背景時觸發
-                        // 檢查是否有浮出的 slice，有的話全部縮回去
-                        if (this.series[0]) {
-                            let hasSliced = false;
-                            this.series[0].points.forEach(p => {
-                                if(p.sliced) {
-                                    p.slice(false);
-                                    hasSliced = true;
-                                }
-                            });
-                            // 隱藏 tooltip
-                            if(this.tooltip) this.tooltip.hide();
-                        }
-                    }
-                }
-            },
-            title: { text: '' },
-            tooltip: {
-                backgroundColor: 'rgba(28, 28, 30, 0.95)',
-                style: { color: '#fff', fontSize: '14px' },
-                borderRadius: 12, borderWidth: 0, shadow: false,
-                valueDecimals: 0, // 全域設定：小數位數為 0 (整數)
-                pointFormat: '<b>{point.name}</b><br>{point.percentage:.1f}%<br>NT$ {point.y:,.0f}'
-            }
-        });
         updateChartData();
+    }
+
+    // Tooltip Logic
+    function showCustomTooltip(point, event) {
+        const tooltip = document.getElementById('customTooltip');
+        const wrapper = document.getElementById('chartWrapper');
+        const titleDiv = tooltip.querySelector('.tt-header');
+        const bodyDiv = tooltip.querySelector('.tt-body');
+        
+        titleDiv.innerText = point.name;
+        // Safe innerHTML
+        bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()}`;
+        
+        tooltip.style.display = 'block';
+        
+        let chartX = event.chartX;
+        let chartY = event.chartY;
+        if(!chartX && event.clientX) {
+            const rect = wrapper.getBoundingClientRect();
+            chartX = event.clientX - rect.left;
+            chartY = event.clientY - rect.top;
+        }
+
+        const tW = tooltip.offsetWidth;
+        const tH = tooltip.offsetHeight;
+        let topPos = chartY - tH - 20;
+        let leftPos = chartX; 
+        if(topPos < 10) topPos = chartY + 20;
+        if(leftPos < tW/2) leftPos = tW/2 + 10;
+        if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
+
+        tooltip.style.top = topPos + 'px';
+        tooltip.style.left = leftPos + 'px';
+    }
+
+    function hideCustomTooltip() {
+        document.getElementById('customTooltip').style.display = 'none';
     }
 
     function updateChartData() {
@@ -318,7 +380,6 @@
             if(val > 0) {
                 if(groups[acc.type] !== undefined) {
                     groups[acc.type] += val;
-                    // 詳細資料也要取整數
                     currentDetails[acc.type].push({ name: acc.name, y: Math.round(val) });
                 }
             }
@@ -334,9 +395,12 @@
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    spacing: [20, 0, 20, 0], height: '100%'
+                    spacing: [20, 0, 20, 0], height: '100%',
+                    style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
                 },
-                title: { text: null }, credits: { enabled: false },
+                title: { text: '' },
+                tooltip: { enabled: false }, // === DISABLE NATIVE TOOLTIP ===
+                credits: { enabled: false },
                 plotOptions: {
                     pie: {
                         innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
@@ -346,27 +410,28 @@
                             style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center' },
                             connectorColor: '#666', softConnector: true
                         },
-                        states: { hover: { halo: { size: 0 } } },
+                        states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
                                 click: function(e) {
-                                    e.stopPropagation(); // 防止冒泡觸發 chart background click
-                                    
+                                    e.stopPropagation(); 
                                     if (clickTimer) {
                                         clearTimeout(clickTimer);
                                         clickTimer = null;
                                         // Double Click
                                         if(chartLevel === 'root' && currentDetails[this.drilldown]) {
-                                            if(chartInstance.tooltip) chartInstance.tooltip.hide();
+                                            hideCustomTooltip();
                                             enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
                                         }
                                     } else {
                                         let that = this;
+                                        let evt = e; 
                                         clickTimer = setTimeout(function() {
                                             clickTimer = null;
                                             // Single Click
                                             if (that.sliced) {
                                                 that.slice(false);
+                                                hideCustomTooltip();
                                             } else {
                                                 if(that.series && that.series.data) {
                                                     that.series.data.forEach(p => {
@@ -374,6 +439,7 @@
                                                     });
                                                 }
                                                 that.slice(true);
+                                                showCustomTooltip(that, evt); 
                                             }
                                         }, 250);
                                     }
@@ -392,6 +458,7 @@
     function enterDetailLevel(categoryKey, data) {
         chartLevel = 'detail';
         document.getElementById('chartBackBtn').style.display = 'block';
+        hideCustomTooltip(); 
         chartInstance.series[0].update({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data
@@ -403,11 +470,11 @@
         chartLevel = 'root';
         document.getElementById('chartBackBtn').style.display = 'none';
         chartInstance.setTitle({ text: '' });
-        if(chartInstance.tooltip) chartInstance.tooltip.hide();
+        hideCustomTooltip();
         updateChartData();
     }
 
-    // --- API & PNL Logic ---
+    // --- API Logic ---
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
@@ -637,4 +704,3 @@
 </script>
 </body>
 </html>
-
