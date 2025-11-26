@@ -55,12 +55,11 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        /* Chart Wrapper */
         #chartWrapper {
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; /* 允許視窗突出 */
+            overflow: visible; 
             z-index: 80;
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
@@ -82,14 +81,14 @@
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
-        /* 小箭頭 */
+        /* 小箭頭 (上方模式) */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
             border-color: rgba(255,255,255,0.95) transparent transparent transparent;
         }
         
-        /* 翻轉樣式 */
+        /* 小箭頭 (下方模式 - 當翻轉時) */
         #customTooltip.bottom {
             transform: translate(-50%, 0);
             margin-top: 15px;
@@ -312,6 +311,54 @@
         setInterval(() => { refreshAllData(); }, 60000);
     }
 
+    // === 核心：統一的點擊處理函式 ===
+    // 這函式同時給第一層與第二層圓餅圖使用，確保行為一致
+    function onPointClick(e) {
+        e.stopPropagation(); // 阻止冒泡，避免背景點擊觸發
+        
+        // 檢查是否為雙擊
+        if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            
+            // 雙擊動作：鑽取 (只在第一層有效)
+            if(chartLevel === 'root' && currentDetails[this.drilldown]) {
+                hideCustomTooltip();
+                enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
+            }
+        } else {
+            // 單擊動作：凸出並顯示 Tooltip (延遲執行以等待雙擊判定)
+            let that = this;
+            // 保存事件座標，因為 setTimeout 執行時 event 物件可能失效
+            let chartX = e.chartX;
+            let chartY = e.chartY;
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            clickTimer = setTimeout(function() {
+                clickTimer = null;
+                
+                // 單擊邏輯
+                if (that.sliced) {
+                    // 如果已經凸出，縮回去並隱藏
+                    that.slice(false);
+                    hideCustomTooltip();
+                } else {
+                    // 如果沒凸出，先把其他的縮回去
+                    if(that.series && that.series.data) {
+                        that.series.data.forEach(p => {
+                            if(p !== that && p.sliced) p.slice(false);
+                        });
+                    }
+                    // 凸出自己
+                    that.slice(true);
+                    // 顯示 Tooltip，傳入保存的座標
+                    showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
+                }
+            }, 250);
+        }
+    }
+
     function initChart() {
         if (typeof Highcharts === 'undefined') {
             document.getElementById('chartLoading').innerText = "圖表載入失敗";
@@ -353,7 +400,7 @@
         });
     }
 
-    function showCustomTooltip(point, event) {
+    function showCustomTooltip(point, eventObj) {
         const tooltip = document.getElementById('customTooltip');
         const wrapper = document.getElementById('chartWrapper');
         const titleDiv = tooltip.querySelector('.tt-header');
@@ -365,29 +412,30 @@
         tooltip.className = ''; 
         tooltip.style.display = 'block';
         
-        let chartX = event.chartX;
-        let chartY = event.chartY;
-        if(!chartX && event.clientX) {
+        let chartX = eventObj.chartX;
+        let chartY = eventObj.chartY;
+        
+        // Fallback
+        if(!chartX && eventObj.clientX) {
             const rect = wrapper.getBoundingClientRect();
-            chartX = event.clientX - rect.left;
-            chartY = event.clientY - rect.top;
+            chartX = eventObj.clientX - rect.left;
+            chartY = eventObj.clientY - rect.top;
         }
 
         const tW = tooltip.offsetWidth;
         const tH = tooltip.offsetHeight;
         
-        // 預設：在點擊位置上方
+        // 預設位置
         let topPos = chartY - tH - 25;
         let leftPos = chartX; 
         
-        // 修正1：空間判斷 - 如果上方空間不足 (例如 < 0)，改到下方
-        // chartY 是相對於 chartWrapper 的
-        if(topPos < 0) {
+        // 修正1：如果 click 點本身就在很上面 (chartY 小)，直接翻轉
+        // 修正2：或者算出來的 topPos < 0 (超出 Wrapper 上緣)，也翻轉
+        if (chartY < 80 || topPos < 0) { 
             topPos = chartY + 25;
             tooltip.classList.add('bottom');
         }
         
-        // 修正2：左右邊界 - 防止 Tooltip 超出 Wrapper
         if(leftPos < tW/2) leftPos = tW/2 + 10;
         if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
 
@@ -422,12 +470,11 @@
             { name: TYPE_NAMES['crypto'], y: Math.round(groups.crypto), drilldown: 'crypto', color: TYPE_COLORS.crypto }
         ].filter(d => d.y > 0);
 
-        // 如果沒有 Chart 實例，建立一個
         if (!chartInstance) {
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    // 修正：增加頂部間距，讓 Tooltip 有更多空間
+                    // V31 修正：增加頂部間距
                     spacing: [30, 0, 20, 0], 
                     height: '100%'
                 },
@@ -449,36 +496,8 @@
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
-                                click: function(e) {
-                                    e.stopPropagation(); 
-                                    
-                                    if (clickTimer) {
-                                        clearTimeout(clickTimer);
-                                        clickTimer = null;
-                                        if(chartLevel === 'root' && currentDetails[this.drilldown]) {
-                                            hideCustomTooltip();
-                                            enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
-                                        }
-                                    } else {
-                                        let that = this;
-                                        let evt = e; 
-                                        clickTimer = setTimeout(function() {
-                                            clickTimer = null;
-                                            if (that.sliced) {
-                                                that.slice(false);
-                                                hideCustomTooltip();
-                                            } else {
-                                                if(that.series && that.series.data) {
-                                                    that.series.data.forEach(p => {
-                                                        if(p !== that && p.sliced) p.slice(false);
-                                                    });
-                                                }
-                                                that.slice(true);
-                                                showCustomTooltip(that, evt); 
-                                            }
-                                        }, 250);
-                                    }
-                                }
+                                // 使用共用的點擊處理函式
+                                click: onPointClick
                             }
                         }
                     }
@@ -486,9 +505,7 @@
                 series: [{ name: '資產', data: rootData }]
             });
         } else {
-            // 如果在 root 層級，而且需要更新數據
             if (chartLevel === 'root') {
-                // 如果沒有 series (可能被重置清掉了)，就重新加
                 if(chartInstance.series.length === 0) {
                      chartInstance.addSeries({
                         name: '資產', data: rootData, type: 'pie',
@@ -503,28 +520,11 @@
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
-                                click: function(e) {
-                                    e.stopPropagation(); 
-                                    if (clickTimer) { clearTimeout(clickTimer); clickTimer = null;
-                                        if(chartLevel === 'root' && currentDetails[this.drilldown]) {
-                                            hideCustomTooltip(); enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
-                                        }
-                                    } else {
-                                        let that = this; let evt = e; 
-                                        clickTimer = setTimeout(function() { clickTimer = null;
-                                            if (that.sliced) { that.slice(false); hideCustomTooltip(); } 
-                                            else {
-                                                if(that.series.data) that.series.data.forEach(p => { if(p!==that && p.sliced) p.slice(false); });
-                                                that.slice(true); showCustomTooltip(that, evt); 
-                                            }
-                                        }, 250);
-                                    }
-                                }
+                                click: onPointClick // 重新綁定
                             }
                         }
                     });
                 } else {
-                    // 如果 series 還在，直接 update data
                     chartInstance.series[0].setData(rootData);
                 }
             }
@@ -538,7 +538,7 @@
         
         if(chartInstance.series[0]) chartInstance.series[0].remove(false);
         
-        // Re-add Series for Animation
+        // Re-add Series for Animation AND Bind Click Event
         chartInstance.addSeries({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data,
@@ -552,7 +552,12 @@
                 connectorColor: '#666', softConnector: true
             },
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-            point: { events: { click: function(e){ /* detail click if needed */ } } }
+            point: { 
+                events: { 
+                    // 關鍵修正：詳細頁面也要綁定同樣的點擊邏輯
+                    click: onPointClick 
+                } 
+            }
         }, true);
         
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
@@ -564,12 +569,10 @@
         chartInstance.setTitle({ text: '' });
         hideCustomTooltip();
         
-        // Remove current detail series
         while(chartInstance.series.length > 0) {
             chartInstance.series[0].remove(false);
         }
         
-        // Re-draw root series
         updateChartData(); 
     }
 
