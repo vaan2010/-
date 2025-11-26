@@ -163,9 +163,22 @@
         .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); }
         .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
 
-        .item-content { flex: 1; min-width: 0; }
-        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item-sub { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Updated Item Content Layout */
+        .item-content { 
+            flex: 1; min-width: 0; 
+            display: flex; flex-direction: column; justify-content: center; 
+        }
+        .item-name { 
+            font-size: 17px; font-weight: 500; margin-bottom: 2px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            line-height: 1.2;
+        }
+        .item-row { 
+            font-size: 13px; color: var(--text-secondary); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            line-height: 1.35;
+        }
+
         .item-amount { text-align: right; margin-left: 10px; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; }
         .amount-pnl { font-size: 12px; margin-top: 2px; font-weight: 500; }
@@ -735,18 +748,33 @@
                 groupDailyPnL += pnl;
                 totalDailyPnL += pnl;
 
-                let sub = acc.currency;
+                // V39 資訊分行邏輯
+                let htmlContent = '';
                 if (acc.isAuto) {
                     let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
-                    // 即時報價顯示：代碼 • 價格 (漲跌%) • 數量
-                    let priceStr = acc.currentPrice ? `$${acc.currentPrice.toLocaleString()}` : '--';
+                    let priceStr = acc.currentPrice ? `$${acc.currentPrice.toLocaleString()} USD` : '--'; // Add USD unit
                     let changeHtml = '';
                     if (acc.dayChangePercent !== undefined && acc.dayChangePercent !== 0) {
                          let sign = acc.dayChangePercent > 0 ? '+' : '';
                          let cls = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
                          changeHtml = ` <span class="${cls}">(${sign}${acc.dayChangePercent.toFixed(2)}%)</span>`;
                     }
-                    sub = `${displaySymbol} • ${priceStr}${changeHtml} • ${acc.balance}`;
+                    
+                    // Line 1: Symbol + Change
+                    let line1 = `${displaySymbol}${changeHtml}`;
+                    // Line 2: Price USD + Quantity
+                    let line2 = `${priceStr} • ${acc.balance}`;
+                    
+                    htmlContent = `
+                        <div class="item-name">${acc.name}</div>
+                        <div class="item-row">${line1}</div>
+                        <div class="item-row">${line2}</div>
+                    `;
+                } else {
+                    htmlContent = `
+                        <div class="item-name">${acc.name}</div>
+                        <div class="item-row">${acc.currency}</div>
+                    `;
                 }
                 
                 let color = g.key==='debt'?'amount-red':'amount-green';
@@ -754,7 +782,7 @@
                 html += `
                     <div class="list-item" onclick="editAccount(${acc.id})">
                         <div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>
-                        <div class="item-content"><div class="item-name">${acc.name}</div><div class="item-sub">${sub}</div></div>
+                        <div class="item-content">${htmlContent}</div>
                         <div class="item-amount">
                             <div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>
                             ${ pnl !== 0 ? `<div class="amount-pnl">${formatPnL(pnl)}</div>` : '<div class="item-sub">TWD</div>' }
