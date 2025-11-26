@@ -233,7 +233,7 @@
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', usdRate: 32.5, usdtRate: 1.0 };
     let editingId = null;
     let chartInstance = null;
-    let clickTimer = null; // For double click detection
+    let clickTimer = null; 
     let currentDetails = {};
     let chartLevel = 'root';
 
@@ -315,7 +315,7 @@
                                     if (clickTimer) {
                                         clearTimeout(clickTimer);
                                         clickTimer = null;
-                                        // Double Click Action: Drilldown
+                                        // Double Click: Drilldown
                                         if(chartLevel === 'root' && currentDetails[this.drilldown]) {
                                             enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
                                         }
@@ -323,15 +323,19 @@
                                         let that = this;
                                         clickTimer = setTimeout(function() {
                                             clickTimer = null;
-                                            // Single Click Action: Exclusive Highlight
+                                            // Single Click: Exclusive Highlight Logic (FIXED)
                                             if (that.sliced) {
                                                 that.slice(false);
                                             } else {
-                                                // Reset all others first
-                                                that.series.data.forEach(p => p.update({ sliced: false }, false));
+                                                // Cleanly reset all others
+                                                if(that.series && that.series.data) {
+                                                    that.series.data.forEach(p => {
+                                                        if(p !== that && p.sliced) p.slice(false);
+                                                    });
+                                                }
                                                 that.slice(true);
                                             }
-                                        }, 300); // 300ms wait for double click
+                                        }, 300);
                                     }
                                 }
                             }
