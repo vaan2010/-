@@ -60,7 +60,7 @@
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; /* 允許視窗突出 */
+            overflow: visible; 
             z-index: 80;
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
@@ -78,21 +78,21 @@
             display: none;
             white-space: nowrap;
             top: 0; left: 0;
-            transform: translate(-50%, -100%); /* 預設顯示在上方 */
+            transform: translate(-50%, -100%);
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
-        /* 小箭頭 (上方顯示時，箭頭在下) */
+        /* 小箭頭 */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
             border-color: rgba(255,255,255,0.95) transparent transparent transparent;
         }
         
-        /* 翻轉樣式 (下方顯示時，箭頭在上) */
+        /* 翻轉樣式 */
         #customTooltip.bottom {
             transform: translate(-50%, 0);
-            margin-top: 20px; /* 下移避開手指 */
+            margin-top: 20px;
         }
         #customTooltip.bottom::after {
             top: -12px;
@@ -312,23 +312,25 @@
         setInterval(() => { refreshAllData(); }, 60000);
     }
 
-    // === 統一的點擊處理 (包含動畫邏輯) ===
+    // 補回的函式：處理點擊事件
     function onPointClick(e) {
         e.stopPropagation(); 
         
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
-            
             // 雙擊：鑽取 (Drilldown)
             if(chartLevel === 'root' && currentDetails[this.drilldown]) {
                 hideCustomTooltip();
                 enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
             }
         } else {
-            // 單擊：凸出 (Highlight)
+            // 單擊動作：凸出 (Highlight)
             let that = this;
-            let evt = e; // capture event
+            let chartX = e.chartX;
+            let chartY = e.chartY;
+            let clientX = e.clientX;
+            let clientY = e.clientY;
             
             clickTimer = setTimeout(function() {
                 clickTimer = null;
@@ -343,7 +345,7 @@
                         });
                     }
                     that.slice(true);
-                    showCustomTooltip(that, evt); 
+                    showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
                 }
             }, 250);
         }
@@ -360,7 +362,6 @@
             chart: { 
                 style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
                 events: {
-                    // 背景點擊邏輯
                     click: function(e) {
                         if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
                         if(this.series[0]) {
@@ -376,7 +377,6 @@
         
         updateChartData();
 
-        // DOM Listener for robustness
         document.getElementById('chartWrapper').addEventListener('click', function(e) {
             const target = e.target;
             const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
@@ -399,7 +399,8 @@
         const bodyDiv = tooltip.querySelector('.tt-body');
         
         titleDiv.innerText = point.name;
-        bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()}`;
+        // 修正：加上 TWD 單位
+        bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()} TWD`;
         
         tooltip.className = ''; 
         tooltip.style.display = 'block';
@@ -419,15 +420,11 @@
         let topPos = chartY - tH - 20;
         let leftPos = chartX; 
         
-        // 修正：判定翻轉 (Flip)
-        // 圓餅圖的中心點大約在高度的一半 (320 / 2 = 160)
-        // 如果點擊點在中心點上方 (chartY < 160)，就強制翻轉到下方
         if (chartY < 160) { 
             topPos = chartY + 30;
             tooltip.classList.add('bottom');
         }
         
-        // 邊界修正
         if(leftPos < tW/2) leftPos = tW/2 + 10;
         if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
 
@@ -466,7 +463,6 @@
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    // 調整：上下間距
                     spacing: [30, 0, 30, 0], 
                     height: '100%'
                 },
@@ -497,23 +493,27 @@
             });
         } else {
             if (chartLevel === 'root') {
-                // 強制重繪以觸發動畫 (Reset to Root)
-                if(chartInstance.series.length > 0) {
-                    chartInstance.series[0].remove(false);
+                if(chartInstance.series.length === 0) {
+                     chartInstance.addSeries({
+                        name: '資產', data: rootData, type: 'pie',
+                        innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
+                        animation: { duration: 800, easing: 'easeOutQuart' },
+                        dataLabels: {
+                            enabled: true, distance: 5,
+                            format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
+                            connectorColor: '#666', softConnector: true
+                        },
+                        states: { hover: { enabled: false }, inactive: { opacity: 1 } },
+                        point: {
+                            events: {
+                                click: onPointClick 
+                            }
+                        }
+                    });
+                } else {
+                    chartInstance.series[0].setData(rootData);
                 }
-                chartInstance.addSeries({
-                    name: '資產', data: rootData, type: 'pie',
-                    innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
-                    animation: { duration: 800, easing: 'easeOutQuart' },
-                    dataLabels: {
-                        enabled: true, distance: 5,
-                        format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                        style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
-                        connectorColor: '#666', softConnector: true
-                    },
-                    states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-                    point: { events: { click: onPointClick } }
-                }, true);
             }
         }
     }
@@ -525,7 +525,6 @@
         
         if(chartInstance.series[0]) chartInstance.series[0].remove(false);
         
-        // Add Detail Series (重繪以觸發動畫)
         chartInstance.addSeries({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data,
@@ -539,7 +538,7 @@
                 connectorColor: '#666', softConnector: true
             },
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-            point: { events: { click: onPointClick } } // 綁定點擊事件
+            point: { events: { click: onPointClick } }
         }, true);
         
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
@@ -551,35 +550,19 @@
         chartInstance.setTitle({ text: '' });
         hideCustomTooltip();
         
-        updateChartData(); // This calls the re-draw logic inside updateChartData
+        while(chartInstance.series.length > 0) {
+            chartInstance.series[0].remove(false);
+        }
+        
+        updateChartData(); 
     }
 
-    // ... API & Logic ...
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
         await updateRates();
         if(settings.apiKey) await fetchPrices();
-        
-        // 只有在根層級時才自動更新圖表，避免在詳細頁面時跳轉
-        if(chartLevel === 'root') {
-             // 這裡用簡單更新數據的方法，不觸發重繪動畫，避免干擾使用者
-             if(chartInstance && chartInstance.series[0]) {
-                 let groups = { 'bank': 0, 'stock': 0, 'crypto': 0 };
-                 accounts.forEach(acc => {
-                     if(acc.type === 'debt') return;
-                     let val = calculateTWD(acc);
-                     if(val > 0 && groups[acc.type] !== undefined) groups[acc.type] += val;
-                 });
-                 let rootData = [
-                    { name: TYPE_NAMES['bank'], y: Math.round(groups.bank), drilldown: 'bank', color: TYPE_COLORS.bank },
-                    { name: TYPE_NAMES['stock'], y: Math.round(groups.stock), drilldown: 'stock', color: TYPE_COLORS.stock },
-                    { name: TYPE_NAMES['crypto'], y: Math.round(groups.crypto), drilldown: 'crypto', color: TYPE_COLORS.crypto }
-                 ].filter(d => d.y > 0);
-                 chartInstance.series[0].setData(rootData);
-             }
-        }
-        
+        if(chartLevel === 'root') updateChartData(); 
         setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
@@ -658,7 +641,7 @@
         if(!val) return '';
         const sign = val > 0 ? '+' : '';
         const cls = val > 0 ? 'pnl-up' : (val < 0 ? 'pnl-down' : '');
-        return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()}</span>`;
+        return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()} TWD</span>`;
     }
 
     function renderAssets() {
@@ -725,10 +708,12 @@
             pnlBlock.style.display = 'block';
             const sign = totalDailyPnL > 0 ? '+' : '';
             const cls = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
-            pnlBadge.innerHTML = `今日: <span class="${cls}">${sign}NT$ ${Math.round(totalDailyPnL).toLocaleString()}</span>`;
+            pnlBadge.innerHTML = `今日: <span class="${cls}">${sign}NT$ ${Math.round(totalDailyPnL).toLocaleString()} TWD</span>`;
         } else {
             pnlBlock.style.display = 'none';
         }
+
+        updateChartData();
     }
 
     function openModal() {
