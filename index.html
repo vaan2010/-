@@ -200,9 +200,18 @@
         .hint-text {
             color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px;
         }
+        
+        .migration-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #30d158; color: #000; padding: 10px 20px;
+            border-radius: 20px; font-weight: 600; font-size: 14px;
+            z-index: 2000; display: none;
+        }
     </style>
 </head>
 <body>
+
+    <div id="migrationToast" class="migration-toast">成功找回舊資料！</div>
 
     <div id="app">
         <div class="navbar">
@@ -296,14 +305,55 @@
     </div>
 
 <script>
-    // --- 資料結構 ---
-    let accounts = JSON.parse(localStorage.getItem('myAssets_v6')) || [
-        { id: 1, type: 'bank', name: '中國信託', symbol: '', currency: 'TWD', balance: 5000, isAuto: false },
-        { id: 2, type: 'stock', name: 'NVDA', symbol: 'NVDA', currency: 'USD', balance: 10, isAuto: true, currentPrice: 0 },
-        { id: 3, type: 'crypto', name: 'Bitcoin', symbol: 'BTC', currency: 'USDT', balance: 0.005, isAuto: true, currentPrice: 0 }
+    // --- 永久固定的 KEY ---
+    const STORAGE_KEY_DATA = 'my_assets_stable_data';
+    const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
+
+    // 1. 自動救援舊資料邏輯
+    function tryMigrateOldData() {
+        if (localStorage.getItem(STORAGE_KEY_DATA)) return; // 已經有新版資料，不用救援
+
+        // 舊版 Key 清單 (倒序檢查，優先抓最新的)
+        const oldKeys = ['myAssets_v6', 'myAssets_v5', 'myAssets_v4', 'myAssets_v3', 'myAssets_v2'];
+        const oldSettingsKeys = ['myAssets_settings_v3', 'myAssets_settings_v2'];
+
+        let found = false;
+
+        // 找資料
+        for (let key of oldKeys) {
+            let oldData = localStorage.getItem(key);
+            if (oldData) {
+                console.log(`Found old data in ${key}, migrating...`);
+                localStorage.setItem(STORAGE_KEY_DATA, oldData);
+                found = true;
+                break; 
+            }
+        }
+
+        // 找設定 (API Key)
+        for (let key of oldSettingsKeys) {
+            let oldSet = localStorage.getItem(key);
+            if (oldSet) {
+                localStorage.setItem(STORAGE_KEY_SETTINGS, oldSet);
+                break;
+            }
+        }
+
+        if (found) {
+            const toast = document.getElementById('migrationToast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+    }
+
+    // --- 資料結構初始化 ---
+    tryMigrateOldData(); // 先嘗試救援
+
+    let accounts = JSON.parse(localStorage.getItem(STORAGE_KEY_DATA)) || [
+        { id: 1, type: 'bank', name: '範例帳戶', symbol: '', currency: 'TWD', balance: 0, isAuto: false }
     ];
 
-    let settings = JSON.parse(localStorage.getItem('myAssets_settings_v3')) || {
+    let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || {
         apiKey: '',
         usdRate: 32.5, 
         usdtRate: 1.0  
@@ -329,7 +379,6 @@
     }
 
     async function updateRates() {
-        // 1. 抓 USD -> TWD
         try {
             const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             const data = await res.json();
@@ -338,18 +387,15 @@
             }
         } catch(e) { console.error("USD匯率更新失敗", e); }
 
-        // 2. 抓 USDT -> USD (Coinbase 報價)
         if(settings.apiKey) {
             try {
                 const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);
                 const json = await res.json();
-                if(json.c) {
-                    settings.usdtRate = json.c;
-                }
+                if(json.c) settings.usdtRate = json.c;
             } catch(e) { console.error("USDT匯率更新失敗", e); }
         }
 
-        localStorage.setItem('myAssets_settings_v3', JSON.stringify(settings));
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
         
         document.getElementById('rateUsd').innerText = `USD ≈ ${settings.usdRate.toFixed(2)}`;
         document.getElementById('rateUsdt').innerText = `USDT ≈ ${settings.usdtRate.toFixed(3)} USD`;
@@ -367,13 +413,10 @@
                 let apiSymbol = acc.symbol;
                 
                 if(acc.type === 'crypto') {
-                    // 如果是 USDT 本身，價格設為 1 (相對於 USDT)
                     if(acc.symbol === 'USDT' || acc.symbol === 'USDC') {
                         acc.currentPrice = 1; 
                         continue;
                     }
-                    
-                    // 其他加密貨幣：抓 OKX 報價 (例如 OKEX:BTC-USDT)
                     if(!apiSymbol.includes(':')) {
                         apiSymbol = `OKEX:${apiSymbol}-USDT`;
                     }
@@ -384,7 +427,7 @@
                 const json = await res.json();
                 
                 if (json.c) {
-                    acc.currentPrice = json.c; // 這裡存的是 BTC/USDT 的價格
+                    acc.currentPrice = json.c; 
                 }
             } catch (e) { console.error(e); }
         }
@@ -415,28 +458,21 @@
             groupItems.forEach(acc => {
                 let finalValTWD = 0;
 
-                // --- 核心計算邏輯 ---
                 if (acc.isAuto) {
                     let price = acc.currentPrice || 0;
-                    
                     if (acc.type === 'crypto') {
-                        // 1. 算出 USDT 總值: (顆數 * 單價)
                         let valInUsdt = acc.balance * price;
-                        // 2. 轉成 USD: (USDT總值 * USDT匯率)
                         let valInUsd = valInUsdt * settings.usdtRate;
-                        // 3. 轉成 TWD: (USD總值 * 台幣匯率)
                         finalValTWD = valInUsd * settings.usdRate;
                     } else {
-                        // 美股: (股數 * 單價 * 台幣匯率)
                         let valInUsd = acc.balance * price;
                         finalValTWD = valInUsd * settings.usdRate;
                     }
                 } else {
-                    // 手動項目
                     if (acc.currency === 'USD') {
                         finalValTWD = acc.balance * settings.usdRate;
                     } else {
-                        finalValTWD = acc.balance; // TWD
+                        finalValTWD = acc.balance;
                     }
                 }
 
@@ -451,10 +487,7 @@
                 if(acc.isAuto) {
                     let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
                     subText = `${displaySymbol} • ${acc.balance}`;
-                    // 顯示目前市價 (方便核對)
-                    if(acc.currentPrice > 0) {
-                         subText += ` @ ${acc.currentPrice}`;
-                    }
+                    if(acc.currentPrice > 0) subText += ` @ ${acc.currentPrice}`;
                 } else {
                     subText = acc.currency;
                 }
@@ -594,13 +627,13 @@
         const key = prompt("請輸入 Finnhub API Key:", settings.apiKey);
         if(key !== null) {
             settings.apiKey = key.trim();
-            localStorage.setItem('myAssets_settings_v3', JSON.stringify(settings));
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
             refreshAllData();
         }
     }
 
     function saveData() {
-        localStorage.setItem('myAssets_v6', JSON.stringify(accounts));
+        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(accounts));
     }
 
     init();
