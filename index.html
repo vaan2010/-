@@ -312,24 +312,20 @@
     }
 
     // === 核心：統一的點擊處理函式 ===
-    // 這函式同時給第一層與第二層圓餅圖使用，確保行為一致
     function onPointClick(e) {
-        e.stopPropagation(); // 阻止冒泡，避免背景點擊觸發
+        e.stopPropagation(); 
         
-        // 檢查是否為雙擊
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
-            
-            // 雙擊動作：鑽取 (只在第一層有效)
+            // 雙擊動作：鑽取
             if(chartLevel === 'root' && currentDetails[this.drilldown]) {
                 hideCustomTooltip();
                 enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
             }
         } else {
-            // 單擊動作：凸出並顯示 Tooltip (延遲執行以等待雙擊判定)
+            // 單擊動作：凸出並顯示 Tooltip
             let that = this;
-            // 保存事件座標，因為 setTimeout 執行時 event 物件可能失效
             let chartX = e.chartX;
             let chartY = e.chartY;
             let clientX = e.clientX;
@@ -337,22 +333,16 @@
             
             clickTimer = setTimeout(function() {
                 clickTimer = null;
-                
-                // 單擊邏輯
                 if (that.sliced) {
-                    // 如果已經凸出，縮回去並隱藏
                     that.slice(false);
                     hideCustomTooltip();
                 } else {
-                    // 如果沒凸出，先把其他的縮回去
                     if(that.series && that.series.data) {
                         that.series.data.forEach(p => {
                             if(p !== that && p.sliced) p.slice(false);
                         });
                     }
-                    // 凸出自己
                     that.slice(true);
-                    // 顯示 Tooltip，傳入保存的座標
                     showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
                 }
             }, 250);
@@ -400,6 +390,7 @@
         });
     }
 
+    // 修正 Tooltip 定位邏輯：更積極的翻轉與邊距判定
     function showCustomTooltip(point, eventObj) {
         const tooltip = document.getElementById('customTooltip');
         const wrapper = document.getElementById('chartWrapper');
@@ -415,7 +406,6 @@
         let chartX = eventObj.chartX;
         let chartY = eventObj.chartY;
         
-        // Fallback
         if(!chartX && eventObj.clientX) {
             const rect = wrapper.getBoundingClientRect();
             chartX = eventObj.clientX - rect.left;
@@ -425,14 +415,15 @@
         const tW = tooltip.offsetWidth;
         const tH = tooltip.offsetHeight;
         
-        // 預設位置
-        let topPos = chartY - tH - 25;
+        // 預設位置 (上方)
+        let topPos = chartY - tH - 20;
         let leftPos = chartX; 
         
-        // 修正1：如果 click 點本身就在很上面 (chartY 小)，直接翻轉
-        // 修正2：或者算出來的 topPos < 0 (超出 Wrapper 上緣)，也翻轉
-        if (chartY < 80 || topPos < 0) { 
-            topPos = chartY + 25;
+        // 修正判定：
+        // 1. 如果計算出的 topPos 小於 55px (大約是返回按鈕區域 + 一點緩衝)
+        // 2. 或者直接點擊在圖表上半部 (chartY < 120)
+        if (topPos < 55 || chartY < 120) { 
+            topPos = chartY + 35; // 改到下方，並留出手指空間
             tooltip.classList.add('bottom');
         }
         
@@ -474,7 +465,7 @@
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    // V31 修正：增加頂部間距
+                    // 增加頂部間距 30px，騰出空間給 Tooltip
                     spacing: [30, 0, 20, 0], 
                     height: '100%'
                 },
@@ -496,7 +487,6 @@
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
-                                // 使用共用的點擊處理函式
                                 click: onPointClick
                             }
                         }
@@ -520,7 +510,7 @@
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
-                                click: onPointClick // 重新綁定
+                                click: onPointClick 
                             }
                         }
                     });
@@ -554,7 +544,6 @@
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
             point: { 
                 events: { 
-                    // 關鍵修正：詳細頁面也要綁定同樣的點擊邏輯
                     click: onPointClick 
                 } 
             }
