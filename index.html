@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>我的資產</title>
     
-    <!-- 新增：主畫面 Icon 設定 -->
+    <!-- 主畫面 Icon -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -76,6 +76,14 @@
         .menu-item:active { background: #2c2c2e; }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
+        
+        /* 分隔線 */
+        .menu-divider {
+            height: 1px; background: #2c2c2e; margin: 10px 25px;
+        }
+        .menu-label {
+            padding: 10px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase;
+        }
 
         .summary-card { padding: 10px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -167,7 +175,7 @@
         .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); }
         .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
 
-        /* Updated Item Content Layout */
+        /* Item Content Layout */
         .item-content { 
             flex: 1; min-width: 0; 
             display: flex; flex-direction: column; justify-content: center; 
@@ -189,7 +197,6 @@
         .amount-green { color: var(--color-up); }
         .amount-red { color: var(--color-down); }
         
-        /* Price change colors for subtitle */
         .sub-green { color: var(--color-up); }
         .sub-red { color: var(--color-down); }
 
@@ -235,7 +242,16 @@
                 <i class="fas fa-cog"></i>
                 <span class="menu-text">設定 API</span>
             </div>
-            <!-- 可以擴充其他選單 -->
+            
+            <div class="menu-label">資料管理</div>
+            <div class="menu-item" onclick="exportData(); toggleSidebar();">
+                <i class="fas fa-file-export"></i>
+                <span class="menu-text">匯出備份 (複製)</span>
+            </div>
+            <div class="menu-item" onclick="importData(); toggleSidebar();">
+                <i class="fas fa-file-import"></i>
+                <span class="menu-text">匯入還原 (貼上)</span>
+            </div>
         </div>
     </div>
 
@@ -390,6 +406,49 @@
         } else {
             sidebar.classList.add('active');
             overlay.classList.add('active');
+        }
+    }
+    
+    // 備份功能
+    function exportData() {
+        const backupObj = {
+            data: JSON.parse(localStorage.getItem(STORAGE_KEY_DATA) || '[]'),
+            settings: JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS) || '{}')
+        };
+        const str = JSON.stringify(backupObj);
+        
+        // 複製到剪貼簿
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(str).then(() => {
+                alert("備份代碼已複製！\n請貼到備忘錄保存。");
+            }).catch(err => {
+                console.error(err);
+                prompt("請全選複製以下代碼：", str);
+            });
+        } else {
+            prompt("請全選複製以下代碼：", str);
+        }
+    }
+
+    // 還原功能
+    function importData() {
+        const str = prompt("請貼上備份代碼：");
+        if (str) {
+            try {
+                const backupObj = JSON.parse(str);
+                if (backupObj.data && Array.isArray(backupObj.data)) {
+                    localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(backupObj.data));
+                    if (backupObj.settings) {
+                        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(backupObj.settings));
+                    }
+                    alert("還原成功！即將重整頁面...");
+                    location.reload();
+                } else {
+                    alert("格式錯誤，無法還原。");
+                }
+            } catch (e) {
+                alert("代碼無效，請檢查是否複製完整。");
+            }
         }
     }
 
