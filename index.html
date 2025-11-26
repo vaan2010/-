@@ -45,7 +45,12 @@
             padding: 15px 20px; background-color: var(--bg-color);
             position: sticky; top: 0; z-index: 100;
         }
-        .navbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
+        /* 修改：標題絕對置中 */
+        .navbar h1 { 
+            font-size: 22px; margin: 0; font-weight: 700; 
+            position: absolute; left: 50%; transform: translateX(-50%);
+            white-space: nowrap;
+        }
         .btn-group { display: flex; gap: 15px; }
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
         .btn-icon.active { color: var(--color-up); }
@@ -407,7 +412,7 @@
 
         if (!chartInstance) {
             chartInstance = Highcharts.chart('assetChart', {
-                chart: { type: 'pie', backgroundColor: 'transparent', spacing: [30, 0, 20, 0], height: '100%' },
+                chart: { type: 'pie', backgroundColor: 'transparent', spacing: [30, 0, 30, 0], height: '100%' },
                 title: { text: null }, credits: { enabled: false }, tooltip: { enabled: false }, 
                 plotOptions: {
                     pie: {
