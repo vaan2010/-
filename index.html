@@ -55,6 +55,7 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
+        /* Chart Wrapper */
         #chartWrapper {
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
@@ -64,7 +65,7 @@
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
         
-        /* 自製 Tooltip */
+        /* Custom Tooltip */
         #customTooltip {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
@@ -81,10 +82,21 @@
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
+        /* Triangle */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
             border-color: rgba(255,255,255,0.95) transparent transparent transparent;
+        }
+        
+        /* Smart Flip Style */
+        #customTooltip.bottom {
+            transform: translate(-50%, 0);
+            margin-top: 15px;
+        }
+        #customTooltip.bottom::after {
+            top: -12px;
+            border-color: transparent transparent rgba(255,255,255,0.95) transparent;
         }
         
         .tt-header { font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; }
@@ -99,6 +111,7 @@
             backdrop-filter: blur(10px); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
+        /* Lists */
         .group-header {
             padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary);
             background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase;
@@ -309,38 +322,32 @@
         Highcharts.setOptions({
             chart: { 
                 style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+                events: {
+                    click: function(e) {
+                        if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+                        if(this.series[0]) {
+                            this.series[0].points.forEach(p => p.slice(false));
+                        }
+                        hideCustomTooltip();
+                    }
+                }
             },
             title: { text: '' },
-            tooltip: { enabled: false } // 禁用內建
+            tooltip: { enabled: false } 
         });
         
         updateChartData();
 
-        // DOM 監聽：處理背景點擊 -> 縮回 & 隱藏
-        // 關鍵修正：這裡不需要判斷 !isChartElement，因為 Point Click 事件已經 stopPropagation
-        // 所以能冒泡到這裡的，絕對不是 Point Click (扇形點擊)
+        // DOM Click Listener for Background
         document.getElementById('chartWrapper').addEventListener('click', function(e) {
             const target = e.target;
+            const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
             const isButton = target.closest('#chartBackBtn');
 
-            // 只要不是按鈕，就視為點擊了背景
-            if (!isButton && chartInstance) {
-                // 取消可能正在倒數的單擊
-                if (clickTimer) {
-                    clearTimeout(clickTimer);
-                    clickTimer = null;
-                }
-
-                // 縮回所有扇形
+            if (!isChartElement && !isButton && chartInstance) {
+                if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
                 if(chartInstance.series && chartInstance.series[0]) {
-                    let hasSliced = false;
-                    chartInstance.series[0].points.forEach(p => {
-                        if(p.sliced) {
-                            p.slice(false);
-                            hasSliced = true;
-                        }
-                    });
-                    // 隱藏 Tooltip
+                    chartInstance.series[0].points.forEach(p => p.slice(false));
                     hideCustomTooltip();
                 }
             }
@@ -356,6 +363,7 @@
         titleDiv.innerText = point.name;
         bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()}`;
         
+        tooltip.className = ''; 
         tooltip.style.display = 'block';
         
         let chartX = event.chartX;
@@ -368,9 +376,16 @@
 
         const tW = tooltip.offsetWidth;
         const tH = tooltip.offsetHeight;
+        
         let topPos = chartY - tH - 25;
         let leftPos = chartX; 
-        if(topPos < 10) topPos = chartY + 25;
+        
+        // Smart Flip Logic
+        if(topPos < 10) {
+            topPos = chartY + 25;
+            tooltip.classList.add('bottom');
+        }
+        
         if(leftPos < tW/2) leftPos = tW/2 + 10;
         if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
 
@@ -412,17 +427,17 @@
                     spacing: [20, 0, 20, 0], height: '100%'
                 },
                 title: { text: null }, credits: { enabled: false },
-                tooltip: { enabled: false }, // 雙重保險
+                tooltip: { enabled: false }, 
                 plotOptions: {
                     pie: {
                         innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
-                        animation: { duration: 500 },
+                        animation: { duration: 800, easing: 'easeOutQuart' },
                         dataLabels: {
                             enabled: true, distance: 5,
                             format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
                             style: { 
                                 color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center',
-                                pointerEvents: 'none' // 關鍵修正：讓標籤穿透點擊
+                                pointerEvents: 'none'
                             },
                             connectorColor: '#666', softConnector: true
                         },
@@ -430,7 +445,7 @@
                         point: {
                             events: {
                                 click: function(e) {
-                                    e.stopPropagation(); // 阻止冒泡到背景
+                                    e.stopPropagation(); 
                                     
                                     if (clickTimer) {
                                         clearTimeout(clickTimer);
@@ -468,7 +483,46 @@
                 series: [{ name: '資產', data: rootData }]
             });
         } else {
-            if (chartLevel === 'root') chartInstance.series[0].setData(rootData);
+            if (chartLevel === 'root') {
+                if (chartInstance.series.length === 0) {
+                    // Re-add series logic
+                    chartInstance.addSeries({
+                        name: '資產', data: rootData, type: 'pie',
+                        innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
+                        animation: { duration: 800, easing: 'easeOutQuart' },
+                        dataLabels: {
+                            enabled: true, distance: 5,
+                            format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
+                            connectorColor: '#666', softConnector: true
+                        },
+                        states: { hover: { enabled: false }, inactive: { opacity: 1 } },
+                        point: {
+                            events: {
+                                click: function(e) {
+                                    e.stopPropagation(); 
+                                    if (clickTimer) { clearTimeout(clickTimer); clickTimer = null;
+                                        if(chartLevel === 'root' && currentDetails[this.drilldown]) {
+                                            hideCustomTooltip(); enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
+                                        }
+                                    } else {
+                                        let that = this; let evt = e; 
+                                        clickTimer = setTimeout(function() { clickTimer = null;
+                                            if (that.sliced) { that.slice(false); hideCustomTooltip(); } 
+                                            else {
+                                                if(that.series.data) that.series.data.forEach(p => { if(p!==that && p.sliced) p.slice(false); });
+                                                that.slice(true); showCustomTooltip(that, evt); 
+                                            }
+                                        }, 250);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    chartInstance.series[0].setData(rootData);
+                }
+            }
         }
     }
 
@@ -477,7 +531,23 @@
         document.getElementById('chartBackBtn').style.display = 'block';
         hideCustomTooltip(); 
         
-        chartInstance.series[0].setData(data, true, { duration: 500, easing: 'easeOutQuad' });
+        if(chartInstance.series[0]) chartInstance.series[0].remove(false);
+        
+        chartInstance.addSeries({
+            name: TYPE_NAMES[categoryKey] || categoryKey,
+            data: data,
+            type: 'pie',
+            innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            dataLabels: {
+                enabled: true, distance: 5,
+                format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
+                connectorColor: '#666', softConnector: true
+            },
+            states: { hover: { enabled: false }, inactive: { opacity: 1 } },
+            point: { events: { click: function(e){ /* detail click */ } } }
+        }, true);
         
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
     }
@@ -487,16 +557,25 @@
         document.getElementById('chartBackBtn').style.display = 'none';
         chartInstance.setTitle({ text: '' });
         hideCustomTooltip();
-        updateChartData();
+        
+        // Remove current (detail) series
+        if(chartInstance.series.length > 0) {
+            while(chartInstance.series.length > 0) {
+                chartInstance.series[0].remove(false);
+            }
+        }
+        
+        // Re-draw root series
+        updateChartData(); 
     }
 
-    // --- API & Logic ---
+    // ... API & Logic (Unchanged)
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
         await updateRates();
         if(settings.apiKey) await fetchPrices();
-        updateChartData();
+        if(chartLevel === 'root') updateChartData(); 
         setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
@@ -646,8 +725,6 @@
         } else {
             pnlBlock.style.display = 'none';
         }
-
-        updateChartData();
     }
 
     function openModal() {
