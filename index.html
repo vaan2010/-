@@ -55,11 +55,12 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
+        /* Chart Wrapper */
         #chartWrapper {
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; 
+            overflow: visible; /* 允許視窗突出 */
             z-index: 80;
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
@@ -77,21 +78,21 @@
             display: none;
             white-space: nowrap;
             top: 0; left: 0;
-            transform: translate(-50%, -100%);
+            transform: translate(-50%, -100%); /* 預設顯示在上方 */
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
-        /* 小箭頭 (上方模式) */
+        /* 小箭頭 (上方顯示時，箭頭在下) */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
             border-color: rgba(255,255,255,0.95) transparent transparent transparent;
         }
         
-        /* 小箭頭 (下方模式 - 當翻轉時) */
+        /* 翻轉樣式 (下方顯示時，箭頭在上) */
         #customTooltip.bottom {
             transform: translate(-50%, 0);
-            margin-top: 15px;
+            margin-top: 20px; /* 下移避開手指 */
         }
         #customTooltip.bottom::after {
             top: -12px;
@@ -220,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Modal (內容略) -->
+    <!-- Modal -->
     <div id="accountModal" class="modal">
         <div class="modal-header">
             <button class="btn-icon" onclick="closeModal()">取消</button>
@@ -311,25 +312,23 @@
         setInterval(() => { refreshAllData(); }, 60000);
     }
 
-    // === 核心：統一的點擊處理函式 ===
+    // === 統一的點擊處理 (包含動畫邏輯) ===
     function onPointClick(e) {
         e.stopPropagation(); 
         
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
-            // 雙擊動作：鑽取
+            
+            // 雙擊：鑽取 (Drilldown)
             if(chartLevel === 'root' && currentDetails[this.drilldown]) {
                 hideCustomTooltip();
                 enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
             }
         } else {
-            // 單擊動作：凸出並顯示 Tooltip
+            // 單擊：凸出 (Highlight)
             let that = this;
-            let chartX = e.chartX;
-            let chartY = e.chartY;
-            let clientX = e.clientX;
-            let clientY = e.clientY;
+            let evt = e; // capture event
             
             clickTimer = setTimeout(function() {
                 clickTimer = null;
@@ -337,13 +336,14 @@
                     that.slice(false);
                     hideCustomTooltip();
                 } else {
+                    // Reset others
                     if(that.series && that.series.data) {
                         that.series.data.forEach(p => {
                             if(p !== that && p.sliced) p.slice(false);
                         });
                     }
                     that.slice(true);
-                    showCustomTooltip(that, { chartX, chartY, clientX, clientY }); 
+                    showCustomTooltip(that, evt); 
                 }
             }, 250);
         }
@@ -360,6 +360,7 @@
             chart: { 
                 style: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
                 events: {
+                    // 背景點擊邏輯
                     click: function(e) {
                         if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
                         if(this.series[0]) {
@@ -375,6 +376,7 @@
         
         updateChartData();
 
+        // DOM Listener for robustness
         document.getElementById('chartWrapper').addEventListener('click', function(e) {
             const target = e.target;
             const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
@@ -390,7 +392,6 @@
         });
     }
 
-    // 修正 Tooltip 定位邏輯：更積極的翻轉與邊距判定
     function showCustomTooltip(point, eventObj) {
         const tooltip = document.getElementById('customTooltip');
         const wrapper = document.getElementById('chartWrapper');
@@ -415,18 +416,18 @@
         const tW = tooltip.offsetWidth;
         const tH = tooltip.offsetHeight;
         
-        // 預設位置 (上方)
         let topPos = chartY - tH - 20;
         let leftPos = chartX; 
         
-        // 修正判定：
-        // 1. 如果計算出的 topPos 小於 55px (大約是返回按鈕區域 + 一點緩衝)
-        // 2. 或者直接點擊在圖表上半部 (chartY < 120)
-        if (topPos < 55 || chartY < 120) { 
-            topPos = chartY + 35; // 改到下方，並留出手指空間
+        // 修正：判定翻轉 (Flip)
+        // 圓餅圖的中心點大約在高度的一半 (320 / 2 = 160)
+        // 如果點擊點在中心點上方 (chartY < 160)，就強制翻轉到下方
+        if (chartY < 160) { 
+            topPos = chartY + 30;
             tooltip.classList.add('bottom');
         }
         
+        // 邊界修正
         if(leftPos < tW/2) leftPos = tW/2 + 10;
         if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
 
@@ -465,8 +466,8 @@
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    // 增加頂部間距 30px，騰出空間給 Tooltip
-                    spacing: [30, 0, 20, 0], 
+                    // 調整：上下間距
+                    spacing: [30, 0, 30, 0], 
                     height: '100%'
                 },
                 title: { text: null }, credits: { enabled: false },
@@ -496,27 +497,23 @@
             });
         } else {
             if (chartLevel === 'root') {
-                if(chartInstance.series.length === 0) {
-                     chartInstance.addSeries({
-                        name: '資產', data: rootData, type: 'pie',
-                        innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
-                        animation: { duration: 800, easing: 'easeOutQuart' },
-                        dataLabels: {
-                            enabled: true, distance: 5,
-                            format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
-                            connectorColor: '#666', softConnector: true
-                        },
-                        states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-                        point: {
-                            events: {
-                                click: onPointClick 
-                            }
-                        }
-                    });
-                } else {
-                    chartInstance.series[0].setData(rootData);
+                // 強制重繪以觸發動畫 (Reset to Root)
+                if(chartInstance.series.length > 0) {
+                    chartInstance.series[0].remove(false);
                 }
+                chartInstance.addSeries({
+                    name: '資產', data: rootData, type: 'pie',
+                    innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
+                    animation: { duration: 800, easing: 'easeOutQuart' },
+                    dataLabels: {
+                        enabled: true, distance: 5,
+                        format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                        style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
+                        connectorColor: '#666', softConnector: true
+                    },
+                    states: { hover: { enabled: false }, inactive: { opacity: 1 } },
+                    point: { events: { click: onPointClick } }
+                }, true);
             }
         }
     }
@@ -528,7 +525,7 @@
         
         if(chartInstance.series[0]) chartInstance.series[0].remove(false);
         
-        // Re-add Series for Animation AND Bind Click Event
+        // Add Detail Series (重繪以觸發動畫)
         chartInstance.addSeries({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data,
@@ -542,11 +539,7 @@
                 connectorColor: '#666', softConnector: true
             },
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-            point: { 
-                events: { 
-                    click: onPointClick 
-                } 
-            }
+            point: { events: { click: onPointClick } } // 綁定點擊事件
         }, true);
         
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
@@ -558,11 +551,7 @@
         chartInstance.setTitle({ text: '' });
         hideCustomTooltip();
         
-        while(chartInstance.series.length > 0) {
-            chartInstance.series[0].remove(false);
-        }
-        
-        updateChartData(); 
+        updateChartData(); // This calls the re-draw logic inside updateChartData
     }
 
     // ... API & Logic ...
@@ -571,7 +560,26 @@
         icon.classList.add('fa-spin-fast');
         await updateRates();
         if(settings.apiKey) await fetchPrices();
-        if(chartLevel === 'root') updateChartData(); 
+        
+        // 只有在根層級時才自動更新圖表，避免在詳細頁面時跳轉
+        if(chartLevel === 'root') {
+             // 這裡用簡單更新數據的方法，不觸發重繪動畫，避免干擾使用者
+             if(chartInstance && chartInstance.series[0]) {
+                 let groups = { 'bank': 0, 'stock': 0, 'crypto': 0 };
+                 accounts.forEach(acc => {
+                     if(acc.type === 'debt') return;
+                     let val = calculateTWD(acc);
+                     if(val > 0 && groups[acc.type] !== undefined) groups[acc.type] += val;
+                 });
+                 let rootData = [
+                    { name: TYPE_NAMES['bank'], y: Math.round(groups.bank), drilldown: 'bank', color: TYPE_COLORS.bank },
+                    { name: TYPE_NAMES['stock'], y: Math.round(groups.stock), drilldown: 'stock', color: TYPE_COLORS.stock },
+                    { name: TYPE_NAMES['crypto'], y: Math.round(groups.crypto), drilldown: 'crypto', color: TYPE_COLORS.crypto }
+                 ].filter(d => d.y > 0);
+                 chartInstance.series[0].setData(rootData);
+             }
+        }
+        
         setTimeout(() => { icon.classList.remove('fa-spin-fast'); }, 500);
     }
 
