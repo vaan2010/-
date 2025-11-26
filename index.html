@@ -171,6 +171,10 @@
         .amount-pnl { font-size: 12px; margin-top: 2px; font-weight: 500; }
         .amount-green { color: var(--color-up); }
         .amount-red { color: var(--color-down); }
+        
+        /* Price change colors for subtitle */
+        .sub-green { color: var(--color-up); }
+        .sub-red { color: var(--color-down); }
 
         .tab-bar {
             position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95);
@@ -339,7 +343,8 @@
         ...a, 
         balance: safeParseFloat(a.balance), 
         currentPrice: safeParseFloat(a.currentPrice),
-        dayChange: safeParseFloat(a.dayChange || 0)
+        dayChange: safeParseFloat(a.dayChange || 0),
+        dayChangePercent: safeParseFloat(a.dayChangePercent || 0) // Initialize
     }));
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', usdRate: 32.5, usdtRate: 1.0 };
     let editingId = null;
@@ -539,7 +544,7 @@
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
                         point: {
                             events: {
-                                click: onPointClick
+                                click: onPointClick 
                             }
                         }
                     }
@@ -650,7 +655,7 @@
                 let isUsdt = false;
                 if(acc.type === 'crypto') {
                     if(acc.symbol==='USDT'||acc.symbol==='USDC') { 
-                        acc.currentPrice=1; acc.dayChange=0; 
+                        acc.currentPrice=1; acc.dayChange=0; acc.dayChangePercent=0;
                         isUsdt = true;
                         continue; 
                     }
@@ -662,6 +667,7 @@
                 if (j.c) {
                     acc.currentPrice = j.c; 
                     acc.dayChange = j.d || 0; 
+                    acc.dayChangePercent = j.dp || 0; // Store percent change
                 }
             } catch(e){}
         }
@@ -729,7 +735,20 @@
                 groupDailyPnL += pnl;
                 totalDailyPnL += pnl;
 
-                let sub = acc.isAuto ? `${acc.symbol.replace('OKEX:','').replace('-USDT','')} • ${acc.balance}` : acc.currency;
+                let sub = acc.currency;
+                if (acc.isAuto) {
+                    let displaySymbol = acc.symbol.replace('OKEX:', '').replace('-USDT', '');
+                    // 即時報價顯示：代碼 • 價格 (漲跌%) • 數量
+                    let priceStr = acc.currentPrice ? `$${acc.currentPrice.toLocaleString()}` : '--';
+                    let changeHtml = '';
+                    if (acc.dayChangePercent !== undefined && acc.dayChangePercent !== 0) {
+                         let sign = acc.dayChangePercent > 0 ? '+' : '';
+                         let cls = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
+                         changeHtml = ` <span class="${cls}">(${sign}${acc.dayChangePercent.toFixed(2)}%)</span>`;
+                    }
+                    sub = `${displaySymbol} • ${priceStr}${changeHtml} • ${acc.balance}`;
+                }
+                
                 let color = g.key==='debt'?'amount-red':'amount-green';
                 
                 html += `
@@ -769,7 +788,7 @@
             pnlBlock.style.display = 'none';
         }
 
-        updateChartData();
+        updateChartData(); // Ensure chart reflects latest data (if visible)
     }
 
     function openModal() {
@@ -822,7 +841,8 @@
         const newA = { 
             id: editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, isAuto:auto, 
             currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0,
-            dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0 
+            dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0,
+            dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0
         };
         if(editingId) accounts[accounts.findIndex(x=>x.id===editingId)]=newA;
         else accounts.push(newA);
