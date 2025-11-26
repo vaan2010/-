@@ -60,12 +60,12 @@
             margin: 0; background: transparent; position: relative;
             height: 320px; width: 100%;
             display: flex; justify-content: center; align-items: center;
-            overflow: visible; 
+            overflow: visible; /* 允許視窗突出 */
             z-index: 80;
         }
         #chartLoading { position: absolute; color: #555; font-size: 14px; }
         
-        /* Custom Tooltip */
+        /* 自製 Tooltip */
         #customTooltip {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
@@ -82,14 +82,14 @@
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
-        /* Triangle */
+        /* 小箭頭 */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
             border-color: rgba(255,255,255,0.95) transparent transparent transparent;
         }
         
-        /* Smart Flip Style */
+        /* 翻轉樣式 */
         #customTooltip.bottom {
             transform: translate(-50%, 0);
             margin-top: 15px;
@@ -221,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (內容略) -->
     <div id="accountModal" class="modal">
         <div class="modal-header">
             <button class="btn-icon" onclick="closeModal()">取消</button>
@@ -338,7 +338,6 @@
         
         updateChartData();
 
-        // DOM Click Listener for Background
         document.getElementById('chartWrapper').addEventListener('click', function(e) {
             const target = e.target;
             const isChartElement = target.tagName === 'path' || target.classList.contains('highcharts-point');
@@ -377,15 +376,18 @@
         const tW = tooltip.offsetWidth;
         const tH = tooltip.offsetHeight;
         
+        // 預設：在點擊位置上方
         let topPos = chartY - tH - 25;
         let leftPos = chartX; 
         
-        // Smart Flip Logic
-        if(topPos < 10) {
+        // 修正1：空間判斷 - 如果上方空間不足 (例如 < 0)，改到下方
+        // chartY 是相對於 chartWrapper 的
+        if(topPos < 0) {
             topPos = chartY + 25;
             tooltip.classList.add('bottom');
         }
         
+        // 修正2：左右邊界 - 防止 Tooltip 超出 Wrapper
         if(leftPos < tW/2) leftPos = tW/2 + 10;
         if(leftPos > wrapper.offsetWidth - tW/2) leftPos = wrapper.offsetWidth - tW/2 - 10;
 
@@ -420,11 +422,14 @@
             { name: TYPE_NAMES['crypto'], y: Math.round(groups.crypto), drilldown: 'crypto', color: TYPE_COLORS.crypto }
         ].filter(d => d.y > 0);
 
+        // 如果沒有 Chart 實例，建立一個
         if (!chartInstance) {
             chartInstance = Highcharts.chart('assetChart', {
                 chart: {
                     type: 'pie', backgroundColor: 'transparent',
-                    spacing: [20, 0, 20, 0], height: '100%'
+                    // 修正：增加頂部間距，讓 Tooltip 有更多空間
+                    spacing: [30, 0, 20, 0], 
+                    height: '100%'
                 },
                 title: { text: null }, credits: { enabled: false },
                 tooltip: { enabled: false }, 
@@ -450,7 +455,6 @@
                                     if (clickTimer) {
                                         clearTimeout(clickTimer);
                                         clickTimer = null;
-                                        // Double Click
                                         if(chartLevel === 'root' && currentDetails[this.drilldown]) {
                                             hideCustomTooltip();
                                             enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
@@ -460,7 +464,6 @@
                                         let evt = e; 
                                         clickTimer = setTimeout(function() {
                                             clickTimer = null;
-                                            // Single Click
                                             if (that.sliced) {
                                                 that.slice(false);
                                                 hideCustomTooltip();
@@ -483,10 +486,11 @@
                 series: [{ name: '資產', data: rootData }]
             });
         } else {
+            // 如果在 root 層級，而且需要更新數據
             if (chartLevel === 'root') {
-                if (chartInstance.series.length === 0) {
-                    // Re-add series logic
-                    chartInstance.addSeries({
+                // 如果沒有 series (可能被重置清掉了)，就重新加
+                if(chartInstance.series.length === 0) {
+                     chartInstance.addSeries({
                         name: '資產', data: rootData, type: 'pie',
                         innerSize: '60%', size: '60%', center: ['50%', '50%'], borderWidth: 0, slicedOffset: 10,
                         animation: { duration: 800, easing: 'easeOutQuart' },
@@ -520,6 +524,7 @@
                         }
                     });
                 } else {
+                    // 如果 series 還在，直接 update data
                     chartInstance.series[0].setData(rootData);
                 }
             }
@@ -533,6 +538,7 @@
         
         if(chartInstance.series[0]) chartInstance.series[0].remove(false);
         
+        // Re-add Series for Animation
         chartInstance.addSeries({
             name: TYPE_NAMES[categoryKey] || categoryKey,
             data: data,
@@ -546,7 +552,7 @@
                 connectorColor: '#666', softConnector: true
             },
             states: { hover: { enabled: false }, inactive: { opacity: 1 } },
-            point: { events: { click: function(e){ /* detail click */ } } }
+            point: { events: { click: function(e){ /* detail click if needed */ } } }
         }, true);
         
         chartInstance.setTitle({ text: TYPE_NAMES[categoryKey], style: { color: '#fff', fontSize: '14px' }, align: 'center', verticalAlign: 'middle', y: 10 });
@@ -558,18 +564,16 @@
         chartInstance.setTitle({ text: '' });
         hideCustomTooltip();
         
-        // Remove current (detail) series
-        if(chartInstance.series.length > 0) {
-            while(chartInstance.series.length > 0) {
-                chartInstance.series[0].remove(false);
-            }
+        // Remove current detail series
+        while(chartInstance.series.length > 0) {
+            chartInstance.series[0].remove(false);
         }
         
         // Re-draw root series
         updateChartData(); 
     }
 
-    // ... API & Logic (Unchanged)
+    // ... API & Logic ...
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
