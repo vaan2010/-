@@ -38,7 +38,40 @@
             position: sticky; top: 0; z-index: 100;
         }
         .navbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
-        .btn-icon { background: none; border: none; color: #0a84ff; font-size: 17px; cursor: pointer; }
+        .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
+
+        /* Sidebar Styles */
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 998;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+            padding-top: max(20px, env(safe-area-inset-top));
+            display: flex; flex-direction: column;
+        }
+        .sidebar.active { left: 0; }
+        
+        .sidebar-header {
+            padding: 20px 25px; border-bottom: 1px solid #2c2c2e;
+        }
+        .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
+        
+        .sidebar-menu { padding: 10px 0; flex: 1; }
+        .menu-item {
+            padding: 15px 25px; display: flex; align-items: center;
+            font-size: 17px; color: #fff; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .menu-item:active { background: #2c2c2e; }
+        .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
+        .menu-text { flex: 1; }
 
         .summary-card { padding: 10px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -82,7 +115,6 @@
             transition: opacity 0.15s, top 0.15s, left 0.15s;
             margin-top: -15px;
         }
-        /* 小箭頭 */
         #customTooltip::after {
             content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
             border-width: 6px; border-style: solid;
@@ -171,9 +203,24 @@
 
     <div id="migrationToast" class="toast">資料已還原</div>
 
+    <!-- Sidebar & Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>選單</h2>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="setApiKey(); toggleSidebar();">
+                <i class="fas fa-cog"></i>
+                <span class="menu-text">設定 API</span>
+            </div>
+            <!-- 可以擴充其他選單 -->
+        </div>
+    </div>
+
     <div id="app">
         <div class="navbar">
-            <button class="btn-icon" onclick="setApiKey()">設定 API</button>
+            <button class="btn-icon" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
             <h1>我的資產</h1>
             <button class="btn-icon" onclick="openModal()">
                 <i class="fas fa-plus"></i>
@@ -221,7 +268,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (內容略) -->
     <div id="accountModal" class="modal">
         <div class="modal-header">
             <button class="btn-icon" onclick="closeModal()">取消</button>
@@ -312,6 +359,18 @@
         setInterval(() => { refreshAllData(); }, 60000);
     }
 
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        } else {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        }
+    }
+
     // 補回的函式：處理點擊事件
     function onPointClick(e) {
         e.stopPropagation(); 
@@ -399,7 +458,6 @@
         const bodyDiv = tooltip.querySelector('.tt-body');
         
         titleDiv.innerText = point.name;
-        // 修正：加上 TWD 單位
         bodyDiv.innerHTML = `<span class="tt-dot" style="background-color:${point.color}"></span>資產: ${Math.round(point.y).toLocaleString()} TWD`;
         
         tooltip.className = ''; 
@@ -475,10 +533,7 @@
                         dataLabels: {
                             enabled: true, distance: 5,
                             format: '{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',
-                            style: { 
-                                color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center',
-                                pointerEvents: 'none'
-                            },
+                            style: { color: '#fff', textOutline: 'none', fontWeight: 'normal', fontSize: '12px', textAlign: 'center', pointerEvents: 'none' },
                             connectorColor: '#666', softConnector: true
                         },
                         states: { hover: { enabled: false }, inactive: { opacity: 1 } },
@@ -557,6 +612,7 @@
         updateChartData(); 
     }
 
+    // ... API & Logic ...
     async function refreshAllData() {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin-fast');
