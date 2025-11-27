@@ -910,33 +910,48 @@
         });
         
         // 滾動到當前激活的標籤，讓它顯示在中間
-        const centerActiveTab = () => {
+        const scrollToCenter = () => {
             const activeTab = document.querySelector(`.page-tab[data-page="${pageIndex}"]`);
             const indicator = document.querySelector('.page-indicator');
             
             if(!activeTab || !indicator) return;
             
-            // 獲取實際尺寸
-            const tabLeft = activeTab.offsetLeft;
-            const tabWidth = activeTab.offsetWidth;
-            const indicatorWidth = indicator.offsetWidth;
-            
-            // 計算居中位置：標籤中心 - 容器中心
-            const centerPosition = tabLeft + (tabWidth / 2) - (indicatorWidth / 2);
-            
-            // 限制在滾動範圍內
-            const maxScroll = indicator.scrollWidth - indicatorWidth;
-            const scrollPos = Math.max(0, Math.min(centerPosition, maxScroll));
-            
-            // 執行滾動
-            indicator.scrollLeft = scrollPos;
+            // 等待一幀確保 DOM 更新完成
+            requestAnimationFrame(() => {
+                // 先重置滾動位置，避免累積誤差
+                indicator.scrollLeft = 0;
+                
+                // 等待一幀讓重置生效
+                requestAnimationFrame(() => {
+                    const tabLeft = activeTab.offsetLeft;
+                    const tabWidth = activeTab.offsetWidth;
+                    const indicatorWidth = indicator.clientWidth;
+                    const indicatorScrollWidth = indicator.scrollWidth;
+                    
+                    // 計算標籤中心位置（相對於容器）
+                    const tabCenter = tabLeft + (tabWidth / 2);
+                    
+                    // 計算容器中心位置
+                    const containerCenter = indicatorWidth / 2;
+                    
+                    // 計算需要滾動的絕對位置（不是相對位置）
+                    const scrollPosition = tabCenter - containerCenter;
+                    
+                    // 確保不超出滾動範圍
+                    const maxScroll = Math.max(0, indicatorScrollWidth - indicatorWidth);
+                    const finalScroll = Math.max(0, Math.min(scrollPosition, maxScroll));
+                    
+                    // 執行平滑滾動
+                    indicator.scrollTo({
+                        left: finalScroll,
+                        behavior: 'smooth'
+                    });
+                });
+            });
         };
         
-        // 多次嘗試，確保在不同時機都能執行
-        centerActiveTab();
-        setTimeout(centerActiveTab, 50);
-        setTimeout(centerActiveTab, 200);
-        setTimeout(centerActiveTab, 400);
+        // 只執行一次，避免重複滾動造成偏移
+        scrollToCenter();
         
         // 更新圖表和列表 - 切換分頁時退出 detail 模式
         chartLevel = pageIndex === 0 ? 'root' : 'page';
@@ -1247,9 +1262,22 @@
         initSwiper();
         chartLevel = 'root';
         currentPage = 0;
-        switchToPage(0);
         renderAssets();
-        setTimeout(() => { initChart(); }, 500);
+        setTimeout(() => { 
+            initChart(); 
+            // 初始化後滾動到第一個標籤中間
+            setTimeout(() => {
+                const firstTab = document.querySelector('.page-tab[data-page="0"]');
+                const indicator = document.querySelector('.page-indicator');
+                if(firstTab && indicator) {
+                    const tabLeft = firstTab.offsetLeft;
+                    const tabWidth = firstTab.offsetWidth;
+                    const indicatorWidth = indicator.clientWidth;
+                    const scrollPos = tabLeft + (tabWidth / 2) - (indicatorWidth / 2);
+                    indicator.scrollLeft = Math.max(0, scrollPos);
+                }
+            }, 100);
+        }, 500);
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(); }, 60000);
