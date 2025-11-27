@@ -6,10 +6,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>我的資產</title>
-    
-    <!-- 主畫面 Icon -->
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -17,62 +13,27 @@
     
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: #1c1c1e;
-            --text-primary: #ffffff;
-            --text-secondary: #8e8e93;
-            --color-bank: #64d2ff;
-            --color-stock: #bf5af2;
-            --color-crypto: #ff9f0a;
-            --color-debt: #ff453a;
-            --color-up: #30d158;
-            --color-down: #ff453a;
-            --border-color: #2c2c2e;
+            --bg-color: #000000; --card-bg: #1c1c1e; --text-primary: #ffffff; --text-secondary: #8e8e93;
+            --color-bank: #64d2ff; --color-stock: #bf5af2; --color-crypto: #ff9f0a; --color-debt: #ff453a;
+            --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
         }
-
-        body {
-            background-color: var(--bg-color); color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0; padding-bottom: 100px;
-            -webkit-tap-highlight-color: transparent; user-select: none;
-        }
-
-        .navbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background-color: var(--bg-color);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .navbar h1 { 
-            font-size: 22px; margin: 0; font-weight: 700; 
-            position: absolute; left: 50%; transform: translateX(-50%);
-            white-space: nowrap;
-        }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: var(--bg-color); position: sticky; top: 0; z-index: 100; }
+        .navbar h1 { font-size: 22px; margin: 0; font-weight: 700; position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; }
         .btn-group { display: flex; gap: 15px; }
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
         .btn-icon.active { color: var(--color-up); }
 
         /* Sidebar */
-        .sidebar-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 998;
-            opacity: 0; visibility: hidden; transition: all 0.3s;
-            backdrop-filter: blur(2px);
-        }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(2px); }
         .sidebar-overlay.active { opacity: 1; visibility: visible; }
-        .sidebar {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
-            padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column;
-        }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; }
         .sidebar.active { left: 0; }
         .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; }
         .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
         .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; }
-        .menu-item {
-            padding: 15px 25px; display: flex; align-items: center;
-            font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s;
-        }
+        .menu-item { padding: 15px 25px; display: flex; align-items: center; font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s; }
         .menu-item:active { background: #2c2c2e; }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
@@ -81,128 +42,44 @@
         .summary-card { padding: 10px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 5px 0; font-family: 'Roboto', sans-serif; }
-        
-        .pnl-badge {
-            font-size: 14px; font-weight: 600; margin-bottom: 10px; display: inline-block;
-            padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1);
-        }
-        .pnl-up { color: var(--color-up); }
-        .pnl-down { color: var(--color-down); }
-
+        .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 10px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
+        .pnl-up { color: var(--color-up); } .pnl-down { color: var(--color-down); }
         .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 5px; margin-bottom: 10px; }
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        /* Chart Wrapper */
-        #chartWrapper {
-            margin: 0; background: transparent; position: relative;
-            height: 320px; width: 100%;
-            display: flex; justify-content: center; align-items: center;
-            overflow: visible; 
-            z-index: 80;
-        }
-        #chartLoading { position: absolute; color: #555; font-size: 14px; }
+        #chartWrapper { margin: 0; background: transparent; position: relative; height: 320px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; z-index: 80; }
         
-        /* 自製 Tooltip */
-        #customTooltip {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.95);
-            color: #000;
-            padding: 10px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            pointer-events: none;
-            z-index: 200; 
-            display: none;
-            white-space: nowrap;
-            top: 0; left: 0;
-            transform: translate(-50%, -100%);
-            transition: opacity 0.15s, top 0.15s, left 0.15s;
-            margin-top: -15px;
-        }
-        #customTooltip::after {
-            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
-            border-width: 6px; border-style: solid;
-            border-color: rgba(255,255,255,0.95) transparent transparent transparent;
-        }
+        /* 修正：完全移除 chartLoading 樣式 */
         
-        /* 翻轉樣式 */
-        #customTooltip.bottom {
-            transform: translate(-50%, 0);
-            margin-top: 20px;
-        }
-        #customTooltip.bottom::after {
-            top: -12px;
-            border-color: transparent transparent rgba(255,255,255,0.95) transparent;
-        }
-        
+        #customTooltip { position: absolute; background: rgba(255, 255, 255, 0.95); color: #000; padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none; z-index: 200; display: none; white-space: nowrap; top: 0; left: 0; transform: translate(-50%, -100%); transition: opacity 0.15s, top 0.15s, left 0.15s; margin-top: -15px; }
+        #customTooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent; }
+        #customTooltip.bottom { transform: translate(-50%, 0); margin-top: 20px; }
+        #customTooltip.bottom::after { top: -12px; border-color: transparent transparent rgba(255,255,255,0.95) transparent; }
         .tt-header { font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; }
         .tt-body { font-size: 15px; color: #000; font-weight: 700; display: flex; align-items: center; }
         .tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .chart-back-btn { position: absolute; top: 10px; left: 20px; z-index: 201; background: rgba(44, 44, 46, 0.9); color: #0a84ff; border: 1px solid #333; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; backdrop-filter: blur(10px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        .chart-back-btn {
-            position: absolute; top: 10px; left: 20px; z-index: 201;
-            background: rgba(44, 44, 46, 0.9); color: #0a84ff;
-            border: 1px solid #333; padding: 6px 14px; border-radius: 20px;
-            font-size: 13px; font-weight: 600; cursor: pointer; display: none;
-            backdrop-filter: blur(10px); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        /* Lists */
-        .group-header {
-            padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary);
-            background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase;
-        }
-        .group-total-block { text-align: right; }
-        .group-total { color: var(--text-primary); font-weight: 600; display: block;}
-        .group-pnl { font-size: 11px; display: block; margin-top: 2px; }
-
+        .group-header { padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary); background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase; }
+        .group-total-block { text-align: right; } .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; }
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
         .list-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
-        .list-item:last-child { border-bottom: none; }
-        .list-item:active { background-color: #2c2c2e; }
+        .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
         .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; }
-        
-        .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); }
-        .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); }
-        .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); }
-        .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
-
-        /* Item Content Layout */
-        .item-content { 
-            flex: 1; min-width: 0; 
-            display: flex; flex-direction: column; justify-content: center; 
-        }
-        .item-name { 
-            font-size: 17px; font-weight: 500; margin-bottom: 2px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            line-height: 1.2;
-        }
-        .item-row { 
-            font-size: 13px; color: var(--text-secondary); 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            line-height: 1.35;
-        }
-
+        .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
+        .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-row { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; }
         .item-amount { text-align: right; margin-left: 10px; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; }
         .amount-pnl { font-size: 12px; margin-top: 2px; font-weight: 500; }
-        .amount-green { color: var(--color-up); }
-        .amount-red { color: var(--color-down); }
-        .sub-green { color: var(--color-up); }
-        .sub-red { color: var(--color-down); }
-        
+        .amount-green { color: var(--color-up); } .amount-red { color: var(--color-down); } .sub-green { color: var(--color-up); } .sub-red { color: var(--color-down); }
         .drag-handle { display: none; color: #666; font-size: 20px; padding-left: 15px; cursor: grab; }
 
-        .tab-bar {
-            position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95);
-            backdrop-filter: blur(20px); border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom));
-            z-index: 200;
-        }
+        .tab-bar { position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 200; }
         .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; width: 30%; }
-        .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; }
-        .tab-item.active { color: #0a84ff; }
+        .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; } .tab-item.active { color: #0a84ff; }
         .fa-spin-fast { animation: fa-spin 1s infinite linear; }
 
         /* Modal */
@@ -219,8 +96,6 @@
         .btn-delete { width: 100%; background: #1c1c1e; color: var(--color-debt); border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 500; }
         .hint-text { color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px; }
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #30d158; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; z-index: 2000; display: none; }
-        
-        /* AI Button */
         .ai-btn-area { margin: 15px 16px 0 16px; }
         .btn-ai { width: 100%; background: linear-gradient(135deg, #0a84ff, #5e5ce6); color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
     </style>
@@ -229,7 +104,7 @@
 
     <div id="migrationToast" class="toast">資料已還原</div>
 
-    <!-- Sidebar & Overlay -->
+    <!-- Sidebar -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header"><h2>選單</h2></div>
@@ -237,7 +112,6 @@
             <div class="menu-label">API 設定</div>
             <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (報價)</span></div>
             <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
-            
             <div class="menu-label">資料管理</div>
             <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份 (複製)</span></div>
             <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原 (貼上)</span></div>
@@ -264,9 +138,8 @@
             </div>
         </div>
 
-        <!-- Chart Area -->
         <div id="chartWrapper">
-            <div id="chartLoading">圖表準備中...</div>
+            <!-- 修正：完全移除 Loading 文字 div -->
             <div id="customTooltip"><div class="tt-header">類別</div><div class="tt-body"><span class="tt-dot"></span>資產: 0</div></div>
             <button class="chart-back-btn" id="chartBackBtn" onclick="resetChartLevel()"><i class="fas fa-chevron-left"></i> 返回總覽</button>
             <div id="assetChart" style="width:100%; height:100%;"></div>
@@ -281,14 +154,13 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (Content Omitted) -->
     <div id="accountModal" class="modal">
         <div class="modal-header">
             <button class="btn-icon" onclick="closeModal()">取消</button>
             <span class="modal-title" id="modalTitle">帳戶編輯</span>
             <button class="btn-icon" style="font-weight:bold;" onclick="saveAccount()">儲存</button>
         </div>
-        
         <div class="ai-btn-area" id="aiArea" style="display:none;">
             <button class="btn-ai" onclick="triggerImageUpload()">
                 <i class="fas fa-camera"></i> 匯入截圖 (AI 辨識)
@@ -296,7 +168,6 @@
             <input type="file" id="imgUpload" multiple accept="image/*" style="display:none" onchange="handleImageUpload(this)">
             <div id="aiStatus" style="text-align:center; color:#aaa; font-size:12px; margin-top:5px;"></div>
         </div>
-
         <div class="form-group">
             <div class="form-row">
                 <span class="form-label">類型</span>
@@ -343,7 +214,18 @@
 
     function tryMigrateOldData() {
         if (localStorage.getItem(STORAGE_KEY_DATA)) return;
-        // (保留遷移邏輯)
+        const oldKeys = ['myAssets_v6', 'myAssets_v5', 'myAssets_v4'];
+        let found = false;
+        for (let key of oldKeys) {
+            let d = localStorage.getItem(key);
+            if (d) { localStorage.setItem(STORAGE_KEY_DATA, d); found = true; break; }
+        }
+        let oldS = localStorage.getItem('myAssets_settings_v3');
+        if (oldS) localStorage.setItem(STORAGE_KEY_SETTINGS, oldS);
+        if (found) {
+            const t = document.getElementById('migrationToast');
+            t.style.display='block'; setTimeout(()=>t.style.display='none',3000);
+        }
     }
     tryMigrateOldData();
 
@@ -413,7 +295,7 @@
         renderAssets();
     }
 
-    // === AI Image Analysis (Fixed Model Name) ===
+    // === AI Image Analysis ===
     function triggerImageUpload() {
         if(!settings.geminiKey) return alert("請先在選單中設定 Gemini API Key");
         document.getElementById('imgUpload').click();
@@ -442,14 +324,13 @@
             
             const imagesParts = await Promise.all(promises);
             
-            // Corrected Model Name: gemini-1.5-flash
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${settings.geminiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
                         parts: [
-                            { text: "Analyze these brokerage screenshots. Find the TOTAL number of shares and the AVERAGE COST per share. If multiple images, calculate weighted average cost. Return JSON: {\"shares\": number, \"avgCost\": number}." },
+                            { text: "Analyze these brokerage screenshots. Find TOTAL shares and AVG COST (weighted). If fees are not explicitly listed, ignore them. Return JSON: {\"shares\": number, \"avgCost\": number}." },
                             ...imagesParts
                         ]
                     }]
@@ -457,7 +338,6 @@
             });
             
             const data = await response.json();
-            
             if (data.error) throw new Error(data.error.message);
 
             if(data.candidates && data.candidates[0].content) {
@@ -468,10 +348,10 @@
                     if(result.shares !== undefined) {
                         document.getElementById('inpBalance').value = result.shares;
                         if(result.avgCost !== undefined) document.getElementById('inpCost').value = result.avgCost;
-                        status.innerText = "分析成功！已填入數據";
+                        status.innerText = "分析成功！";
                         status.style.color = "#30d158";
                     } else {
-                        status.innerText = "無法識別數據";
+                        status.innerText = "無法識別";
                         status.style.color = "red";
                     }
                 } else {
@@ -483,25 +363,104 @@
 
         } catch (e) {
             console.error(e);
-            status.innerText = "分析失敗: " + e.message;
+            status.innerText = "失敗: " + e.message;
             status.style.color = "red";
         }
         input.value = ''; 
     }
 
-    // ... (Chart/Logic same as V39) ...
     function onPointClick(e) { e.stopPropagation(); if(clickTimer){ clearTimeout(clickTimer); clickTimer=null; if(chartLevel==='root'&&currentDetails[this.drilldown]){ hideCustomTooltip(); enterDetailLevel(this.drilldown, currentDetails[this.drilldown]); } } else { let t=this; let ex=e; clickTimer=setTimeout(function(){ clickTimer=null; if(t.sliced){ t.slice(false); hideCustomTooltip(); } else { if(t.series.data) t.series.data.forEach(p=>{ if(p!==t&&p.sliced)p.slice(false); }); t.slice(true); showCustomTooltip(t, ex); } }, 250); } }
     function initChart() { if(typeof Highcharts==='undefined')return; Highcharts.setOptions({ chart:{style:{fontFamily:'sans-serif'},events:{click:function(e){ if(clickTimer){clearTimeout(clickTimer);clickTimer=null;} if(this.series[0])this.series[0].points.forEach(p=>p.slice(false)); hideCustomTooltip(); }}}, title:{text:''}, tooltip:{enabled:false} }); updateChartData(); document.getElementById('chartWrapper').addEventListener('click',function(e){ const t=e.target; if(!t.tagName==='path'&&!t.closest('#chartBackBtn')&&chartInstance){ if(clickTimer)clearTimeout(clickTimer); if(chartInstance.series[0])chartInstance.series[0].points.forEach(p=>p.slice(false)); hideCustomTooltip(); } }); }
-    function showCustomTooltip(p,e){ const t=document.getElementById('customTooltip'); const w=document.getElementById('chartWrapper'); t.querySelector('.tt-header').innerText=p.name; t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${Math.round(p.y).toLocaleString()} TWD`; t.className=''; t.style.display='block'; let cx=e.chartX; let cy=e.chartY; if(!cx&&e.clientX){const r=w.getBoundingClientRect();cx=e.clientX-r.left;cy=e.clientY-r.top;} const tw=t.offsetWidth; const th=t.offsetHeight; let top=cy-th-25; let left=cx; if(cy<160){top=cy+30;t.classList.add('bottom');}else{t.classList.remove('bottom');} if(left<tw/2)left=tw/2+10; if(left>w.offsetWidth-tw/2)left=w.offsetWidth-tw/2-10; t.style.top=top+'px'; t.style.left=left+'px'; }
+    
+    function showCustomTooltip(p,e){ const t=document.getElementById('customTooltip'); const w=document.getElementById('chartWrapper'); t.querySelector('.tt-header').innerText=p.name; t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${Math.round(p.y).toLocaleString()} TWD`; t.className=''; t.style.display='block'; let cx=e.chartX; let cy=e.chartY; if(!cx&&e.clientX){const r=w.getBoundingClientRect();cx=e.clientX-r.left;cy=e.clientY-r.top;} const tw=t.offsetWidth; const th=t.offsetHeight; let top=cy-th-25; let left=cx; if(cy<160){top=cy+30;t.classList.add('bottom');} if(left<tw/2)left=tw/2+10; if(left>w.offsetWidth-tw/2)left=w.offsetWidth-tw/2-10; t.style.top=top+'px'; t.style.left=left+'px'; }
     function hideCustomTooltip(){ document.getElementById('customTooltip').style.display='none'; }
-    function updateChartData() { if(!Highcharts)return; let groups={'bank':0,'stock':0,'crypto':0}; currentDetails={'bank':[],'stock':[],'crypto':[]}; accounts.forEach(acc=>{ if(acc.type==='debt')return; let val=calculateTWD(acc); if(val>0){ if(groups[acc.type]!==undefined){ groups[acc.type]+=val; currentDetails[acc.type].push({name:acc.name,y:Math.round(val),color:acc.type==='bank'?TYPE_COLORS.bank:(acc.type==='stock'?TYPE_COLORS.stock:TYPE_COLORS.crypto)}); } } }); let rootData=[{name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:TYPE_COLORS.bank},{name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:TYPE_COLORS.stock},{name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:TYPE_COLORS.crypto}].filter(d=>d.y>0); if(!chartInstance){ chartInstance=Highcharts.chart('assetChart',{chart:{type:'pie',backgroundColor:'transparent',spacing:[30,0,20,0],height:'100%'},title:{text:null},credits:{enabled:false},tooltip:{enabled:false},plotOptions:{pie:{innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false},inactive:{opacity:1}},point:{events:{click:onPointClick}}}},series:[{name:'資產',data:rootData}]}); } else { if(chartLevel==='root'){ if(chartInstance.series.length===0){ chartInstance.addSeries({name:'資產',data:rootData,type:'pie',innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false}},point:{events:{click:onPointClick}}}); } else { chartInstance.series[0].setData(rootData); } } } }
-    function enterDetailLevel(cat, data) { chartLevel='detail'; document.getElementById('chartBackBtn').style.display='block'; hideCustomTooltip(); if(chartInstance.series[0])chartInstance.series[0].remove(false); chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'60%', size:'60%', center:['50%','50%'], borderWidth:0, slicedOffset:10, animation:{duration:800,easing:'easeOutQuart'}, dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false}}, point:{events:{click:onPointClick}} }, true); chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); }
+
+    function updateChartData() { 
+        if(!Highcharts)return; 
+        let groups={'bank':0,'stock':0,'crypto':0}; 
+        currentDetails={'bank':[],'stock':[],'crypto':[]}; 
+        
+        accounts.forEach(acc=>{ 
+            if(acc.type==='debt')return; 
+            let val=calculateTWD(acc); 
+            if(val>0){ 
+                if(groups[acc.type]!==undefined){ 
+                    groups[acc.type]+=val; 
+                    // 修正: 為子項目分配顏色 (使用同色系但不同亮度，或直接循環顏色)
+                    // 簡單解法：給子項目分配獨立顏色，不讓它全紫
+                    // 這裡我們用 hash string 來給每支股票一個固定顏色，或者簡單用 Highcharts 默認顏色循環
+                    // 但為了美觀，我們沿用 Highcharts 的預設顏色分配，或者手動指定
+                    // 這裡我們先不指定子項目的 color，讓 Highcharts 自動分配，會比較多彩
+                    currentDetails[acc.type].push({
+                        name: acc.name, 
+                        y: Math.round(val)
+                        // 移除 color 指定，讓它自動多彩
+                    }); 
+                } 
+            } 
+        }); 
+        
+        let rootData=[
+            {name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:TYPE_COLORS.bank},
+            {name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:TYPE_COLORS.stock},
+            {name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:TYPE_COLORS.crypto}
+        ].filter(d=>d.y>0); 
+        
+        if(!chartInstance){ 
+            chartInstance=Highcharts.chart('assetChart',{
+                chart:{type:'pie',backgroundColor:'transparent',spacing:[30,0,20,0],height:'100%'},
+                title:{text:null},
+                credits:{enabled:false},
+                tooltip:{enabled:false},
+                plotOptions:{
+                    pie:{
+                        innerSize:'60%',
+                        size:'60%',
+                        center:['50%','50%'],
+                        borderWidth:0,
+                        slicedOffset:10,
+                        animation:{duration:800,easing:'easeOutQuart'},
+                        dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},
+                        states:{hover:{enabled:false},inactive:{opacity:1}},
+                        point:{events:{click:onPointClick}}
+                    }
+                },
+                series:[{name:'資產',data:rootData}]
+            }); 
+        } else { 
+            if(chartLevel==='root'){ 
+                if(chartInstance.series.length===0){ 
+                    chartInstance.addSeries({name:'資產',data:rootData,type:'pie',innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false}},point:{events:{click:onPointClick}}}); 
+                } else { 
+                    chartInstance.series[0].setData(rootData); 
+                } 
+            } 
+        } 
+    }
+
+    function enterDetailLevel(cat, data) { 
+        chartLevel='detail'; document.getElementById('chartBackBtn').style.display='block'; hideCustomTooltip(); 
+        if(chartInstance.series[0])chartInstance.series[0].remove(false); 
+        
+        // 修正：進入詳細頁面時，讓 Highcharts 自動分配顏色，不要強制全紫
+        // 或是我們可以基於母顏色做漸層。這裡先讓它自動多彩。
+        chartInstance.addSeries({ 
+            name:TYPE_NAMES[cat]||cat, 
+            data:data, 
+            type:'pie', innerSize:'60%', size:'60%', center:['50%','50%'], borderWidth:0, slicedOffset:10, animation:{duration:800,easing:'easeOutQuart'}, 
+            dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, 
+            states:{hover:{enabled:false}}, 
+            point:{events:{click:onPointClick}} 
+        }, true); 
+        
+        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+    }
+    
     function resetChartLevel() { chartLevel='root'; document.getElementById('chartBackBtn').style.display='none'; chartInstance.setTitle({text:''}); hideCustomTooltip(); while(chartInstance.series.length>0)chartInstance.series[0].remove(false); updateChartData(); }
 
     async function refreshAllData() { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey)await fetchPrices(); if(chartLevel==='root')updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
     async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
     async function fetchPrices() { if(!settings.apiKey)return; const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } }catch(e){} } saveData(); renderAssets(); }
-
     function calculateTWD(acc) { let val=0; if(acc.isAuto){ let p=acc.currentPrice||0; if(acc.currency==='USD')val=acc.balance*p*settings.usdRate; else if(acc.type==='crypto')val=acc.balance*p*settings.usdtRate*settings.usdRate; else val=acc.balance*p*settings.usdRate; } else { if(acc.currency==='USD')val=acc.balance*settings.usdRate; else val=acc.balance; } return safeParseFloat(val); }
     function calculatePnL_TWD(acc) { if(acc.cost>0&&acc.isAuto){ let cur=calculateTWD(acc); let cost=acc.balance*acc.cost*settings.usdRate; return cur-cost; } if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.currency==='USD')pnl=acc.balance*acc.dayChange*settings.usdRate; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate*settings.usdRate; else pnl=acc.balance*acc.dayChange*settings.usdRate; return safeParseFloat(pnl); }
     function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()} TWD</span>`; }
@@ -521,4 +480,3 @@
 </script>
 </body>
 </html>
-
