@@ -44,6 +44,10 @@
             body { padding-bottom: 0; }
             .modal { align-items: center; justify-content: center; display: flex; }
             .modal-content-wrapper { width: 500px !important; height: 80% !important; max-height: 700px; border-radius: 16px; border: 1px solid var(--border-color); position: relative !important; overflow: hidden; display: flex; flex-direction: column; }
+            #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; }
+            #assetChart { max-width: 100% !important; width: 100% !important; height: 100% !important; }
+            #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
+            #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
         }
 
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: var(--bg-color); position: sticky; top: 0; z-index: 100; height: 60px; width: 100%; }
@@ -70,7 +74,10 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        #chartWrapper { margin: -10px 0 0 0; background: transparent; position: relative; height: 320px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; z-index: 80; }
+        #chartWrapper { margin: -10px 0 0 0; background: transparent; position: relative; height: 320px; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; }
+        #assetChart { max-width: 100% !important; box-sizing: border-box !important; width: 100% !important; height: 100% !important; }
+        #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
+        #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
         #chartWrapper .highcharts-point { transition: none !important; pointer-events: auto !important; }
         #chartWrapper .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
         #chartWrapper .highcharts-series .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
@@ -97,16 +104,19 @@
         .group-header { padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary); background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase; }
         .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; text-align: right;}
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
-        .list-item { display: flex; align-items: flex-start; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
+        .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
         .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
         .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
-        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-        .item-row { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; margin-bottom: 0; }
-        .item-amount { text-align: right; margin-left: 10px; display: flex; flex-direction: column; justify-content: flex-start; }
+        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
+        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .item-row-compact .item-label { opacity: 0.7; }
+        .item-row-compact span { white-space: nowrap; }
+        .item-amount { text-align: right; margin-left: 8px; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; flex-shrink: 0; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; }
-        .amount-pnl { font-size: 12px; margin-top: 0; margin-bottom: 0; font-weight: 500; line-height: 1.35; }
+        .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
@@ -297,7 +307,7 @@
                 <div class="list-section page-swiper" id="pageSwiper">
                     <div class="page-container" id="pageContainer">
                         <div class="page-item" data-page="0">
-                            <div id="assetsContainer"></div>
+                    <div id="assetsContainer"></div>
                         </div>
                         <div class="page-item" data-page="1">
                             <div id="assetsContainer1"></div>
@@ -525,10 +535,10 @@
         
         if(!chartInstance){
             chartInstance=Highcharts.chart('assetChart',{
-                chart:{type:'pie',backgroundColor:'transparent',spacing:[30,0,20,0],height:'100%'},
+                chart:{type:'pie',backgroundColor:'transparent',spacing:[30,20,20,20],height:'100%',width:null,reflow:true,margin:[30,20,20,20]},
                 title:{text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
                 credits:{enabled:false},tooltip:{enabled:false},
-                plotOptions:{pie:{innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
+                plotOptions:{pie:{innerSize:'55%',size:'55%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
                 series:[{name:'資產',data:chartData}]
             });
             disableChartHover();
@@ -536,14 +546,14 @@
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
                 chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'55%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
                     disableChartHover();
                 } else {
                     chartInstance.series[0].setData(chartData); 
                 } 
             } else if(chartLevel === 'detail') {
                 // 詳細模式不在此更新，由enterDetailLevel處理
-            }
+            } 
         } 
     }
     
@@ -558,9 +568,9 @@
         }
         
         if(chartInstance.series[0])chartInstance.series[0].remove(false); 
-        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'60%', size:'60%', center:['50%','50%'], borderWidth:0, slicedOffset:10, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true); 
-        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
-        disableChartHover(); 
+        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'55%', size:'55%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
+        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
+        disableChartHover();
     }
     
     let hoverCheckInterval = null;
@@ -1180,24 +1190,29 @@
                     let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
                     let priceUnit = acc.type === 'twstock' ? 'TWD' : 'USD';
                     let pricePrefix = acc.type === 'twstock' ? 'NT$' : '$';
-                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()} ${priceUnit}` : '--';
+                    // 簡化價格顯示，去掉單位
+                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()}` : '--';
                     let chg = '';
                     if(acc.dayChangePercent) {
                         let s = acc.dayChangePercent > 0 ? '+' : '';
                         let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
                         chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
                     }
-                    let line1 = chg || '--';
-                    let line2 = `${price} • ${acc.balance}`;
-                    let line3 = '';
+                    // 第一行：當天漲跌幅 + 價格（更緊湊）
+                    let line1 = chg ? `<div class="item-row-compact">${chg}<span class="item-label">•</span><span>${price}</span></div>` : `<div class="item-row">${price}</div>`;
+                    // 第二行：數量 + 成本百分比（簡化顯示）
+                    let line2 = '';
                     if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0) {
                         let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
                         let s = pnlPct >= 0 ? '+' : '';
                         let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
                         let costPrefix = acc.type === 'twstock' ? 'NT$' : '$';
-                        line3 = `成本 ${costPrefix}${acc.cost.toFixed(2)} <span class="${c}">${s}${pnlPct.toFixed(2)}%</span>`;
+                        // 簡化：只顯示成本和百分比，去掉"成本"文字
+                        line2 = `<div class="item-row-compact"><span>${acc.balance}股</span><span class="item-label">•</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span></div>`;
+                    } else {
+                        line2 = `<div class="item-row">${acc.balance}股</div>`;
                     }
-                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${line1}</div><div class="item-row">${line2}</div>${line3 ? `<div class="item-row">${line3}</div>` : ''}`;
+                    htmlContent = `<div class="item-name">${acc.name}</div>${line1}${line2}`;
                 } else {
                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
                 }
@@ -1211,18 +1226,18 @@
                 
                 if(acc.isAuto) {
                     let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
+                    // 合併當天損益和成本損益到更緊湊的格式
+                    let pnlLines = [];
                     if(Math.abs(dailyPnL) > 0.01) {
-                        pnlHtml += `<div class="amount-pnl" style="font-size:11px;">當天 ${formatPnL(dailyPnL)}</div>`;
-                    } else {
-                        pnlHtml += `<div class="amount-spacer"></div>`;
+                        pnlLines.push(`當天 ${formatPnL(dailyPnL)}`);
                     }
-                    pnlHtml += `<div class="amount-spacer"></div>`;
-                    if(hasLine3) {
-                        if(Math.abs(costPnL) > 0.01) {
-                            pnlHtml += `<div class="amount-pnl">成本 ${formatPnL(costPnL)}</div>`;
-                        } else {
-                            pnlHtml += `<div class="amount-spacer"></div>`;
-                        }
+                    if(hasLine3 && Math.abs(costPnL) > 0.01) {
+                        pnlLines.push(`成本 ${formatPnL(costPnL)}`);
+                    }
+                    if(pnlLines.length > 0) {
+                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl">${line}</div>`).join('');
+                    } else {
+                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
                     }
                 } else {
                     pnlHtml = `<div class="amount-spacer"></div>`;
