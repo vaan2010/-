@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>我的資產</title>
     
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/192/wallet.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -124,7 +125,10 @@
         .hint-text { color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px; }
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #30d158; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; z-index: 2000; display: none; }
         .ai-btn-area { margin: 15px 16px 0 16px; }
-        .btn-ai { width: 100%; background: linear-gradient(135deg, #0a84ff, #5e5ce6); color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-ai { width: 100%; background: linear-gradient(135deg, #0a84ff, #5e5ce6); color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+        .btn-ai:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; opacity: 0.6; }
+        .progress-container { width: 100%; height: 4px; background: #2c2c2e; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #0a84ff, #5e5ce6); width: 0%; transition: width 0.3s ease; border-radius: 2px; }
 
         /* Detail View */
         #detailView { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
@@ -151,6 +155,14 @@
 </head>
 <body>
     <div id="migrationToast" class="toast">資料已還原</div>
+    <div id="importProgressToast" class="toast" style="background: #0a84ff; display: none;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+                <div id="importProgressBar" style="height: 100%; background: #fff; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <span id="importProgressText">匯入中...</span>
+        </div>
+    </div>
     <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleFileImport(event)">
 
     <!-- App Container -->
@@ -264,20 +276,23 @@
                             <option value="custom">自訂...</option>
                         </select>
                     </div>
-                    <button class="btn-ai" onclick="triggerImageUpload()"><i class="fas fa-camera"></i> 匯入截圖 (AI 辨識)</button>
+                    <button class="btn-ai" id="btnAI" onclick="triggerImageUpload()"><i class="fas fa-camera"></i> 匯入截圖 (AI 辨識)</button>
                     <input type="file" id="imgUpload" multiple accept="image/*" style="display:none" onchange="handleImageUpload(this)">
                     <div id="aiStatus" style="text-align:center; color:#aaa; font-size:12px; margin-top:5px;"></div>
+                    <div class="progress-container" id="aiProgress">
+                        <div class="progress-bar" id="aiProgressBar"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row"><span class="form-label">類型</span><select id="inpType" class="form-input" onchange="handleTypeChange()"><option value="bank">銀行</option><option value="crypto">加密貨幣</option><option value="stock">投資理財</option><option value="debt">負債</option></select></div>
                     <div class="form-row" id="rowName"><span class="form-label">名稱</span><input type="text" id="inpName" class="form-input" placeholder="例如: NVDA"></div>
-                    <div class="form-row" id="rowSymbol" style="display:none;"><span class="form-label">代碼</span><input type="text" id="inpSymbol" class="form-input" placeholder="例如: NVDA" oninput="syncNameFromSymbol()"></div>
+                    <div class="form-row" id="rowSymbol" style="display:none;"><span class="form-label">代碼</span><input type="text" id="inpSymbol" class="form-input" placeholder="例如: NVDA" oninput="syncNameFromSymbol(); updateAIButtonState();"></div>
                     <div class="form-row" id="rowCurrency"><span class="form-label">幣別</span><select id="inpCurrency" class="form-input"><option value="TWD">TWD (新台幣)</option><option value="USD">USD (美金)</option></select></div>
                     <div class="form-row"><span class="form-label" id="lblBalance">股數</span><input type="number" id="inpBalance" class="form-input" placeholder="0"></div>
                     <div class="form-row" id="rowCost" style="display:none;"><span class="form-label">平均成本</span><input type="number" id="inpCost" class="form-input" placeholder="0 (USD)"></div>
                 </div>
                 <div id="symbolHint" class="hint-text" style="display:none;">* 輸入代碼，預設使用美金報價</div>
-                <div class="delete-btn-area"><button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除此帳戶</button></div>
+                <div class="delete-btn-area"><button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除</button></div>
             </div>
             <div id="contentDetail" class="tab-content">
                 <div class="tx-list" id="txListContainer"><div class="tx-no-data">尚未匯入明細資料</div></div>
@@ -427,10 +442,11 @@
     function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');}else{s.classList.add('active');o.classList.add('active');} }
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
-    function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
+    function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
-    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='crypto'); const isStock=(t==='stock'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=isStock?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(isStock) syncNameFromSymbol(); }
+    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='crypto'); const isStock=(t==='stock'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=isStock?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(isStock) { syncNameFromSymbol(); updateAIButtonState(); } else if(auto) { updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
+    function updateAIButtonState() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='crypto'){ const symbol=document.getElementById('inpSymbol').value.trim(); const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=!symbol; } }
     function syncNameFromSymbol() { const t=document.getElementById('inpType').value; if(t==='stock'){ const s=document.getElementById('inpSymbol').value.trim().toUpperCase(); if(s) document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } }
     function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='crypto'){if(!s.includes(':'))s=`COINBASE:${s}-USD`;c='USD';} if(!n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
@@ -465,19 +481,39 @@
     }
     function importData() { 
         const choice = confirm("選擇匯入方式：\n確定 = 貼上JSON文字\n取消 = 選擇檔案");
+        const progressToast = document.getElementById('importProgressToast');
+        const progressBar = document.getElementById('importProgressBar');
+        const progressText = document.getElementById('importProgressText');
         if (choice) {
             const text = prompt("貼上備份JSON:");
             if (text) {
+                progressToast.style.display = 'block';
+                progressBar.style.width = '30%';
+                progressText.innerText = '解析JSON中...';
                 try {
-                    const d = JSON.parse(text);
-                    if (d.data && d.settings) {
-                        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
-                        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
-                        location.reload();
-                    } else {
-                        alert("格式錯誤：缺少 data 或 settings");
-                    }
+                    setTimeout(() => {
+                        progressBar.style.width = '60%';
+                        progressText.innerText = '驗證資料中...';
+                        const d = JSON.parse(text);
+                        if (d.data && d.settings) {
+                            progressBar.style.width = '80%';
+                            progressText.innerText = '寫入資料中...';
+                            setTimeout(() => {
+                                progressBar.style.width = '100%';
+                                progressText.innerText = '完成！';
+                                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
+                                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
+                                setTimeout(() => location.reload(), 500);
+                            }, 200);
+                        } else {
+                            progressToast.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            alert("格式錯誤：缺少 data 或 settings");
+                        }
+                    }, 100);
                 } catch(err) {
+                    progressToast.style.display = 'none';
+                    progressBar.style.width = '0%';
                     alert("解析失敗: " + err.message);
                 }
             }
@@ -488,18 +524,40 @@
     function handleFileImport(event) {
         const file = event.target.files[0];
         if (!file) return;
+        const progressToast = document.getElementById('importProgressToast');
+        const progressBar = document.getElementById('importProgressBar');
+        const progressText = document.getElementById('importProgressText');
+        progressToast.style.display = 'block';
+        progressBar.style.width = '20%';
+        progressText.innerText = '讀取檔案中...';
         const reader = new FileReader();
         reader.onload = function(e) {
+            progressBar.style.width = '50%';
+            progressText.innerText = '解析JSON中...';
             try {
-                const d = JSON.parse(e.target.result);
-                if (d.data && d.settings) {
-                    localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
-                    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
-                    location.reload();
-                } else {
-                    alert("檔案格式錯誤");
-                }
+                setTimeout(() => {
+                    progressBar.style.width = '70%';
+                    progressText.innerText = '驗證資料中...';
+                    const d = JSON.parse(e.target.result);
+                    if (d.data && d.settings) {
+                        progressBar.style.width = '90%';
+                        progressText.innerText = '寫入資料中...';
+                        setTimeout(() => {
+                            progressBar.style.width = '100%';
+                            progressText.innerText = '完成！';
+                            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
+                            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
+                            setTimeout(() => location.reload(), 500);
+                        }, 200);
+                    } else {
+                        progressToast.style.display = 'none';
+                        progressBar.style.width = '0%';
+                        alert("檔案格式錯誤");
+                    }
+                }, 100);
             } catch(err) {
+                progressToast.style.display = 'none';
+                progressBar.style.width = '0%';
                 alert("讀取檔案失敗: " + err.message);
             }
         };
@@ -560,14 +618,33 @@
     function triggerImageUpload() { if(!settings.geminiKey)return alert("請先設定 Gemini Key"); document.getElementById('imgUpload').click(); }
     async function handleImageUpload(input) {
         if(!input.files || input.files.length === 0) return;
-        const status = document.getElementById('aiStatus'); status.innerText = `分析中...`; status.style.color = "#aaa";
+        const status = document.getElementById('aiStatus'); 
+        const progressContainer = document.getElementById('aiProgress');
+        const progressBar = document.getElementById('aiProgressBar');
+        status.innerText = `讀取圖片中...`; status.style.color = "#aaa";
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '10%';
         try {
-            const promises = Array.from(input.files).map(f => new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res({inlineData:{mimeType:f.type,data:e.target.result.split(',')[1]}});r.onerror=rej;r.readAsDataURL(f);}));
+            const files = Array.from(input.files);
+            const promises = files.map((f, idx) => new Promise((res,rej)=>{
+                const r=new FileReader();
+                r.onload=e=>{
+                    progressBar.style.width = `${20 + (idx + 1) * 30 / files.length}%`;
+                    res({inlineData:{mimeType:f.type,data:e.target.result.split(',')[1]}});
+                };
+                r.onerror=rej;
+                r.readAsDataURL(f);
+            }));
             const images = await Promise.all(promises);
+            progressBar.style.width = '60%';
+            status.innerText = `AI 分析中...`; status.style.color = "#0a84ff";
             const broker = document.getElementById('brokerSelect').value;
             let fee = 0.1; if (broker === 'fubon') fee = 0.25; else if (broker === 'custom') fee = settings.feeRate || 0.1;
             const prompt = `Analyze brokerage screenshots. 1. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 2. Calculate TOTAL shares. 3. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price * (1 + ${fee}/100). Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"transactions": [...], "totalShares": number, "avgCost": number}`;
+            progressBar.style.width = '80%';
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...images] }] }) });
+            progressBar.style.width = '90%';
+            status.innerText = `處理結果中...`; status.style.color = "#0a84ff";
             const data = await resp.json(); if(data.error) throw new Error(data.error.message);
             const txt = data.candidates[0].content.parts[0].text; const match = txt.match(/\{[\s\S]*\}/);
             if(match) {
@@ -595,10 +672,20 @@
                     document.getElementById('inpBalance').value = totalShares;
                     document.getElementById('inpCost').value = avgCost.toFixed(4);
                     renderTransactions(window.tempTransactions);
-                    status.innerText = `成功! 已累積 ${allTx.length} 筆交易，總股數: ${totalShares}，已含 ${fee}% 手續費`; status.style.color = "#30d158"; switchTab('detail');
+                    progressBar.style.width = '100%';
+                    status.innerText = `成功! 已累積 ${allTx.length} 筆交易，總股數: ${totalShares}，已含 ${fee}% 手續費`; status.style.color = "#30d158"; 
+                    setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
+                    switchTab('detail');
                 } else { throw new Error("No data"); }
             }
-        } catch(e) { console.error(e); status.innerText = "失敗: " + e.message; status.style.color = "red"; } input.value = '';
+        } catch(e) { 
+            console.error(e); 
+            status.innerText = "失敗: " + e.message; 
+            status.style.color = "red"; 
+            progressContainer.style.display = 'none'; 
+            progressBar.style.width = '0%'; 
+        } 
+        input.value = '';
     }
     function renderTransactions(list) { const c = document.getElementById('txListContainer'); c.innerHTML = ''; if(!list || list.length === 0) { c.innerHTML = '<div class="tx-no-data">無明細</div>'; return; } list.forEach(tx => { c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div></div>`; }); }
 
