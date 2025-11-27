@@ -35,9 +35,45 @@
         
         .content-grid { display: flex; flex-direction: column; }
         .chart-section { display: flex; flex-direction: column; flex-shrink: 0; }
-        .list-section { flex: 1; overflow-y: auto; min-height: 0; }
+        .list-section { flex: 1; overflow-y: auto; min-height: 0; position: relative; }
+        .page-nav-arrow { display: none; }
         
         @media (min-width: 768px) {
+            .list-section { position: relative; }
+            .list-container { position: relative; margin: 0 60px 10px 60px !important; }
+            .page-nav-arrow { 
+                display: flex; 
+                position: absolute; 
+                top: 50%; 
+                transform: translateY(-50%); 
+                z-index: 100; 
+                width: 50px; 
+                height: 50px; 
+                border-radius: 50%; 
+                background: transparent; 
+                border: none; 
+                color: rgba(255, 255, 255, 0.5); 
+                font-size: 28px; 
+                cursor: pointer; 
+                align-items: center; 
+                justify-content: center; 
+                transition: all 0.3s; 
+            }
+            .page-nav-arrow:hover { 
+                color: rgba(255, 255, 255, 0.9); 
+                background: rgba(255, 255, 255, 0.05); 
+                transform: translateY(-50%) scale(1.1); 
+            }
+            .page-nav-arrow:active { 
+                transform: translateY(-50%) scale(0.95); 
+            }
+            .page-nav-arrow.disabled { 
+                opacity: 0.15; 
+                cursor: not-allowed; 
+                pointer-events: none; 
+            }
+            .page-nav-arrow.prev { left: 5px; }
+            .page-nav-arrow.next { right: 5px; }
             .sidebar { position: static; left: 0; box-shadow: none; }
             .sidebar-overlay { display: none !important; }
             .hamburger-btn { display: none !important; }
@@ -151,11 +187,23 @@
             backdrop-filter: blur(10px);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
             scroll-behavior: smooth;
         }
         .page-indicator::-webkit-scrollbar {
-            display: none;
+            display: none !important; /* Chrome, Safari, Opera */
+            width: 0 !important;
+            height: 0 !important;
+            background: transparent !important;
+        }
+        .page-indicator::-webkit-scrollbar-track {
+            display: none !important;
+            background: transparent !important;
+        }
+        .page-indicator::-webkit-scrollbar-thumb {
+            display: none !important;
+            background: transparent !important;
         }
         .page-tab { 
             padding: 10px 18px;
@@ -277,7 +325,7 @@
         <div class="main-content">
             <div class="navbar">
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <h1>我的資產</h1>
+                <h1>資產總覽</h1>
                 <div class="btn-group">
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
                     <button class="btn-icon" id="addBtn" onclick="openModal()"><i class="fas fa-plus"></i></button>
@@ -311,6 +359,12 @@
                 </div>
 
                 <div class="list-section page-swiper" id="pageSwiper">
+                    <button class="page-nav-arrow prev" id="prevPageBtn" onclick="switchToPrevPage()" aria-label="上一頁">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="page-nav-arrow next" id="nextPageBtn" onclick="switchToNextPage()" aria-label="下一頁">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                     <div class="page-container" id="pageContainer">
                         <div class="page-item" data-page="0">
                     <div id="assetsContainer"></div>
@@ -925,73 +979,46 @@
             tab.classList.toggle('active', idx === pageIndex);
         });
         
-        // 滾動到當前激活的標籤，讓它顯示在中間
-        const centerTab = () => {
+        // 確保選中的標籤在可見範圍內（但不居中）
+        const ensureTabVisible = () => {
             const activeTab = document.querySelector(`.page-tab[data-page="${pageIndex}"]`);
             const indicator = document.querySelector('.page-indicator');
             
             if(!activeTab || !indicator) return;
             
-            // 強制重新計算佈局
-            indicator.offsetHeight; // 觸發重排
+            const tabRect = activeTab.getBoundingClientRect();
+            const indicatorRect = indicator.getBoundingClientRect();
             
-            // 使用 offsetLeft 獲取相對於容器的絕對位置
-            const tabLeft = activeTab.offsetLeft;
-            const tabWidth = activeTab.offsetWidth;
-            const indicatorWidth = indicator.offsetWidth || indicator.clientWidth;
-            const indicatorScrollWidth = indicator.scrollWidth;
+            // 檢查標籤是否在可見範圍內
+            const isVisible = tabRect.left >= indicatorRect.left && tabRect.right <= indicatorRect.right;
             
-            // 計算標籤中心位置
-            const tabCenter = tabLeft + (tabWidth / 2);
-            
-            // 計算容器中心位置
-            const containerCenter = indicatorWidth / 2;
-            
-            // 計算需要滾動的絕對位置
-            const scrollPosition = tabCenter - containerCenter;
-            
-            // 確保不超出滾動範圍
-            const maxScroll = Math.max(0, indicatorScrollWidth - indicatorWidth);
-            const finalScroll = Math.max(0, Math.min(scrollPosition, maxScroll));
-            
-            // 先立即設置，確保位置正確
-            indicator.scrollLeft = finalScroll;
-            
-            // 然後使用平滑滾動（如果支持）
-            if(typeof indicator.scrollTo === 'function') {
-                indicator.scrollTo({
-                    left: finalScroll,
-                    behavior: 'smooth'
-                });
+            if(!isVisible) {
+                // 如果標籤在左側被切掉，滾動到左側
+                if(tabRect.left < indicatorRect.left) {
+                    indicator.scrollTo({
+                        left: activeTab.offsetLeft - 10,
+                        behavior: 'smooth'
+                    });
+                }
+                // 如果標籤在右側被切掉，滾動到右側
+                else if(tabRect.right > indicatorRect.right) {
+                    const scrollLeft = activeTab.offsetLeft + activeTab.offsetWidth - indicator.clientWidth + 10;
+                    indicator.scrollTo({
+                        left: Math.max(0, scrollLeft),
+                        behavior: 'smooth'
+                    });
+                }
             }
         };
         
-        // 使用多種方式確保在不同時機都能正確執行
-        centerTab();
+        // 延遲執行，確保DOM更新完成
         requestAnimationFrame(() => {
-            centerTab();
-            setTimeout(() => {
-                centerTab();
-                // 最後一次檢查，確保位置正確
-                setTimeout(() => {
-                    const activeTab = document.querySelector(`.page-tab[data-page="${pageIndex}"]`);
-                    const indicator = document.querySelector('.page-indicator');
-                    if(activeTab && indicator) {
-                        const tabRect = activeTab.getBoundingClientRect();
-                        const indicatorRect = indicator.getBoundingClientRect();
-                        const tabCenter = tabRect.left + tabRect.width / 2;
-                        const indicatorCenter = indicatorRect.left + indicatorRect.width / 2;
-                        const offset = tabCenter - indicatorCenter;
-                        if(Math.abs(offset) > 5) { // 如果偏移超過5px，重新調整
-                            indicator.scrollBy({
-                                left: offset,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                }, 200);
-            }, 150);
+            ensureTabVisible();
+            setTimeout(ensureTabVisible, 100);
         });
+        
+        // 更新箭頭按鈕狀態（桌面版）
+        updatePageNavArrows();
         
         // 更新圖表和列表 - 切換分頁時退出 detail 模式
         chartLevel = pageIndex === 0 ? 'root' : 'page';
@@ -1007,6 +1034,42 @@
         renderAssets();
     }
     
+    // 切換到上一頁
+    function switchToPrevPage() {
+        if(currentPage > 0) {
+            switchToPage(currentPage - 1);
+        }
+    }
+    
+    // 切換到下一頁
+    function switchToNextPage() {
+        if(currentPage < PAGE_TYPES.length - 1) {
+            switchToPage(currentPage + 1);
+        }
+    }
+    
+    // 更新箭頭按鈕的禁用狀態
+    function updatePageNavArrows() {
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        
+        if(prevBtn) {
+            if(currentPage === 0) {
+                prevBtn.classList.add('disabled');
+            } else {
+                prevBtn.classList.remove('disabled');
+            }
+        }
+        
+        if(nextBtn) {
+            if(currentPage >= PAGE_TYPES.length - 1) {
+                nextBtn.classList.add('disabled');
+            } else {
+                nextBtn.classList.remove('disabled');
+            }
+        }
+    }
+    
     function initSwiper() {
         const swiper = document.getElementById('pageSwiper');
         if(!swiper) return;
@@ -1019,6 +1082,19 @@
             touchEndX = e.changedTouches[0].clientX;
             handleSwipe();
         }, { passive: true });
+        
+        // 為圖表區域也添加滑動手勢支持
+        const chartSection = document.querySelector('.chart-section');
+        if(chartSection) {
+            chartSection.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            chartSection.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].clientX;
+                handleSwipe();
+            }, { passive: true });
+        }
     }
     
     function handleSwipe() {
@@ -1308,10 +1384,31 @@
         chartLevel = 'root';
         currentPage = 0;
         renderAssets();
+        // 初始化箭頭按鈕狀態
+        updatePageNavArrows();
         setTimeout(() => { 
             initChart(); 
             // 初始化時不自動居中，只在用戶切換分頁時才居中
         }, 500);
+        
+        // 監聽窗口大小改變，重新調整圖表
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if(chartInstance) {
+                    // 強制圖表重新計算大小
+                    chartInstance.reflow();
+                    // 延遲一下再重新調整，確保DOM更新完成
+                    setTimeout(() => {
+                        if(chartInstance) {
+                            chartInstance.reflow();
+                        }
+                    }, 100);
+                }
+            }, 250);
+        });
+        
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(); }, 60000);
