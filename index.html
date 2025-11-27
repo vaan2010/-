@@ -187,7 +187,7 @@
         .page-item { min-width: 100%; flex-shrink: 0; }
         .page-indicator { 
             display: flex; 
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
             gap: 6px; 
             padding: 12px 16px 10px 16px; 
@@ -201,6 +201,22 @@
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
             scroll-behavior: smooth;
+        }
+        .page-indicator::before,
+        .page-indicator::after {
+            content: '';
+            flex: 1 1 auto;
+            min-width: 0;
+            max-width: calc((100% - 300px) / 2);
+        }
+        @media (max-width: 600px) {
+            .page-indicator::before,
+            .page-indicator::after {
+                display: none;
+            }
+            .page-indicator {
+                justify-content: flex-start;
+            }
         }
         .page-indicator::-webkit-scrollbar {
             display: none !important; /* Chrome, Safari, Opera */
@@ -1404,21 +1420,96 @@
         
         // 監聽窗口大小改變，重新調整圖表
         let resizeTimer;
-        window.addEventListener('resize', () => {
+        let lastWidth = window.innerWidth;
+        let lastIsDesktop = window.innerWidth >= 768;
+        
+        const handleResize = () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
+                const currentWidth = window.innerWidth;
+                const currentIsDesktop = currentWidth >= 768;
+                const widthChanged = Math.abs(currentWidth - lastWidth) > 50;
+                const mediaQueryChanged = lastIsDesktop !== currentIsDesktop;
+                
+                lastWidth = currentWidth;
+                lastIsDesktop = currentIsDesktop;
+                
                 if(chartInstance) {
-                    // 強制圖表重新計算大小
-                    chartInstance.reflow();
-                    // 延遲一下再重新調整，確保DOM更新完成
-                    setTimeout(() => {
-                        if(chartInstance) {
+                    const chartWrapper = document.getElementById('chartWrapper');
+                    const assetChart = document.getElementById('assetChart');
+                    if(chartWrapper && assetChart) {
+                        // 觸發重排，確保CSS媒體查詢已應用
+                        chartWrapper.offsetHeight;
+                        assetChart.offsetHeight;
+                        
+                        // 獲取容器的實際寬度和高度
+                        const wrapperWidth = chartWrapper.clientWidth;
+                        const wrapperHeight = chartWrapper.clientHeight;
+                        
+                        // 如果媒體查詢改變或寬度變化較大，需要更徹底地重新渲染
+                        if(mediaQueryChanged || widthChanged) {
+                            // 強制設置圖表大小
+                            if(wrapperWidth > 0 && wrapperHeight > 0) {
+                                chartInstance.setSize(wrapperWidth, wrapperHeight, false);
+                            }
+                            
+                            // 強制重新計算圖表大小
                             chartInstance.reflow();
+                            
+                            // 多次嘗試確保更新完成
+                            requestAnimationFrame(() => {
+                                if(chartInstance && wrapperWidth > 0 && wrapperHeight > 0) {
+                                    chartInstance.setSize(wrapperWidth, wrapperHeight, false);
+                                    chartInstance.reflow();
+                                    setTimeout(() => {
+                                        if(chartInstance) {
+                                            const newWidth = chartWrapper.clientWidth;
+                                            const newHeight = chartWrapper.clientHeight;
+                                            if(newWidth > 0 && newHeight > 0) {
+                                                chartInstance.setSize(newWidth, newHeight, false);
+                                                chartInstance.reflow();
+                                                // 最後一次確保
+                                                requestAnimationFrame(() => {
+                                                    if(chartInstance) {
+                                                        chartInstance.reflow();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }, 100);
+                                }
+                            });
+                        } else {
+                            // 小幅度變化，簡單重新計算
+                            if(wrapperWidth > 0 && wrapperHeight > 0) {
+                                chartInstance.setSize(wrapperWidth, wrapperHeight, false);
+                            }
+                            chartInstance.reflow();
+                            setTimeout(() => {
+                                if(chartInstance) {
+                                    const newWidth = chartWrapper.clientWidth;
+                                    const newHeight = chartWrapper.clientHeight;
+                                    if(newWidth > 0 && newHeight > 0) {
+                                        chartInstance.setSize(newWidth, newHeight, false);
+                                    }
+                                    chartInstance.reflow();
+                                }
+                            }, 100);
                         }
-                    }, 100);
+                    }
                 }
-            }, 250);
-        });
+            }, 200);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        
+        // 監聽媒體查詢變化（更可靠的方式）
+        if(window.matchMedia) {
+            const mediaQuery = window.matchMedia('(min-width: 768px)');
+            mediaQuery.addEventListener('change', () => {
+                handleResize();
+            });
+        }
         
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
