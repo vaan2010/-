@@ -33,18 +33,23 @@
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
         .sidebar.active { left: 0; }
         
+        .content-grid { display: flex; flex-direction: column; }
+        .chart-section { display: flex; flex-direction: column; flex-shrink: 0; }
+        .list-section { flex: 1; overflow-y: auto; min-height: 0; }
+        
         @media (min-width: 768px) {
             .sidebar { position: static; left: 0; box-shadow: none; }
             .sidebar-overlay { display: none !important; }
             .hamburger-btn { display: none !important; }
             .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
             .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; height: 100%; }
+            .chart-section { height: auto; }
             .summary-card { text-align: left !important; padding: 0 !important; margin-bottom: 20px; }
             .tab-bar { display: none !important; }
             body { padding-bottom: 0; }
             .modal { align-items: center; justify-content: center; display: flex; }
             .modal-content-wrapper { width: 500px !important; height: 80% !important; max-height: 700px; border-radius: 16px; border: 1px solid var(--border-color); position: relative !important; overflow: hidden; display: flex; flex-direction: column; }
-            #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; }
+            #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; flex: 0 0 auto; min-height: 320px; }
             #assetChart { max-width: 100% !important; width: 100% !important; height: 100% !important; }
             #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
             #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
@@ -65,7 +70,8 @@
         .menu-text { flex: 1; }
         .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
 
-        .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
+        /* chart-section 樣式在 content-grid 中定義 */
+        .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
         .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
@@ -74,7 +80,7 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        #chartWrapper { margin: -10px 0 0 0; background: transparent; position: relative; height: 320px; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; }
+        #chartWrapper { flex: 1; background: transparent; position: relative; min-height: 320px; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; margin: auto 0; }
         #assetChart { max-width: 100% !important; box-sizing: border-box !important; width: 100% !important; height: 100% !important; }
         #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
         #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
@@ -1188,9 +1194,9 @@
                 let htmlContent = '';
                 if(acc.isAuto) {
                     let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
-                    let priceUnit = acc.type === 'twstock' ? 'TWD' : 'USD';
+                    // 台股使用 NT$，美股/加密貨幣使用 $
                     let pricePrefix = acc.type === 'twstock' ? 'NT$' : '$';
-                    // 簡化價格顯示，去掉單位
+                    // 簡化價格顯示，去掉單位（台股和美股都統一格式）
                     let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()}` : '--';
                     let chg = '';
                     if(acc.dayChangePercent) {
@@ -1304,18 +1310,7 @@
         renderAssets();
         setTimeout(() => { 
             initChart(); 
-            // 初始化後滾動到第一個標籤中間
-            setTimeout(() => {
-                const firstTab = document.querySelector('.page-tab[data-page="0"]');
-                const indicator = document.querySelector('.page-indicator');
-                if(firstTab && indicator) {
-                    const tabLeft = firstTab.offsetLeft;
-                    const tabWidth = firstTab.offsetWidth;
-                    const indicatorWidth = indicator.clientWidth;
-                    const scrollPos = tabLeft + (tabWidth / 2) - (indicatorWidth / 2);
-                    indicator.scrollLeft = Math.max(0, scrollPos);
-                }
-            }, 100);
+            // 初始化時不自動居中，只在用戶切換分頁時才居中
         }, 500);
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
