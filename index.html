@@ -61,16 +61,16 @@
         .menu-text { flex: 1; }
         .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
 
-        .summary-card { padding: 10px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
+        .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 5px 0; font-family: 'Roboto', sans-serif; }
-        .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 10px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
+        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
+        .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
         .pnl-up { color: var(--color-up); } .pnl-down { color: var(--color-down); }
-        .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 5px; margin-bottom: 10px; }
+        .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 3px; margin-bottom: 5px; }
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        #chartWrapper { margin: 0; background: transparent; position: relative; height: 320px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; z-index: 80; }
+        #chartWrapper { margin: -10px 0 0 0; background: transparent; position: relative; height: 320px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; z-index: 80; }
         #chartWrapper .highcharts-point { transition: none !important; pointer-events: auto !important; }
         #chartWrapper .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
         #chartWrapper .highcharts-series .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
@@ -117,6 +117,68 @@
         .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; width: 30%; }
         .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; } .tab-item.active { color: #0a84ff; }
         .fa-spin-fast { animation: fa-spin 1s infinite linear; }
+
+        /* Page Swiper */
+        .page-swiper { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
+        .page-container { display: flex; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
+        .page-item { min-width: 100%; flex-shrink: 0; }
+        .page-indicator { 
+            display: flex; 
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px; 
+            padding: 12px 16px 10px 16px; 
+            position: sticky; 
+            top: 60px; 
+            z-index: 95; 
+            background: linear-gradient(to bottom, var(--bg-color) 0%, var(--bg-color) 90%, transparent 100%);
+            backdrop-filter: blur(10px);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+        }
+        .page-indicator::-webkit-scrollbar {
+            display: none;
+        }
+        .page-tab { 
+            padding: 10px 18px;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: rgba(142, 142, 147, 0.1);
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            flex-shrink: 0;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .page-tab.active { 
+            color: #ffffff;
+            background: #0a84ff;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+        }
+        
+        @media (min-width: 480px) {
+            .page-tab { 
+                padding: 12px 24px;
+                font-size: 18px;
+            }
+            .page-tab.active { 
+                font-size: 18px;
+            }
+        }
+        .page-tab:active {
+            transform: scale(0.95);
+        }
+        .page-tab:not(.active):hover {
+            background: rgba(142, 142, 147, 0.2);
+        }
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow: hidden; }
@@ -186,7 +248,8 @@
             <div class="sidebar-header"><h2>設定</h2></div>
             <div class="sidebar-menu">
                 <div class="menu-label">API 設定</div>
-                <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (報價)</span></div>
+                <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (美股報價)</span></div>
+                <div class="menu-item" onclick="setApiKey('fugle'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Fugle Key (台股報價)</span></div>
                 <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
                 <div class="menu-label">資料管理</div>
                 <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
@@ -205,10 +268,18 @@
                 </div>
             </div>
 
+            <div class="page-indicator">
+                <button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button>
+                <button class="page-tab" data-page="1" onclick="switchToPage(1)">銀行</button>
+                <button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button>
+                <button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button>
+                <button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>
+            </div>
+
             <div class="content-grid">
                 <div class="chart-section">
                     <div class="summary-card">
-                        <div class="total-label">總淨資產 (TWD)</div>
+                        <div class="total-label" id="summaryLabel">總淨資產 (TWD)</div>
                         <div class="total-amount" id="totalNetWorth">NT$ --</div>
                         <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge" id="totalPnLBadge">今日: +0</div></div>
                         <div class="rate-info">
@@ -219,13 +290,29 @@
 
                     <div id="chartWrapper">
                         <div id="customTooltip"><div class="tt-header">類別</div><div class="tt-body"><span class="tt-dot"></span>資產: 0</div></div>
-                        <button class="chart-back-btn" id="chartBackBtn" onclick="resetChartLevel()"><i class="fas fa-chevron-left"></i> 返回總覽</button>
                         <div id="assetChart" style="width:100%; height:100%;"></div>
                     </div>
                 </div>
 
-                <div class="list-section">
-                    <div id="assetsContainer"></div>
+                <div class="list-section page-swiper" id="pageSwiper">
+                    <div class="page-container" id="pageContainer">
+                        <div class="page-item" data-page="0">
+                            <div id="assetsContainer"></div>
+                        </div>
+                        <div class="page-item" data-page="1">
+                            <div id="assetsContainer1"></div>
+                        </div>
+                        <div class="page-item" data-page="2">
+                            <div id="assetsContainer2"></div>
+                        </div>
+                        <div class="page-item" data-page="3">
+                            <div id="assetsContainer3"></div>
+                        </div>
+                        <div class="page-item" data-page="4">
+                            <div id="assetsContainer4"></div>
+                        </div>
+                    </div>
+                    <div id="debtContainer" style="margin-top: 20px;"></div>
                     <div style="height: 60px;" class="mobile-spacer"></div>
                 </div>
             </div>
@@ -297,12 +384,12 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="form-row"><span class="form-label">類型</span><select id="inpType" class="form-input" onchange="handleTypeChange()"><option value="bank">銀行</option><option value="crypto">加密貨幣</option><option value="stock">投資理財</option><option value="debt">負債</option></select></div>
+                    <div class="form-row"><span class="form-label">類型</span><select id="inpType" class="form-input" onchange="handleTypeChange()"><option value="bank">銀行</option><option value="crypto">加密貨幣</option><option value="stock">投資理財 (美股)</option><option value="twstock">投資理財 (台股)</option><option value="debt">負債</option></select></div>
                     <div class="form-row" id="rowName"><span class="form-label">名稱</span><input type="text" id="inpName" class="form-input" placeholder="例如: NVDA"></div>
                     <div class="form-row" id="rowSymbol" style="display:none;"><span class="form-label">代碼</span><input type="text" id="inpSymbol" class="form-input" placeholder="例如: NVDA" oninput="syncNameFromSymbol(); updateAIButtonState();"></div>
                     <div class="form-row" id="rowCurrency"><span class="form-label">幣別</span><select id="inpCurrency" class="form-input"><option value="TWD">TWD (新台幣)</option><option value="USD">USD (美金)</option></select></div>
                     <div class="form-row"><span class="form-label" id="lblBalance">股數</span><input type="number" id="inpBalance" class="form-input" placeholder="0"></div>
-                    <div class="form-row" id="rowCost" style="display:none;"><span class="form-label">平均成本</span><input type="number" id="inpCost" class="form-input" placeholder="0 (USD)"></div>
+                    <div class="form-row" id="rowCost" style="display:none;"><span class="form-label">平均成本</span><input type="number" id="inpCost" class="form-input" placeholder="0"></div>
                 </div>
                 <div id="symbolHint" class="hint-text" style="display:none;">* 輸入代碼，預設使用美金報價</div>
                 <div class="delete-btn-area"><button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除</button></div>
@@ -318,8 +405,8 @@
     const STORAGE_KEY_DATA = 'my_assets_stable_data';
     const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
     
-    const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
-    const TYPE_NAMES = { 'bank': '銀行', 'stock': '投資理財', 'crypto': '加密貨幣', 'debt': '負債' };
+    const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#bf5af2', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
+    const TYPE_NAMES = { 'bank': '銀行', 'stock': '投資理財', 'twstock': '投資理財 (台股)', 'crypto': '加密貨幣', 'debt': '負債' };
 
     let editingId = null;
     let chartInstance = null;
@@ -329,6 +416,13 @@
     let isEditMode = false;
     let sortables = [];
     let currentDetailAcc = null;
+    
+    // Page Swiper
+    let currentPage = 0;
+    const PAGE_TYPES = ['overview', 'bank', 'stock', 'twstock', 'crypto'];
+    const PAGE_NAMES = ['總覽', '銀行/現金', '美股', '台股', '加密貨幣'];
+    let touchStartX = 0;
+    let touchEndX = 0;
 
     // 2. Define Data Loading Functions
     function safeParseFloat(val) { let v = parseFloat(val); return isNaN(v) ? 0 : v; }
@@ -359,7 +453,7 @@
         dayChange: safeParseFloat(a.dayChange || 0), dayChangePercent: safeParseFloat(a.dayChangePercent || 0), 
         cost: safeParseFloat(a.cost || 0), order: (a.order!==undefined)?a.order:index, transactions: a.transactions || [] 
     }));
-    let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 };
+    let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 };
 
     // 3. Define ALL Functions (Chart, UI, Logic)
 
@@ -368,7 +462,10 @@
         e.stopPropagation(); 
         if (clickTimer) { 
             clearTimeout(clickTimer); clickTimer = null; 
-            if(chartLevel==='root'&&currentDetails[this.drilldown]){ hideCustomTooltip(); enterDetailLevel(this.drilldown, currentDetails[this.drilldown]); } 
+            if((chartLevel==='root' || currentPage === 0) && currentDetails[this.drilldown]){ 
+                hideCustomTooltip(); 
+                enterDetailLevel(this.drilldown, currentDetails[this.drilldown]);
+            } 
         } else { 
             let t=this; let ex=e; 
             clickTimer=setTimeout(function(){ clickTimer=null; activeInactivePoints.clear(); if(t.sliced){ t.slice(false); t.setState('normal'); const prevPointEl = t.graphic?.element; if(prevPointEl) { prevPointEl.style.setProperty('opacity', '1', 'important'); } if(t.series.data) t.series.data.forEach(p=>{ if(p!==t) { p.setState('normal'); const pEl = p.graphic?.element; if(pEl) pEl.style.setProperty('opacity', '1', 'important'); } }); hideCustomTooltip(); } else { if(t.series.data) { t.series.data.forEach(p=>{ if(p!==t){ if(p.sliced) { p.slice(false); p.setState('inactive'); const pointEl = p.graphic?.element; if(pointEl) { const pointId = pointEl.getAttribute('data-highcharts-point-index') || pointEl.getAttribute('class') || `point-${p.index}`; activeInactivePoints.add(pointId); pointEl.style.setProperty('opacity', '0.3', 'important'); } } else { p.setState('inactive'); const pointEl = p.graphic?.element; if(pointEl) { const pointId = pointEl.getAttribute('data-highcharts-point-index') || pointEl.getAttribute('class') || `point-${p.index}`; activeInactivePoints.add(pointId); pointEl.style.setProperty('opacity', '0.3', 'important'); } } } }); } t.slice(true); t.setState('normal'); const newPointEl = t.graphic?.element; if(newPointEl) { newPointEl.style.setProperty('opacity', '1', 'important'); } showCustomTooltip(t, ex); } }, 250); 
@@ -394,8 +491,8 @@
 
     function updateChartData() { 
         if(!Highcharts)return; 
-        let groups={'bank':0,'stock':0,'crypto':0}; 
-        currentDetails={'bank':[],'stock':[],'crypto':[]}; 
+        let groups={'bank':0,'stock':0,'twstock':0,'crypto':0}; 
+        currentDetails={'bank':[],'stock':[],'twstock':[],'crypto':[]}; 
         
         accounts.forEach(acc=>{ 
             if(acc.type==='debt')return; 
@@ -408,34 +505,62 @@
             } 
         }); 
         
-        let rootData=[{name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:TYPE_COLORS.bank},{name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:TYPE_COLORS.stock},{name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:TYPE_COLORS.crypto}].filter(d=>d.y>0); 
+        // 根據當前分頁和圖表層級決定顯示的數據
+        let chartData = [];
+        let chartTitle = '';
+        
+        if(chartLevel === 'root' || (chartLevel === 'page' && currentPage === 0)) {
+            // 總覽分頁：顯示四個類別的總覽
+            chartData = [{name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:TYPE_COLORS.bank},{name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:TYPE_COLORS.stock},{name:TYPE_NAMES['twstock'],y:Math.round(groups.twstock),drilldown:'twstock',color:TYPE_COLORS.twstock},{name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:TYPE_COLORS.crypto}].filter(d=>d.y>0);
+            chartTitle = '';
+        } else if(chartLevel === 'page' && currentPage > 0) {
+            // 分頁模式：顯示當前分頁類別內的資產分布
+            const currentType = PAGE_TYPES[currentPage];
+            chartData = currentDetails[currentType] || [];
+            chartTitle = PAGE_NAMES[currentPage];
+        } else if(chartLevel === 'detail') {
+            // 詳細模式：已經在enterDetailLevel中處理，不在此更新
+            return;
+        }
         
         if(!chartInstance){
             chartInstance=Highcharts.chart('assetChart',{
                 chart:{type:'pie',backgroundColor:'transparent',spacing:[30,0,20,0],height:'100%'},
-                title:{text:null},credits:{enabled:false},tooltip:{enabled:false},
+                title:{text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
+                credits:{enabled:false},tooltip:{enabled:false},
                 plotOptions:{pie:{innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
-                series:[{name:'資產',data:rootData}]
+                series:[{name:'資產',data:chartData}]
             });
             disableChartHover();
         } else { 
-            if(chartLevel==='root'){ 
+            if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
+                chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:rootData,type:'pie',innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}});
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'60%',size:'60%',center:['50%','50%'],borderWidth:0,slicedOffset:10,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
                     disableChartHover();
                 } else {
-                    chartInstance.series[0].setData(rootData); 
+                    chartInstance.series[0].setData(chartData); 
                 } 
-            } 
+            } else if(chartLevel === 'detail') {
+                // 詳細模式不在此更新，由enterDetailLevel處理
+            }
         } 
     }
     
     function enterDetailLevel(cat, data) { 
-        chartLevel='detail'; document.getElementById('chartBackBtn').style.display='block'; hideCustomTooltip(); 
+        chartLevel='detail'; 
+        hideCustomTooltip(); 
+        
+        // 切換到對應的分頁（總覽是0，所以類別分頁要+1）
+        const pageIndex = PAGE_TYPES.indexOf(cat);
+        if(pageIndex > 0) {
+            switchToPage(pageIndex);
+        }
+        
         if(chartInstance.series[0])chartInstance.series[0].remove(false); 
-        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'60%', size:'60%', center:['50%','50%'], borderWidth:0, slicedOffset:10, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
-        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
-        disableChartHover();
+        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'60%', size:'60%', center:['50%','50%'], borderWidth:0, slicedOffset:10, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:5,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true); 
+        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+        disableChartHover(); 
     }
     
     let hoverCheckInterval = null;
@@ -489,19 +614,31 @@
         }, 100);
     }
     
-    function resetChartLevel() { activeInactivePoints.clear(); chartLevel='root'; document.getElementById('chartBackBtn').style.display='none'; chartInstance.setTitle({text:''}); hideCustomTooltip(); while(chartInstance.series.length>0)chartInstance.series[0].remove(false); updateChartData(); disableChartHover(); }
+    function resetChartLevel() { 
+        activeInactivePoints.clear(); 
+        if(chartLevel === 'detail') {
+            // 從詳細模式返回，根據當前分頁決定
+            chartLevel = currentPage === 0 ? 'root' : 'page';
+        } else {
+            chartLevel = currentPage === 0 ? 'root' : 'page';
+        }
+        hideCustomTooltip(); 
+        while(chartInstance.series.length>0)chartInstance.series[0].remove(false); 
+        updateChartData(); 
+        disableChartHover(); 
+    }
     
     function initChart() { 
         if(typeof Highcharts==='undefined')return; 
         Highcharts.setOptions({chart:{style:{fontFamily:'sans-serif'},events:{click:function(e){if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}activeInactivePoints.clear();if(this.series[0]){this.series[0].points.forEach(p=>{p.slice(false);p.setState('normal');const pEl = p.graphic?.element;if(pEl) pEl.style.setProperty('opacity', '1', 'important');});}hideCustomTooltip();}}},title:{text:''},tooltip:{enabled:false},plotOptions:{pie:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}}}}}}); 
         updateChartData(); 
-        document.getElementById('chartWrapper').addEventListener('click',function(e){const t=e.target;if(t.tagName!=='path'&&!t.closest('#chartBackBtn')&&!t.closest('.highcharts-point')&&chartInstance){if(clickTimer)clearTimeout(clickTimer);activeInactivePoints.clear();if(chartInstance.series[0]){chartInstance.series[0].points.forEach(p=>{p.slice(false);p.setState('normal');const pEl = p.graphic?.element;if(pEl) pEl.style.setProperty('opacity', '1', 'important');});}hideCustomTooltip();}}); 
+        document.getElementById('chartWrapper').addEventListener('click',function(e){const t=e.target;if(t.tagName!=='path'&&!t.closest('.highcharts-point')&&chartInstance){if(clickTimer)clearTimeout(clickTimer);activeInactivePoints.clear();if(chartInstance.series[0]){chartInstance.series[0].points.forEach(p=>{p.slice(false);p.setState('normal');const pEl = p.graphic?.element;if(pEl) pEl.style.setProperty('opacity', '1', 'important');});}hideCustomTooltip();}}); 
     }
 
     // --- Calculations ---
-    function calculateTWD(acc) { let val=0; if(acc.isAuto){ let p=acc.currentPrice||0; if(acc.currency==='USD')val=acc.balance*p*settings.usdRate; else if(acc.type==='crypto')val=acc.balance*p*settings.usdtRate*settings.usdRate; else val=acc.balance*p*settings.usdRate; } else { if(acc.currency==='USD')val=acc.balance*settings.usdRate; else val=acc.balance; } return safeParseFloat(val); }
-    function calculateDailyPnL_TWD(acc) { if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.currency==='USD')pnl=acc.balance*acc.dayChange*settings.usdRate; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate*settings.usdRate; else pnl=acc.balance*acc.dayChange*settings.usdRate; return safeParseFloat(pnl); }
-    function calculateCostPnL_TWD(acc) { if(!acc.cost||acc.cost<=0||!acc.isAuto)return 0; let cur=calculateTWD(acc); let cost=acc.balance*acc.cost*settings.usdRate; return safeParseFloat(cur-cost); }
+    function calculateTWD(acc) { let val=0; if(acc.isAuto){ let p=acc.currentPrice||0; if(acc.type==='twstock')val=acc.balance*p; else if(acc.currency==='USD')val=acc.balance*p*settings.usdRate; else if(acc.type==='crypto')val=acc.balance*p*settings.usdtRate*settings.usdRate; else val=acc.balance*p*settings.usdRate; } else { if(acc.currency==='USD')val=acc.balance*settings.usdRate; else val=acc.balance; } return safeParseFloat(val); }
+    function calculateDailyPnL_TWD(acc) { if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.type==='twstock')pnl=acc.balance*acc.dayChange; else if(acc.currency==='USD')pnl=acc.balance*acc.dayChange*settings.usdRate; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate*settings.usdRate; else pnl=acc.balance*acc.dayChange*settings.usdRate; return safeParseFloat(pnl); }
+    function calculateCostPnL_TWD(acc) { if(!acc.cost||acc.cost<=0||!acc.isAuto)return 0; let cur=calculateTWD(acc); let cost=acc.type==='twstock'?acc.balance*acc.cost:acc.balance*acc.cost*settings.usdRate; return safeParseFloat(cur-cost); }
     function calculatePnL_TWD(acc) { if(acc.cost>0&&acc.isAuto){ return calculateCostPnL_TWD(acc); } return calculateDailyPnL_TWD(acc); }
     function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()} TWD</span>`; }
 
@@ -512,10 +649,10 @@
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
-    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
-    function updateAIButtonState() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='crypto'){ const symbol=document.getElementById('inpSymbol').value.trim(); const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=!symbol; } }
-    function syncNameFromSymbol() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='crypto'){ const s=document.getElementById('inpSymbol').value.trim().toUpperCase(); if(s) { if(t==='stock') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } else if(t==='crypto') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } } } }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='crypto'){ if(!s)return alert("代碼?"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
+    function updateAIButtonState() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='twstock'||t==='crypto'){ const symbol=document.getElementById('inpSymbol').value.trim(); const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=!symbol; } }
+    function syncNameFromSymbol() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='twstock'||t==='crypto'){ const s=document.getElementById('inpSymbol').value.trim().toUpperCase(); if(s) { if(t==='stock'||t==='twstock') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } else if(t==='crypto') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } } } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("代碼?"); n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("代碼?"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -530,7 +667,7 @@
     }
     function saveData() { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(accounts)); }
     function updateOrder(type,container){ let ids=Array.from(container.children).map(c=>parseInt(c.getAttribute('data-id'))); ids.forEach((id,idx)=>{ let a=accounts.find(x=>x.id===id); if(a)a.order=idx; }); saveData(); }
-    function setApiKey(t) { if(t==='finnhub'){const k=prompt("Finnhub Key:", settings.apiKey);if(k)settings.apiKey=k.trim();} else {const k=prompt("Gemini Key:", settings.geminiKey);if(k)settings.geminiKey=k.trim();} localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); refreshAllData(); }
+    function setApiKey(t) { if(t==='finnhub'){const k=prompt("Finnhub Key:", settings.apiKey);if(k)settings.apiKey=k.trim();} else if(t==='fugle'){const k=prompt("Fugle Key:", settings.fugleKey);if(k)settings.fugleKey=k.trim();} else {const k=prompt("Gemini Key:", settings.geminiKey);if(k)settings.geminiKey=k.trim();} localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); refreshAllData(); }
     function setFeeRate() { const k=prompt("手續費率 (%):", settings.feeRate); if(k)settings.feeRate=parseFloat(k); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); }
     function updateFeeDisplay() { const s=document.getElementById('brokerSelect'); if(s.value==='custom'){ const r=prompt("自訂費率 (%):", settings.feeRate||0.1); if(r)settings.feeRate=parseFloat(r); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); } }
     function exportData() { 
@@ -639,7 +776,7 @@
         if (!currentDetailAcc) return;
         if (!currentDetailAcc.isAuto) { editAccount(id); return; }
         document.getElementById('dName').innerText = currentDetailAcc.name; document.getElementById('dSymbol').innerText = currentDetailAcc.symbol; document.getElementById('dQty').innerText = currentDetailAcc.balance;
-        let price = currentDetailAcc.currentPrice || 0; document.getElementById('dPrice').innerText = `$${price.toLocaleString()}`;
+        let price = currentDetailAcc.currentPrice || 0; let priceUnit = currentDetailAcc.type === 'twstock' ? 'TWD' : 'USD'; document.getElementById('dPrice').innerText = `${currentDetailAcc.type === 'twstock' ? 'NT$' : '$'}${price.toLocaleString()}`;
         let valTWD = calculateTWD(currentDetailAcc); document.getElementById('dVal').innerText = `NT$ ${Math.round(valTWD).toLocaleString()}`;
         let cost = currentDetailAcc.cost || 0; let fee = settings.feeRate || 0.1;
         
@@ -652,7 +789,7 @@
         // 持股成本損益
         let costPnL = calculateCostPnL_TWD(currentDetailAcc);
         let costPnLUSD = (price - cost) * currentDetailAcc.balance;
-        let costPnLTWD = costPnLUSD * settings.usdRate;
+        let costPnLTWD = currentDetailAcc.type === 'twstock' ? costPnLUSD : costPnLUSD * settings.usdRate;
         let costPnlPct = (cost > 0) ? ((price - cost) / cost) * 100 : 0;
         let costSign = costPnLTWD >= 0 ? '+' : '';
         let costColor = '#fff';
@@ -757,17 +894,364 @@
     function renderTransactions(list) { const c = document.getElementById('txListContainer'); c.innerHTML = ''; if(!list || list.length === 0) { c.innerHTML = '<div class="tx-no-data">無明細</div>'; return; } list.forEach(tx => { c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div></div>`; }); }
 
     // Async Updates
-    async function refreshAllData() { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey)await fetchPrices(); if(chartLevel==='root')updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
+    async function refreshAllData() { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
     async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
-    async function fetchPrices() { if(!settings.apiKey)return; const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } }catch(e){} } saveData(); renderAssets(); }
-    function renderAssets() { const c=document.getElementById('assetsContainer'); c.innerHTML=''; sortables.forEach(s=>s.destroy()); sortables=[]; const groups=[{key:'bank',t:'銀行 / 現金',i:'fa-university',s:'icon-bank'},{key:'stock',t:'投資理財 (美股)',i:'fa-chart-line',s:'icon-stock'},{key:'crypto',t:'加密貨幣 (USD)',i:'fa-bitcoin',s:'icon-crypto'},{key:'debt',t:'負債',i:'fa-hand-holding-usd',s:'icon-debt'}]; let net=0; let totalDailyPnL=0; groups.forEach(g=>{ let items=accounts.filter(a=>a.type===g.key).sort((a,b)=>(a.order||0)-(b.order||0)); if(items.length===0)return; let sum=0; let groupPnL=0; let html=''; items.forEach(acc=>{ let val=calculateTWD(acc); let pnl=calculatePnL_TWD(acc); if(g.key==='debt')net-=val; else net+=val; sum+=val; groupPnL+=pnl; totalDailyPnL+=pnl; let htmlContent=''; if(acc.isAuto){ let sym=acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); let price=acc.currentPrice?`$${acc.currentPrice.toLocaleString()} USD`:'--'; let chg=''; if(acc.dayChangePercent){ let s=acc.dayChangePercent>0?'+':''; let c=acc.dayChangePercent>0?'sub-green':'sub-red'; chg=`<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`; } let line1=chg || '--'; if(!acc.dayChangePercent) chg='--'; let line2=`${price} • ${acc.balance}`; let line3=''; if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0){ let pnlPct=((acc.currentPrice - acc.cost) / acc.cost) * 100; let s=pnlPct>=0?'+':''; let c=pnlPct>=0?'sub-green':'sub-red'; line3=`成本 $${acc.cost.toFixed(2)} <span class="${c}">${s}${pnlPct.toFixed(2)}%</span>`; } htmlContent=`<div class="item-name">${acc.name}</div><div class="item-row">${line1}</div><div class="item-row">${line2}</div>${line3?`<div class="item-row">${line3}</div>`:''}`; } else { htmlContent=`<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`; } let color=g.key==='debt'?'amount-red':'amount-green'; let hdl=isEditMode?`<div class="drag-handle"><i class="fas fa-bars"></i></div>`:''; let clk=isEditMode?`onclick="openDetailView(${acc.id})"`:`onclick="openDetailView(${acc.id})"`; let dailyPnL=acc.isAuto?calculateDailyPnL_TWD(acc):0; let costPnL=acc.isAuto?calculateCostPnL_TWD(acc):0; let pnlHtml=''; if(acc.isAuto){ let hasLine3=(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0); if(Math.abs(dailyPnL)>0.01){ pnlHtml+=`<div class="amount-pnl" style="font-size:11px;">當天 ${formatPnL(dailyPnL)}</div>`; } else { pnlHtml+=`<div class="amount-spacer"></div>`; } pnlHtml+=`<div class="amount-spacer"></div>`; if(hasLine3){ if(Math.abs(costPnL)>0.01){ pnlHtml+=`<div class="amount-pnl">成本 ${formatPnL(costPnL)}</div>`; } else { pnlHtml+=`<div class="amount-spacer"></div>`; } } } else { pnlHtml=`<div class="amount-spacer"></div>`; if(pnl!==0){ pnlHtml+=`<div class="amount-pnl">${formatPnL(pnl)}</div>`; } else { pnlHtml+='<div class="item-sub">TWD</div>'; } } html+=`<div class="list-item" ${clk} data-id="${acc.id}"><div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`; }); let pHtml=groupPnL!==0?`<span class="group-pnl">${formatPnL(groupPnL)}</span>`:''; let cid=`group-${g.key}`; c.innerHTML+=`<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total">${Math.round(sum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="${cid}">${html}</div>`; }); if(isEditMode){ groups.forEach(g=>{ let el=document.getElementById(`group-${g.key}`); if(el)sortables.push(Sortable.create(el,{handle:'.drag-handle',animation:150,onEnd:function(evt){updateOrder(g.key,evt.from);}})); }); document.querySelectorAll('.drag-handle').forEach(el=>el.style.display='block'); } document.getElementById('totalNetWorth').innerText=`NT$ ${Math.round(net).toLocaleString()}`; const b=document.getElementById('totalPnLBlock'); const bd=document.getElementById('totalPnLBadge'); if(Math.abs(totalDailyPnL)>1){ b.style.display='block'; const s=totalDailyPnL>0?'+':''; const c=totalDailyPnL>0?'pnl-up':'pnl-down'; bd.innerHTML=`損益: <span class="${c}">${s}NT$ ${Math.round(totalDailyPnL).toLocaleString()} TWD</span>`; } else { b.style.display='none'; } updateChartData(); }
+    async function fetchPrices() { const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ if(acc.type==='twstock'){ if(!settings.fugleKey)continue; await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${acc.symbol}`,{headers:{'X-API-KEY':settings.fugleKey}}); const j=await res.json(); if(j){ const price=j.lastPrice||(j.trade&&j.trade.price)||(j.trades&&j.trades[0]&&j.trades[0].price)||0; const changePercent=j.changePercent||(j.trade&&j.trade.changePercent)||0; const prevClose=j.previousClose||(price&&changePercent?price/(1+changePercent/100):price)||price; acc.currentPrice=price; acc.dayChangePercent=changePercent||0; acc.dayChange=(price-prevClose)||0; } } else { if(!settings.apiKey)continue; let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } } }catch(e){} } saveData(); renderAssets(); }
+    // Page Swiper Functions
+    function switchToPage(pageIndex) {
+        if(pageIndex < 0 || pageIndex >= PAGE_TYPES.length) return;
+        currentPage = pageIndex;
+        const container = document.getElementById('pageContainer');
+        if(container) container.style.transform = `translateX(-${pageIndex * 100}%)`;
+        
+        // 更新分頁指示器
+        document.querySelectorAll('.page-tab').forEach((tab, idx) => {
+            tab.classList.toggle('active', idx === pageIndex);
+        });
+        
+        // 滾動到當前激活的標籤，讓它顯示在中間
+        const centerActiveTab = () => {
+            const activeTab = document.querySelector(`.page-tab[data-page="${pageIndex}"]`);
+            const indicator = document.querySelector('.page-indicator');
+            
+            if(!activeTab || !indicator) return;
+            
+            // 獲取實際尺寸
+            const tabLeft = activeTab.offsetLeft;
+            const tabWidth = activeTab.offsetWidth;
+            const indicatorWidth = indicator.offsetWidth;
+            
+            // 計算居中位置：標籤中心 - 容器中心
+            const centerPosition = tabLeft + (tabWidth / 2) - (indicatorWidth / 2);
+            
+            // 限制在滾動範圍內
+            const maxScroll = indicator.scrollWidth - indicatorWidth;
+            const scrollPos = Math.max(0, Math.min(centerPosition, maxScroll));
+            
+            // 執行滾動
+            indicator.scrollLeft = scrollPos;
+        };
+        
+        // 多次嘗試，確保在不同時機都能執行
+        centerActiveTab();
+        setTimeout(centerActiveTab, 50);
+        setTimeout(centerActiveTab, 200);
+        setTimeout(centerActiveTab, 400);
+        
+        // 更新圖表和列表 - 切換分頁時退出 detail 模式
+        chartLevel = pageIndex === 0 ? 'root' : 'page';
+        
+        // 如果之前在 detail 模式，清除圖表系列
+        if(chartInstance && chartInstance.series.length > 0) {
+            while(chartInstance.series.length > 0) {
+                chartInstance.series[0].remove(false);
+            }
+        }
+        
+        updateChartData();
+        renderAssets();
+    }
+    
+    function initSwiper() {
+        const swiper = document.getElementById('pageSwiper');
+        if(!swiper) return;
+        
+        swiper.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        swiper.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].clientX;
+            handleSwipe();
+        }, { passive: true });
+    }
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if(Math.abs(diff) > swipeThreshold) {
+            if(diff > 0 && currentPage < PAGE_TYPES.length - 1) {
+                // 向右滑動，切換到下一個分頁
+                switchToPage(currentPage + 1);
+            } else if(diff < 0 && currentPage > 0) {
+                // 向左滑動，切換到上一個分頁
+                switchToPage(currentPage - 1);
+            }
+        }
+    }
+    
+    function renderAssets() { 
+        sortables.forEach(s=>s.destroy()); 
+        sortables=[]; 
+        
+        let displayAmount = 0;
+        let totalDailyPnL = 0;
+        
+        if(currentPage === 0) {
+            // 總覽分頁：計算總淨資產（包含所有資產減去負債）
+            accounts.forEach(acc => {
+                let val = calculateTWD(acc);
+                if(acc.type === 'debt') displayAmount -= val;
+                else displayAmount += val;
+                if(acc.isAuto) totalDailyPnL += calculateDailyPnL_TWD(acc);
+            });
+        } else {
+            // 其他分頁：只計算該分頁類別的總額
+            const currentType = PAGE_TYPES[currentPage];
+            accounts.forEach(acc => {
+                if(acc.type === currentType) {
+                    let val = calculateTWD(acc);
+                    displayAmount += val;
+                    if(acc.isAuto) totalDailyPnL += calculateDailyPnL_TWD(acc);
+                }
+            });
+        }
+        
+        // 更新總資產顯示
+        document.getElementById('totalNetWorth').innerText = `NT$ ${Math.round(displayAmount).toLocaleString()}`;
+        const b = document.getElementById('totalPnLBlock');
+        const bd = document.getElementById('totalPnLBadge');
+        if(Math.abs(totalDailyPnL) > 1) {
+            b.style.display = 'block';
+            // 重置樣式，確保損益正常顯示
+            bd.style.visibility = 'visible';
+            bd.style.height = '';
+            bd.style.margin = '';
+            bd.style.padding = '';
+            const s = totalDailyPnL > 0 ? '+' : '';
+            const c = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
+            bd.innerHTML = `損益: <span class="${c}">${s}NT$ ${Math.round(totalDailyPnL).toLocaleString()} TWD</span>`;
+        } else {
+            // 即使沒有損益也顯示空白區塊，保持與其他分頁對齊（完全不可見但佔位）
+            b.style.display = 'block';
+            bd.style.visibility = 'hidden';
+            bd.style.height = '0';
+            bd.style.margin = '0';
+            bd.style.padding = '0';
+            bd.innerHTML = '';
+        }
+        
+        // 更新摘要標籤
+        const summaryLabelEl = document.getElementById('summaryLabel');
+        if(currentPage === 0) {
+            if(summaryLabelEl) summaryLabelEl.innerText = '總淨資產 (TWD)';
+        } else {
+            if(summaryLabelEl) summaryLabelEl.innerText = `${PAGE_NAMES[currentPage]} 總額 (TWD)`;
+        }
+        
+        // 渲染總覽分頁（第0頁）- 顯示各類別卡片（與其他分頁格式一致）
+        if(currentPage === 0) {
+            const c = document.getElementById('assetsContainer');
+            if(c) {
+                c.innerHTML = '';
+                const categoryTypes = ['bank', 'stock', 'twstock', 'crypto'];
+                const categoryConfig = {
+                    'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
+                    'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
+                    'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-stock'},
+                    'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
+                };
+                
+                let allItems = [];
+                categoryTypes.forEach(type => {
+                    const g = categoryConfig[type];
+                    if(!g) return;
+                    let items = accounts.filter(a => a.type === type);
+                    let sum = 0;
+                    let groupPnL = 0;
+                    items.forEach(acc => {
+                        let val = calculateTWD(acc);
+                        sum += val;
+                        groupPnL += calculatePnL_TWD(acc);
+                    });
+                    if(sum > 0) {
+                        allItems.push({type: type, name: g.t, icon: g.i, iconClass: g.s, sum: sum, pnl: groupPnL});
+                    }
+                });
+                
+                if(allItems.length === 0) {
+                    c.innerHTML = '<div style="text-align:center; color:#666; padding:30px 0;">暫無資產</div>';
+                    return;
+                }
+                
+                let totalSum = 0;
+                let totalPnL = 0;
+                let html = '';
+                
+                allItems.forEach(item => {
+                    totalSum += item.sum;
+                    totalPnL += item.pnl;
+                    
+                    let htmlContent = `<div class="item-name">${item.name}</div><div class="item-row">總覽</div>`;
+                    let color = 'amount-green';
+                    let pnlHtml = '';
+                    
+                    if(Math.abs(item.pnl) > 0.01) {
+                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl">${formatPnL(item.pnl)}</div>`;
+                    } else {
+                        pnlHtml = `<div class="amount-spacer"></div><div class="item-sub">TWD</div>`;
+                    }
+                    
+                    html += `<div class="list-item" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div></div>`;
+                });
+                
+                let pHtml = totalPnL !== 0 ? `<span class="group-pnl">${formatPnL(totalPnL)}</span>` : '';
+                c.innerHTML = `<div class="group-header"><span>總覽</span><div class="group-total-block"><span class="group-total">${Math.round(totalSum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-overview">${html}</div>`;
+            }
+        }
+        
+        // 渲染其他分頁（第1-4頁）
+        PAGE_TYPES.forEach((type, pageIdx) => {
+            if(pageIdx === 0) return; // 跳過總覽分頁
+            
+            const containerId = pageIdx === 1 ? 'assetsContainer1' : (pageIdx === 2 ? 'assetsContainer2' : (pageIdx === 3 ? 'assetsContainer3' : 'assetsContainer4'));
+            const c = document.getElementById(containerId);
+            if(!c) return;
+            
+            const groupConfig = {
+                'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
+                'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
+                'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-stock'},
+                'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
+            };
+            const g = groupConfig[type];
+            if(!g) return;
+            
+            // 分頁模式：顯示該類別內的資產列表
+            c.innerHTML = '';
+            let items = accounts.filter(a => a.type === type).sort((a,b) => (a.order||0) - (b.order||0));
+            if(items.length === 0) {
+                c.innerHTML = '<div style="text-align:center; color:#666; padding:30px 0;">暫無資產</div>';
+                return;
+            }
+            
+            let sum = 0;
+            let groupPnL = 0;
+            let html = '';
+            
+            items.forEach(acc => {
+                let val = calculateTWD(acc);
+                let pnl = calculatePnL_TWD(acc);
+                sum += val;
+                groupPnL += pnl;
+                
+                let htmlContent = '';
+                if(acc.isAuto) {
+                    let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                    let priceUnit = acc.type === 'twstock' ? 'TWD' : 'USD';
+                    let pricePrefix = acc.type === 'twstock' ? 'NT$' : '$';
+                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()} ${priceUnit}` : '--';
+                    let chg = '';
+                    if(acc.dayChangePercent) {
+                        let s = acc.dayChangePercent > 0 ? '+' : '';
+                        let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
+                        chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
+                    }
+                    let line1 = chg || '--';
+                    let line2 = `${price} • ${acc.balance}`;
+                    let line3 = '';
+                    if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0) {
+                        let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
+                        let s = pnlPct >= 0 ? '+' : '';
+                        let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
+                        let costPrefix = acc.type === 'twstock' ? 'NT$' : '$';
+                        line3 = `成本 ${costPrefix}${acc.cost.toFixed(2)} <span class="${c}">${s}${pnlPct.toFixed(2)}%</span>`;
+                    }
+                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${line1}</div><div class="item-row">${line2}</div>${line3 ? `<div class="item-row">${line3}</div>` : ''}`;
+                } else {
+                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
+                }
+                
+                let color = 'amount-green';
+                let hdl = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
+                let clk = `onclick="openDetailView(${acc.id})"`;
+                let dailyPnL = acc.isAuto ? calculateDailyPnL_TWD(acc) : 0;
+                let costPnL = acc.isAuto ? calculateCostPnL_TWD(acc) : 0;
+                let pnlHtml = '';
+                
+                if(acc.isAuto) {
+                    let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
+                    if(Math.abs(dailyPnL) > 0.01) {
+                        pnlHtml += `<div class="amount-pnl" style="font-size:11px;">當天 ${formatPnL(dailyPnL)}</div>`;
+                    } else {
+                        pnlHtml += `<div class="amount-spacer"></div>`;
+                    }
+                    pnlHtml += `<div class="amount-spacer"></div>`;
+                    if(hasLine3) {
+                        if(Math.abs(costPnL) > 0.01) {
+                            pnlHtml += `<div class="amount-pnl">成本 ${formatPnL(costPnL)}</div>`;
+                        } else {
+                            pnlHtml += `<div class="amount-spacer"></div>`;
+                        }
+                    }
+                } else {
+                    pnlHtml = `<div class="amount-spacer"></div>`;
+                    if(pnl !== 0) {
+                        pnlHtml += `<div class="amount-pnl">${formatPnL(pnl)}</div>`;
+                    } else {
+                        pnlHtml += '<div class="item-sub">TWD</div>';
+                    }
+                }
+                
+                html += `<div class="list-item" ${clk} data-id="${acc.id}"><div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
+            });
+            
+            let pHtml = groupPnL !== 0 ? `<span class="group-pnl">${formatPnL(groupPnL)}</span>` : '';
+            c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total">${Math.round(sum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
+            
+            // 設置拖曳排序
+            if(isEditMode) {
+                let el = document.getElementById(`group-${type}`);
+                if(el) {
+                    sortables.push(Sortable.create(el, {
+                        handle: '.drag-handle',
+                        animation: 150,
+                        onEnd: function(evt) { updateOrder(type, evt.from); }
+                    }));
+                }
+            }
+        });
+        
+        // 渲染負債（始終顯示）
+        renderDebt();
+        
+        // 更新圖表
+        updateChartData();
+    }
+    
+    function renderDebt() {
+        const debtContainer = document.getElementById('debtContainer');
+        if(!debtContainer) return;
+        
+        let debtItems = accounts.filter(a => a.type === 'debt').sort((a,b) => (a.order||0) - (b.order||0));
+        if(debtItems.length === 0) {
+            debtContainer.innerHTML = '';
+            return;
+        }
+        
+        let totalDebt = 0;
+        let html = '';
+        
+        debtItems.forEach(acc => {
+            let val = calculateTWD(acc);
+            totalDebt += val;
+            html += `<div class="list-item" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount"><div class="amount-val amount-red">${Math.round(val).toLocaleString()}</div></div></div>`;
+        });
+        
+        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total">${Math.round(totalDebt).toLocaleString()}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
+    }
 
     // 4. Start the app only after everything is defined
     async function init() {
+        initSwiper();
+        chartLevel = 'root';
+        currentPage = 0;
+        switchToPage(0);
         renderAssets();
         setTimeout(() => { initChart(); }, 500);
         await updateRates(); 
-        if(settings.apiKey) fetchPrices();
+        if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(); }, 60000);
     }
     
