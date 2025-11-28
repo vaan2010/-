@@ -558,7 +558,8 @@
         /* Detail View */
         #detailView { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
         #detailView.active { transform: translateX(0); }
-        .detail-header { padding: 30px 20px 20px; border-bottom: 1px solid #2c2c2e; background: #1c1c1e; flex-shrink: 0; }
+        .detail-header { padding: 10px 20px 20px; border-bottom: 1px solid #2c2c2e; background: #1c1c1e; flex-shrink: 0; }
+        #detailView .navbar { position: relative; z-index: 1; }
         .detail-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 5px; }
         .detail-subtitle { font-size: 14px; color: #8e8e93; }
         .detail-stats { display: flex; justify-content: space-between; margin-top: 20px; }
@@ -1275,7 +1276,7 @@
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const balanceInput = document.getElementById('inpBalance').value.trim(); const b = balanceInput === '' ? 0 : (parseFloat(balanceInput) || 0); const costInput = document.getElementById('inpCost').value.trim(); const cost = costInput === '' ? 0 : (parseFloat(costInput) || 0); const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && balanceInput === '')return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id && newA.isAuto) { openDetailView(newA.id); } else if(currentDetailAcc && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1398,7 +1399,17 @@
         currentDetailAcc = accounts.find(x => x.id === id);
         if (!currentDetailAcc) return;
         if (!currentDetailAcc.isAuto) { editAccount(id); return; }
-        document.getElementById('dName').innerText = currentDetailAcc.name; document.getElementById('dSymbol').innerText = currentDetailAcc.symbol; document.getElementById('dQty').innerText = currentDetailAcc.balance;
+        // 美股和台股：只顯示公司名稱，不顯示代碼
+        let displayName = currentDetailAcc.name;
+        if(currentDetailAcc.type === 'stock') {
+            displayName = cleanCompanyName(currentDetailAcc.name);
+        } else if(currentDetailAcc.type === 'twstock') {
+            displayName = currentDetailAcc.name;
+        }
+        document.getElementById('dName').innerText = displayName; 
+        document.getElementById('dSymbol').innerText = ''; // 清空代碼內容
+        document.getElementById('dSymbol').style.display = 'none'; // 隱藏代碼
+        document.getElementById('dQty').innerText = currentDetailAcc.balance;
         let price = currentDetailAcc.currentPrice || 0; let priceUnit = currentDetailAcc.type === 'twstock' ? 'TWD' : 'USD'; document.getElementById('dPrice').innerText = `${price.toLocaleString()}`;
         let val = calculateValue(currentDetailAcc); document.getElementById('dVal').innerText = formatAmount(val);
         let cost = currentDetailAcc.cost || 0; let fee = settings.feeRate || 0.1;
