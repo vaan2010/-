@@ -214,17 +214,17 @@
             background: none;
             border: none;
             color: #0a84ff;
-            font-size: 12px;
+            font-size: clamp(10px, 1.5vw, 14px);
             cursor: pointer;
-            padding: 2px;
-            margin-left: 2px;
+            padding: clamp(2px, 0.3vw, 4px);
+            margin-left: clamp(1px, 0.3vw, 4px);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0.7;
             transition: opacity 0.2s;
             flex-shrink: 0;
-            min-width: 20px;
+            min-width: clamp(18px, 2.5vw, 24px);
         }
         .item-eye-btn:hover {
             opacity: 1;
@@ -271,22 +271,79 @@
         .group-header { padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary); background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase; }
         .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; text-align: right;}
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
-        .list-item { display: flex; align-items: flex-start; padding: 8px 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; }
+        .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
-        .item-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 14px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
+        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
         .item-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
         .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
-        .item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-        .item-name .symbol-small { font-size: 11px; font-weight: 400; opacity: 0.7; margin-left: 3px; }
-        .item-row { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 1px; }
-        .item-row-compact { font-size: 10px; color: var(--text-secondary); line-height: 1.2; margin-bottom: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
+        .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
+        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
         .item-row-compact span { white-space: nowrap; min-width: 0; }
-        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 2px; margin-left: 3px; flex-shrink: 1; min-width: 0; }
+        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 4px; margin-left: 8px; flex-shrink: 1; min-width: 0; }
         .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; }
-        .amount-val { font-size: 14px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 1px; white-space: nowrap; }
-        .amount-pnl { font-size: 9px; margin-top: 0; margin-bottom: 0; font-weight: 500; line-height: 1.2; white-space: nowrap; }
+        .amount-val { font-size: 18px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; }
+        .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+        
+        /* 只針對美股和台股列表應用響應式縮小 */
+        #group-stock .list-item,
+        #group-twstock .list-item {
+            padding: clamp(6px, 1.5vw, 12px) clamp(8px, 2vw, 16px);
+        }
+        #group-stock .item-icon,
+        #group-twstock .item-icon {
+            width: clamp(28px, 4vw, 40px);
+            height: clamp(28px, 4vw, 40px);
+            margin-right: clamp(8px, 1.5vw, 15px);
+            font-size: clamp(12px, 2vw, 18px);
+        }
+        #group-stock .item-name,
+        #group-twstock .item-name {
+            font-size: clamp(12px, 2.2vw, 17px);
+            margin-bottom: clamp(1px, 0.3vw, 3px);
+        }
+        #group-stock .item-name .symbol-small,
+        #group-twstock .item-name .symbol-small {
+            font-size: clamp(10px, 1.8vw, 13px);
+            margin-left: clamp(2px, 0.5vw, 6px);
+        }
+        #group-stock .item-row,
+        #group-twstock .item-row {
+            font-size: clamp(9px, 1.5vw, 12px);
+            margin-bottom: clamp(1px, 0.3vw, 2px);
+        }
+        #group-stock .item-row-compact,
+        #group-twstock .item-row-compact {
+            font-size: clamp(9px, 1.5vw, 11px);
+            margin-bottom: clamp(1px, 0.3vw, 2px);
+            gap: clamp(1px, 0.4vw, 4px);
+        }
+        #group-stock .item-amount-wrapper,
+        #group-twstock .item-amount-wrapper {
+            gap: clamp(1px, 0.3vw, 4px);
+            margin-left: clamp(2px, 0.5vw, 8px);
+        }
+        #group-stock .amount-val,
+        #group-twstock .amount-val {
+            font-size: clamp(12px, 2vw, 18px);
+            margin-bottom: clamp(1px, 0.3vw, 2px);
+        }
+        #group-stock .amount-pnl,
+        #group-twstock .amount-pnl {
+            font-size: clamp(8px, 1.3vw, 11px);
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+        #group-stock .item-eye-btn,
+        #group-twstock .item-eye-btn {
+            font-size: clamp(10px, 1.5vw, 14px);
+            padding: clamp(2px, 0.3vw, 4px);
+            margin-left: clamp(1px, 0.3vw, 4px);
+            min-width: clamp(18px, 2.5vw, 24px);
+        }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
