@@ -172,19 +172,66 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--card-bg);
             color: var(--text-secondary);
             font-size: inherit;
             font-weight: inherit;
             border-radius: inherit;
         }
+        /* 只有原本有背景的元素才顯示背景 */
+        .numbers-hidden .rate-badge::after,
+        .numbers-hidden .pnl-badge::after {
+            background-color: var(--card-bg);
+        }
         .numbers-hidden .total-amount::after { font-size: 40px; }
         .numbers-hidden .pnl-badge::after { font-size: 14px; }
         .numbers-hidden .rate-badge::after { font-size: 12px; }
-        .numbers-hidden .amount-val::after { font-size: 17px; }
-        .numbers-hidden .amount-pnl::after { font-size: 11px; }
         .numbers-hidden .group-total::after { font-size: inherit; }
         .numbers-hidden .group-pnl::after { font-size: 11px; }
+        
+        /* 列表項目單獨隱藏 */
+        .item-hidden .item-numbers {
+            visibility: hidden;
+            position: relative;
+        }
+        .item-hidden .item-numbers::after {
+            content: '****';
+            visibility: visible;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: inherit;
+            font-weight: inherit;
+        }
+        .item-hidden .amount-val.item-numbers::after { font-size: 17px; }
+        .item-hidden .amount-pnl.item-numbers::after { font-size: 11px; }
+        .item-eye-btn {
+            background: none;
+            border: none;
+            color: #0a84ff;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .item-eye-btn:hover {
+            opacity: 1;
+        }
+        .item-amount-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
         .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
         .pnl-up { color: var(--color-up); } .pnl-down { color: var(--color-down); }
         .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 3px; margin-bottom: 5px; }
@@ -234,7 +281,8 @@
         .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .item-row-compact .item-label { opacity: 0.7; }
         .item-row-compact span { white-space: nowrap; }
-        .item-amount { text-align: right; margin-left: 8px; display: flex; flex-direction: column; justify-content: flex-start; min-width: 90px; flex-shrink: 0; }
+        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 4px; margin-left: 8px; flex-shrink: 0; }
+        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 90px; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; }
         .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
@@ -931,6 +979,12 @@
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
+    }
+    function toggleItemNumbers(itemId) {
+        const key = `itemHidden_${itemId}`;
+        const isHidden = localStorage.getItem(key) === 'true';
+        localStorage.setItem(key, !isHidden);
+        renderAssets();
     }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
@@ -1694,12 +1748,16 @@
                     let pnlHtml = '';
                     
                     if(Math.abs(item.pnl) > 0.01) {
-                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl numbers-content">${formatPnL(item.pnl)}</div>`;
+                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl item-numbers">${formatPnL(item.pnl)}</div>`;
                     } else {
                         pnlHtml = `<div class="amount-spacer"></div><div class="item-sub">TWD</div>`;
                     }
                     
-                    html += `<div class="list-item" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val numbers-content ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div></div>`;
+                    // 檢查該項目是否被隱藏
+                    let itemHidden = localStorage.getItem(`itemHidden_category-${item.type}`) === 'true';
+                    let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
+                    
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers('category-${item.type}')" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
                 });
                 
                 let pHtml = totalPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(totalPnL)}</span>` : '';
@@ -1797,18 +1855,22 @@
                         pnlLines.push(`成本 ${formatPnL(costPnL)}`);
                     }
                     if(pnlLines.length > 0) {
-                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl numbers-content">${line}</div>`).join('');
+                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl item-numbers">${line}</div>`).join('');
                     } else {
                         pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
                     }
                 } else {
                     pnlHtml = `<div class="amount-spacer"></div>`;
                     if(pnl !== 0) {
-                        pnlHtml += `<div class="amount-pnl numbers-content">${formatPnL(pnl)}</div>`;
+                        pnlHtml += `<div class="amount-pnl item-numbers">${formatPnL(pnl)}</div>`;
                     } else {
                         pnlHtml += '<div class="item-sub">TWD</div>';
                     }
                 }
+                
+                // 檢查該項目是否被隱藏
+                let itemHidden = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
+                let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
                 
                 // 美股且有 logo 時顯示 logo，否則顯示 icon
                 let iconHtml = '';
@@ -1817,7 +1879,7 @@
                 } else {
                     iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
                 }
-                html += `<div class="list-item" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val numbers-content ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
+                html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${hdl}</div>`;
             });
             
             let pHtml = groupPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(groupPnL)}</span>` : '';
@@ -1859,7 +1921,11 @@
         debtItems.forEach(acc => {
             let val = calculateTWD(acc);
             totalDebt += val;
-            html += `<div class="list-item" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount"><div class="amount-val numbers-content amount-red">${Math.round(val).toLocaleString()}</div></div></div>`;
+            // 檢查該項目是否被隱藏
+            let itemHidden = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
+            let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
+            
+            html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers amount-red">${Math.round(val).toLocaleString()}</div></div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
         });
         
         debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(totalDebt).toLocaleString()}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
