@@ -214,15 +214,17 @@
             background: none;
             border: none;
             color: #0a84ff;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
-            padding: 4px;
-            margin-left: 8px;
+            padding: 2px;
+            margin-left: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0.7;
             transition: opacity 0.2s;
+            flex-shrink: 0;
+            min-width: 20px;
         }
         .item-eye-btn:hover {
             opacity: 1;
@@ -269,22 +271,22 @@
         .group-header { padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary); background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase; }
         .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; text-align: right;}
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
-        .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
+        .list-item { display: flex; align-items: flex-start; padding: 8px 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
-        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
+        .item-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 14px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
         .item-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
-        .item-content { flex: 1; min-width: 0; max-width: calc(100% - 120px); display: flex; flex-direction: column; justify-content: flex-start; }
-        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-        .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
-        .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
-        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-        .item-row-compact .item-label { opacity: 0.7; }
-        .item-row-compact span { white-space: nowrap; }
-        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 4px; margin-left: 8px; flex-shrink: 0; }
-        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 90px; }
-        .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; }
-        .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; }
+        .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+        .item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-name .symbol-small { font-size: 11px; font-weight: 400; opacity: 0.7; margin-left: 3px; }
+        .item-row { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 1px; }
+        .item-row-compact { font-size: 10px; color: var(--text-secondary); line-height: 1.2; margin-bottom: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+        .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
+        .item-row-compact span { white-space: nowrap; min-width: 0; }
+        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 2px; margin-left: 3px; flex-shrink: 1; min-width: 0; }
+        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; }
+        .amount-val { font-size: 14px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 1px; white-space: nowrap; }
+        .amount-pnl { font-size: 9px; margin-top: 0; margin-bottom: 0; font-weight: 500; line-height: 1.2; white-space: nowrap; }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
@@ -665,7 +667,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="form-row"><span class="form-label">類型</span><select id="inpType" class="form-input" onchange="handleTypeChange()"><option value="bank">銀行</option><option value="crypto">加密貨幣</option><option value="stock">投資理財 (美股)</option><option value="twstock">投資理財 (台股)</option><option value="debt">負債</option></select></div>
+                    <div class="form-row"><span class="form-label">類型</span><select id="inpType" class="form-input" onchange="handleTypeChange()"><option value="bank">銀行</option><option value="crypto">加密貨幣</option><option value="stock">美股</option><option value="twstock">台股</option><option value="debt">負債</option></select></div>
                     <div class="form-row" id="rowName"><span class="form-label">名稱</span><input type="text" id="inpName" class="form-input" placeholder="例如: NVDA"></div>
                     <div class="form-row" id="rowSymbol" style="display:none;"><span class="form-label">代碼</span><input type="text" id="inpSymbol" class="form-input" placeholder="例如: NVDA" oninput="syncNameFromSymbol(); updateAIButtonState();"></div>
                     <div class="form-row" id="rowCurrency"><span class="form-label">幣別</span><select id="inpCurrency" class="form-input"><option value="TWD">TWD (新台幣)</option><option value="USD">USD (美金)</option></select></div>
@@ -687,7 +689,7 @@
     const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
     
     const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#0a84ff', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
-    const TYPE_NAMES = { 'bank': '銀行', 'stock': '投資理財', 'twstock': '投資理財 (台股)', 'crypto': '加密貨幣', 'debt': '負債' };
+    const TYPE_NAMES = { 'bank': '銀行', 'stock': '美股', 'twstock': '台股', 'crypto': '加密貨幣', 'debt': '負債' };
 
     let editingId = null;
     let chartInstance = null;
@@ -951,7 +953,7 @@
     function calculateDailyPnL_TWD(acc) { if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.type==='twstock')pnl=acc.balance*acc.dayChange; else if(acc.currency==='USD')pnl=acc.balance*acc.dayChange*settings.usdRate; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate*settings.usdRate; else pnl=acc.balance*acc.dayChange*settings.usdRate; return safeParseFloat(pnl); }
     function calculateCostPnL_TWD(acc) { if(!acc.cost||acc.cost<=0||!acc.isAuto)return 0; let cur=calculateTWD(acc); let cost=acc.type==='twstock'?acc.balance*acc.cost:acc.balance*acc.cost*settings.usdRate; return safeParseFloat(cur-cost); }
     function calculatePnL_TWD(acc) { if(acc.cost>0&&acc.isAuto){ return calculateCostPnL_TWD(acc); } return calculateDailyPnL_TWD(acc); }
-    function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()} TWD</span>`; }
+    function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()}</span>`; }
 
     // --- UI ---
     function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('collapsed');}}else{s.classList.add('active');o.classList.add('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('collapsed');}} }
@@ -1708,8 +1710,8 @@
                 const categoryTypes = ['bank', 'stock', 'twstock', 'crypto'];
                 const categoryConfig = {
                     'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
-                    'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
-                    'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-twstock'},
+                    'stock': {t:'美股', i:'fa-chart-line', s:'icon-stock'},
+                    'twstock': {t:'台股', i:'fa-chart-line', s:'icon-twstock'},
                     'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
                 };
                 
@@ -1725,15 +1727,11 @@
                         sum += val;
                         groupPnL += calculatePnL_TWD(acc);
                     });
-                    if(sum > 0) {
-                        allItems.push({type: type, name: g.t, icon: g.i, iconClass: g.s, sum: sum, pnl: groupPnL});
-                    }
+                    // 即使沒有資產也要顯示，顯示為 0
+                    allItems.push({type: type, name: g.t, icon: g.i, iconClass: g.s, sum: sum, pnl: groupPnL});
                 });
                 
-                if(allItems.length === 0) {
-                    c.innerHTML = '<div style="text-align:center; color:#666; padding:30px 0;">暫無資產</div>';
-                    return;
-                }
+                // 所有分類都會顯示，不需要檢查是否為空
                 
                 let totalSum = 0;
                 let totalPnL = 0;
@@ -1775,8 +1773,8 @@
             
             const groupConfig = {
                 'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
-                'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
-                'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-twstock'},
+                'stock': {t:'美股', i:'fa-chart-line', s:'icon-stock'},
+                'twstock': {t:'台股', i:'fa-chart-line', s:'icon-twstock'},
                 'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
             };
             const g = groupConfig[type];
@@ -1849,10 +1847,10 @@
                     // 合併當天損益和成本損益到更緊湊的格式
                     let pnlLines = [];
                     if(Math.abs(dailyPnL) > 0.01) {
-                        pnlLines.push(`當天 ${formatPnL(dailyPnL)}`);
+                        pnlLines.push(`當天${formatPnL(dailyPnL)}`);
                     }
                     if(hasLine3 && Math.abs(costPnL) > 0.01) {
-                        pnlLines.push(`成本 ${formatPnL(costPnL)}`);
+                        pnlLines.push(`成本${formatPnL(costPnL)}`);
                     }
                     if(pnlLines.length > 0) {
                         pnlHtml = pnlLines.map(line => `<div class="amount-pnl item-numbers">${line}</div>`).join('');
