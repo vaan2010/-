@@ -194,14 +194,14 @@
         .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
         .item-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
-        .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+        .item-content { flex: 1; min-width: 0; max-width: calc(100% - 120px); display: flex; flex-direction: column; justify-content: flex-start; }
         .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
         .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
         .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .item-row-compact .item-label { opacity: 0.7; }
         .item-row-compact span { white-space: nowrap; }
-        .item-amount { text-align: right; margin-left: 8px; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; flex-shrink: 0; }
+        .item-amount { text-align: right; margin-left: 8px; display: flex; flex-direction: column; justify-content: flex-start; min-width: 90px; flex-shrink: 0; }
         .amount-val { font-size: 17px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; }
         .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
@@ -389,6 +389,15 @@
         </div>
     </div>
     <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleFileImport(event)">
+    <div id="refreshStockOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1999; display: none; backdrop-filter: blur(4px);"></div>
+    <div id="refreshStockProgressToast" class="toast" style="background: #0a84ff; display: none; z-index: 2001;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+                <div id="refreshStockProgressBar" style="height: 100%; background: #fff; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <span id="refreshStockProgressText">重新整理中...</span>
+        </div>
+    </div>
 
     <!-- App Container -->
     <div class="app-container">
@@ -1271,11 +1280,26 @@
             return;
         }
         
+        // 顯示遮罩層和進度條
+        const overlay = document.getElementById('refreshStockOverlay');
+        const progressToast = document.getElementById('refreshStockProgressToast');
+        const progressBar = document.getElementById('refreshStockProgressBar');
+        const progressText = document.getElementById('refreshStockProgressText');
+        overlay.style.display = 'block';
+        progressToast.style.display = 'block';
+        progressBar.style.width = '5%';
+        progressText.innerText = '準備中...';
+        
         let updated = 0;
         let total = stockAccounts.length + twstockAccounts.length;
+        let current = 0;
         
         // 重新整理美股資訊
         for(let acc of stockAccounts) {
+            current++;
+            progressBar.style.width = `${5 + (current / total) * 50}%`;
+            progressText.innerText = `更新美股: ${acc.symbol} (${current}/${total})`;
+            
             try {
                 const sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
                 const profile = await fetchUSStockProfile(sym);
@@ -1293,6 +1317,10 @@
         
         // 重新整理台股資訊
         for(let acc of twstockAccounts) {
+            current++;
+            progressBar.style.width = `${55 + ((current - stockAccounts.length) / Math.max(twstockAccounts.length, 1)) * 40}%`;
+            progressText.innerText = `更新台股: ${acc.symbol} (${current}/${total})`;
+            
             try {
                 const sym = acc.symbol;
                 if(/^\d{4}$/.test(sym)) {
@@ -1310,12 +1338,23 @@
         }
         
         // 保存更新後的資料
+        progressBar.style.width = '95%';
+        progressText.innerText = '儲存資料中...';
         saveData();
+        
         // 重新渲染列表和圖表
+        progressBar.style.width = '100%';
+        progressText.innerText = '完成！';
         renderAssets();
         updateChartData();
         
-        alert(`已重新整理 ${updated}/${total} 個股票資訊`);
+        // 延遲後隱藏遮罩層和進度條
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            progressToast.style.display = 'none';
+            progressBar.style.width = '0%';
+            alert(`已重新整理 ${updated}/${total} 個股票資訊`);
+        }, 500);
     }
     async function fetchPrices() { const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ if(acc.type==='twstock'){ if(!settings.fugleKey)continue; await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${acc.symbol}`,{headers:{'X-API-KEY':settings.fugleKey}}); const j=await res.json(); if(j){ const price=j.lastPrice||(j.trade&&j.trade.price)||(j.trades&&j.trades[0]&&j.trades[0].price)||0; const changePercent=j.changePercent||(j.trade&&j.trade.changePercent)||0; const prevClose=j.previousClose||(price&&changePercent?price/(1+changePercent/100):price)||price; acc.currentPrice=price; acc.dayChangePercent=changePercent||0; acc.dayChange=(price-prevClose)||0; } } else { if(!settings.apiKey)continue; let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } } }catch(e){} } saveData(); renderAssets(); }
     // Page Swiper Functions
