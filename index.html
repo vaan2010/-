@@ -1135,9 +1135,31 @@
             progressBar.style.width = '90%';
             status.innerText = `處理結果中...`; status.style.color = "#0a84ff";
             const data = await resp.json(); if(data.error) throw new Error(data.error.message);
-            const txt = data.candidates[0].content.parts[0].text; const match = txt.match(/\{[\s\S]*\}/);
+            if(!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
+                throw new Error("AI 回應格式錯誤，請重試");
+            }
+            const txt = data.candidates[0].content.parts[0].text; 
+            // 嘗試提取 JSON，使用更寬鬆的匹配
+            let match = txt.match(/\{[\s\S]*\}/);
+            if(!match) {
+                // 如果沒有找到 JSON，嘗試尋找 JSON 陣列
+                match = txt.match(/\[[\s\S]*\]/);
+            }
             if(match) {
-                const res = JSON.parse(match[0]);
+                let res;
+                try {
+                    res = JSON.parse(match[0]);
+                } catch(parseError) {
+                    // 如果解析失敗，嘗試清理文字後再解析
+                    let cleanedJson = match[0].replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+                    // 移除 JSON 後面的非 JSON 字符
+                    cleanedJson = cleanedJson.replace(/\}[^}]*$/, '}');
+                    try {
+                        res = JSON.parse(cleanedJson);
+                    } catch(e) {
+                        throw new Error("無法解析 AI 回應的 JSON 格式，請重試或檢查圖片內容");
+                    }
+                }
                 if(res.transactions && res.transactions.length > 0) {
                     // 如果有提取到股票代碼，自動填入
                     if(res.symbol && res.symbol.trim()) {
@@ -1179,7 +1201,11 @@
                     status.innerText = `成功! 已累積 ${allTx.length} 筆交易，總股數: ${totalShares}，已含 ${feeText} 手續費`; status.style.color = "#30d158"; 
                     setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
                     switchTab('detail');
-                } else { throw new Error("No data"); }
+                } else { 
+                    throw new Error("AI 未辨識到交易資料，請確認圖片包含交易明細");
+                }
+            } else {
+                throw new Error("AI 回應中未找到有效的 JSON 資料，請重試");
             }
         } catch(e) { 
             console.error(e); 
