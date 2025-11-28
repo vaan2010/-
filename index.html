@@ -35,10 +35,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        @media (min-width: 768px) {
-            .sidebar.collapsed ~ .main-content { margin-left: 0; }
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -48,6 +45,13 @@
         .sidebar-overlay.active { opacity: 1; visibility: visible; }
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
         .sidebar.active { left: 0; }
+        @media (min-width: 768px) {
+            .sidebar-overlay { display: block !important; }
+            .sidebar { position: fixed; left: -280px; z-index: 999; }
+            .sidebar.active { left: 0; }
+            .sidebar:not(.collapsed):not(.active) { left: 0; }
+            .sidebar.collapsed { left: -280px; }
+        }
         
         .content-grid { display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow-x: hidden; min-height: 0; }
         .chart-section { display: flex; flex-direction: column; flex-shrink: 0; width: 100%; max-width: 100%; min-width: 0; }
@@ -58,7 +62,7 @@
         .page-nav-arrow { display: none; }
         
         @media (min-width: 768px) {
-            .list-section { position: relative; }
+            .list-section { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
             .list-container { position: relative; margin: 0 60px 10px 60px !important; }
             .page-nav-arrow { 
                 display: flex; 
@@ -93,21 +97,24 @@
             }
             .page-nav-arrow.prev { left: 5px; }
             .page-nav-arrow.next { right: 5px; }
-            .sidebar { position: static; left: 0; box-shadow: none; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-width: 280px; }
-            .sidebar.collapsed { width: 0; min-width: 0; overflow: visible; border-right: none; }
-            .sidebar-overlay { display: none !important; }
             .hamburger-btn { display: none !important; }
             .sidebar-toggle-btn-desktop { display: block !important; }
             .sidebar.collapsed .sidebar-header, .sidebar.collapsed .sidebar-menu { opacity: 0; pointer-events: none; }
-            .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
-            .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+            .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; width: 100%; }
+            .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; height: 100%; scrollbar-width: none; -ms-overflow-style: none; align-items: start; }
             .content-grid::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
             .content-grid::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
             .content-grid::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
-            .chart-section { height: auto; }
-            .summary-card { text-align: left !important; padding: 0 !important; margin-bottom: 20px; }
-            .tab-bar { display: none !important; }
+            .chart-section { height: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+            .summary-card { text-align: center !important; padding: 0 !important; margin-bottom: 20px; width: 100%; }
+            .list-section { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; }
+            .list-section .page-container { width: 100%; }
+            .list-section .group-header { text-align: left; }
+            .list-section .page-container > div:first-child.group-header { margin-top: 0; }
             body { padding-bottom: 0; }
+            .tab-bar { position: fixed; bottom: 0; width: 100%; left: 0; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 40px; padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); z-index: 200; }
+            .tab-bar .tab-item { width: auto; padding: 0 30px; font-size: 14px; }
+            .tab-bar .tab-item i { font-size: 18px; }
             .modal { align-items: center; justify-content: center; display: flex; }
             .modal-content-wrapper { width: 500px !important; height: 80% !important; max-height: 700px; border-radius: 16px; border: 1px solid var(--border-color); position: relative !important; overflow: hidden; display: flex; flex-direction: column; }
             #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; flex: 0 0 auto; min-height: 320px; width: 100%; }
@@ -126,11 +133,11 @@
         .sidebar-toggle-btn-desktop { display: none; }
         .sidebar-toggle-btn-navbar { display: none; }
         @media (min-width: 768px) {
-            .sidebar-toggle-btn-desktop { display: block !important; position: absolute; top: 15px; left: 20px; z-index: 1001; }
+            .sidebar-toggle-btn-desktop { display: block !important; position: fixed; top: 15px; left: 20px; z-index: 1001; }
             .sidebar.collapsed .sidebar-toggle-btn-desktop { display: none !important; }
             .sidebar-toggle-btn-navbar { display: none !important; }
-            .sidebar.collapsed ~ .main-content .sidebar-toggle-btn-navbar { display: block !important; }
-            .sidebar { position: relative; }
+            .sidebar.collapsed ~ .main-content .sidebar-toggle-btn-navbar { display: block !important; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; z-index: 1001; }
+            .navbar .btn-group { margin-left: 50px; }
         }
         .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; }
         .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
@@ -302,6 +309,24 @@
             background: rgba(142, 142, 147, 0.2);
         }
 
+        /* Calendar */
+        .calendar-container { max-width: 600px; margin: 0 auto; background: var(--card-bg); border-radius: 12px; padding: 20px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-nav-btn { background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px; }
+        .calendar-nav-btn:hover { color: #0a84ff; }
+        .calendar-month-year { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; color: var(--text-primary); }
+        .calendar-dropdown { font-size: 12px; opacity: 0.6; }
+        .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 12px; }
+        .calendar-weekday { text-align: center; font-size: 13px; color: var(--text-secondary); font-weight: 500; padding: 8px 0; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 15px; cursor: pointer; transition: all 0.2s; color: var(--text-primary); background: transparent; border: none; }
+        .calendar-day:hover { background: rgba(142, 142, 147, 0.2); }
+        .calendar-day.other-month { color: var(--text-secondary); opacity: 0.4; }
+        .calendar-day.today { background: #0a84ff; color: #fff; font-weight: 600; }
+        .calendar-day.selected { background: rgba(10, 132, 255, 0.2); color: #0a84ff; font-weight: 600; }
+        .calendar-day.has-event { position: relative; }
+        .calendar-day.has-event::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #30d158; }
+
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow: hidden; }
         .modal-content-wrapper { width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; overflow: hidden; }
@@ -377,6 +402,8 @@
                 <div class="menu-label">資料管理</div>
                 <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
                 <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
+                <div class="menu-label">更新</div>
+                <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
             </div>
         </div>
 
@@ -447,9 +474,33 @@
                 </div>
             </div>
 
+            <!-- Calendar Page -->
+            <div id="calendarPage" style="display: none; padding: 20px; overflow-y: auto; height: 100%;">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <div class="calendar-month-year">
+                            <span id="calendarMonthYear">2025年11月</span>
+                            <i class="fas fa-chevron-down calendar-dropdown"></i>
+                        </div>
+                        <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">週日</div>
+                        <div class="calendar-weekday">週一</div>
+                        <div class="calendar-weekday">週二</div>
+                        <div class="calendar-weekday">週三</div>
+                        <div class="calendar-weekday">週四</div>
+                        <div class="calendar-weekday">週五</div>
+                        <div class="calendar-weekday">週六</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+
             <div class="tab-bar">
-                <button class="tab-item active"><i class="fas fa-wallet"></i>資產列表</button>
-                <button class="tab-item" id="refreshBtn" onclick="refreshAllData()"><i id="refreshIcon" class="fas fa-sync-alt"></i>立即更新</button>
+                <button class="tab-item active" id="assetListTab" onclick="switchToCalendarPage(false)"><i class="fas fa-wallet"></i>資產列表</button>
+                <button class="tab-item" id="calendarTabBtn" onclick="switchToCalendarPage(true)"><i class="fas fa-calendar"></i>日期</button>
             </div>
         </div>
     </div>
@@ -798,16 +849,29 @@
     function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()} TWD</span>`; }
 
     // --- UI ---
-    function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');}else{s.classList.add('active');o.classList.add('active');} }
-    function toggleSidebarCollapse() { const s=document.getElementById('sidebar'); const isCollapsed=s.classList.contains('collapsed'); if(isCollapsed){s.classList.remove('collapsed'); localStorage.setItem('sidebarCollapsed','false');}else{s.classList.add('collapsed'); localStorage.setItem('sidebarCollapsed','true');} }
-    function initSidebarState() { if(window.matchMedia('(min-width: 768px)').matches){ const collapsed=localStorage.getItem('sidebarCollapsed')==='true'; const s=document.getElementById('sidebar'); if(collapsed)s.classList.add('collapsed'); } }
+    function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('collapsed');}}else{s.classList.add('active');o.classList.add('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('collapsed');}} }
+    function toggleSidebarCollapse() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); const isCollapsed=s.classList.contains('collapsed'); if(isCollapsed){s.classList.remove('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('active'); o.classList.add('active');} localStorage.setItem('sidebarCollapsed','false');}else{s.classList.add('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('active'); o.classList.remove('active');} localStorage.setItem('sidebarCollapsed','true');} }
+    function initSidebarState() { if(window.matchMedia('(min-width: 768px)').matches){ const collapsed=localStorage.getItem('sidebarCollapsed')==='true'; const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(collapsed){s.classList.add('collapsed'); s.classList.remove('active'); o.classList.remove('active');}else{s.classList.remove('collapsed'); s.classList.add('active'); o.classList.add('active');} } }
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
-    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
-    function updateAIButtonState() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='twstock'||t==='crypto'){ const symbol=document.getElementById('inpSymbol').value.trim(); const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=!symbol; } }
+    function updateBrokerOptions() {
+        const t = document.getElementById('inpType').value;
+        const brokerSelect = document.getElementById('brokerSelect');
+        if (!brokerSelect) return;
+        brokerSelect.innerHTML = '';
+        if (t === 'twstock') {
+            brokerSelect.innerHTML = '<option value="cathay">國泰證券 (1.425%)</option><option value="cathay_fixed">國泰證券 (定期定額 固定1元)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
+        } else if (t === 'stock') {
+            brokerSelect.innerHTML = '<option value="cathay">國泰證券 (0.1%)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
+        } else {
+            brokerSelect.innerHTML = '<option value="cathay">國泰證券 (0.1%)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
+        }
+    }
+    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { updateBrokerOptions(); syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
+    function updateAIButtonState() { const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=false; }
     let nameQueryTimer = null;
     async function fetchTWStockName(symbol) {
         if(!settings.fugleKey || !symbol) return null;
@@ -858,7 +922,7 @@
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("代碼?"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("代碼?"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1051,18 +1115,21 @@
             const broker = document.getElementById('brokerSelect').value;
             const accountType = document.getElementById('inpType').value;
             const isTWStock = accountType === 'twstock';
+            const isUSStock = accountType === 'stock';
             const isFixedFee = isTWStock && broker === 'cathay_fixed'; // 台股國泰定期定額固定1元
             let fee = 0.1; 
             if (isTWStock && broker === 'cathay') {
                 fee = 1.425; // 台股國泰一般交易1.425%
             } else if (isTWStock && broker === 'cathay_fixed') {
                 fee = 0; // 台股國泰定期定額固定1元，fee設為0（會在計算時直接加1元）
+            } else if (isUSStock && broker === 'cathay') {
+                fee = 0.1; // 美股國泰0.1%
             } else if (broker === 'fubon') {
                 fee = 0.25;
             } else if (broker === 'custom') {
                 fee = settings.feeRate || 0.1;
             }
-            const prompt = `Analyze brokerage screenshots. 1. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 2. Calculate TOTAL shares. 3. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price${isFixedFee ? ' + 1' : ` * (1 + ${fee}/100)`}. Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"transactions": [...], "totalShares": number, "avgCost": number}`;
+            const prompt = `Analyze brokerage screenshots. 1. Extract stock symbol/code if visible (look for stock ticker symbols like NVDA, TSLA, 2330, etc.). 2. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 3. Calculate TOTAL shares. 4. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price${isFixedFee ? ' + 1' : ` * (1 + ${fee}/100)`}. Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"symbol": "stock symbol if found", "transactions": [...], "totalShares": number, "avgCost": number}`;
             progressBar.style.width = '80%';
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...images] }] }) });
             progressBar.style.width = '90%';
@@ -1072,6 +1139,14 @@
             if(match) {
                 const res = JSON.parse(match[0]);
                 if(res.transactions && res.transactions.length > 0) {
+                    // 如果有提取到股票代碼，自動填入
+                    if(res.symbol && res.symbol.trim()) {
+                        const symbolInput = document.getElementById('inpSymbol');
+                        if(symbolInput && !symbolInput.value.trim()) {
+                            symbolInput.value = res.symbol.trim().toUpperCase();
+                            syncNameFromSymbol();
+                        }
+                    }
                     // 累積到現有交易明細
                     const existingTx = window.tempTransactions || [];
                     const newTx = res.transactions || [];
@@ -1118,7 +1193,7 @@
     function renderTransactions(list) { const c = document.getElementById('txListContainer'); c.innerHTML = ''; if(!list || list.length === 0) { c.innerHTML = '<div class="tx-no-data">無明細</div>'; return; } list.forEach(tx => { c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div></div>`; }); }
 
     // Async Updates
-    async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
+    async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); if(icon) icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{if(icon) icon.classList.remove('fa-spin-fast');},500); }
     async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
     async function fetchPrices() { const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ if(acc.type==='twstock'){ if(!settings.fugleKey)continue; await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${acc.symbol}`,{headers:{'X-API-KEY':settings.fugleKey}}); const j=await res.json(); if(j){ const price=j.lastPrice||(j.trade&&j.trade.price)||(j.trades&&j.trades[0]&&j.trades[0].price)||0; const changePercent=j.changePercent||(j.trade&&j.trade.changePercent)||0; const prevClose=j.previousClose||(price&&changePercent?price/(1+changePercent/100):price)||price; acc.currentPrice=price; acc.dayChangePercent=changePercent||0; acc.dayChange=(price-prevClose)||0; } } else { if(!settings.apiKey)continue; let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } } }catch(e){} } saveData(); renderAssets(); }
     // Page Swiper Functions
@@ -1269,6 +1344,31 @@
     function renderAssets() { 
         sortables.forEach(s=>s.destroy()); 
         sortables=[]; 
+        
+        // 在桌面模式下，動態計算並對齊列表標題與圓餅圖中心
+        if(window.matchMedia('(min-width: 768px)').matches) {
+            setTimeout(() => {
+                const chartWrapper = document.querySelector('#chartWrapper');
+                const firstGroupHeader = document.querySelector('.list-section .page-container > div:first-child.group-header');
+                if(chartWrapper && firstGroupHeader) {
+                    // 取得圓餅圖的中心位置（相對於視窗）
+                    const chartRect = chartWrapper.getBoundingClientRect();
+                    const chartCenterY = chartRect.top + (chartRect.height / 2);
+                    
+                    // 取得列表標題的位置（相對於視窗）
+                    const headerRect = firstGroupHeader.getBoundingClientRect();
+                    const headerTopY = headerRect.top;
+                    
+                    // 計算需要補償的高度差：讓 group-header 的頂部與圓餅圖中心對齊
+                    const offset = chartCenterY - headerTopY;
+                    if(offset > 0) {
+                        firstGroupHeader.style.marginTop = `${offset}px`;
+                    } else {
+                        firstGroupHeader.style.marginTop = '0px';
+                    }
+                }
+            }, 300);
+        }
         
         let displayAmount = 0;
         let totalDailyPnL = 0;
@@ -1687,6 +1787,89 @@
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
+    }
+    
+    // Calendar Functions
+    let currentCalendarDate = new Date();
+    let selectedDate = null;
+    function switchToCalendarPage(showCalendar) {
+        const calendarPage = document.getElementById('calendarPage');
+        const contentGrid = document.querySelector('.content-grid');
+        const assetListTab = document.getElementById('assetListTab');
+        const calendarTabBtn = document.getElementById('calendarTabBtn');
+        const pageIndicator = document.querySelector('.page-indicator');
+        const navbarTitle = document.querySelector('.navbar h1');
+        if(showCalendar) {
+            calendarPage.style.display = 'block';
+            if(contentGrid) contentGrid.style.display = 'none';
+            assetListTab?.classList.remove('active');
+            calendarTabBtn?.classList.add('active');
+            if(pageIndicator) {
+                const year = currentCalendarDate.getFullYear();
+                const month = currentCalendarDate.getMonth() + 1;
+                pageIndicator.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; padding: 0 20px;"><button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-left"></i></button><div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">${year}年${month}月</div><button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-right"></i></button></div>`;
+            }
+            if(navbarTitle) navbarTitle.textContent = '日期';
+            renderCalendar();
+        } else {
+            calendarPage.style.display = 'none';
+            if(contentGrid) contentGrid.style.display = '';
+            assetListTab?.classList.add('active');
+            calendarTabBtn?.classList.remove('active');
+            if(pageIndicator) {
+                pageIndicator.innerHTML = '<button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button><button class="page-tab" data-page="1" onclick="switchToPage(1)">銀行</button><button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button><button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button><button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>';
+                switchToPage(currentPage);
+            }
+            if(navbarTitle) navbarTitle.textContent = '資產總覽';
+        }
+    }
+    function changeCalendarMonth(delta) {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+        renderCalendar();
+        const pageIndicator = document.querySelector('.page-indicator');
+        if(pageIndicator && document.getElementById('calendarPage').style.display === 'block') {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth() + 1;
+            pageIndicator.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; padding: 0 20px;"><button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-left"></i></button><div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">${year}年${month}月</div><button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-right"></i></button></div>`;
+        }
+    }
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const monthYear = document.getElementById('calendarMonthYear');
+        if(!grid || !monthYear) return;
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth();
+        monthYear.textContent = `${year}年${month + 1}月`;
+        grid.innerHTML = '';
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selected = selectedDate ? new Date(selectedDate) : null;
+        if(selected) selected.setHours(0, 0, 0, 0);
+        for(let i = 0; i < 42; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            const day = date.getDate();
+            const isOtherMonth = date.getMonth() !== month;
+            const isToday = date.getTime() === today.getTime();
+            const isSelected = selected && date.getTime() === selected.getTime();
+            const dayBtn = document.createElement('button');
+            dayBtn.className = 'calendar-day';
+            dayBtn.textContent = day;
+            if(isOtherMonth) dayBtn.classList.add('other-month');
+            if(isToday) dayBtn.classList.add('today');
+            if(isSelected) dayBtn.classList.add('selected');
+            dayBtn.onclick = () => selectDate(date);
+            grid.appendChild(dayBtn);
+        }
+    }
+    function selectDate(date) {
+        selectedDate = new Date(date);
+        renderCalendar();
+        console.log('Selected date:', selectedDate.toLocaleDateString('zh-TW'));
     }
     
     init();
