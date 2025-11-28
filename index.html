@@ -35,7 +35,10 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @media (min-width: 768px) {
+            .sidebar.collapsed ~ .main-content { margin-left: 0; }
+        }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -90,9 +93,12 @@
             }
             .page-nav-arrow.prev { left: 5px; }
             .page-nav-arrow.next { right: 5px; }
-            .sidebar { position: static; left: 0; box-shadow: none; }
+            .sidebar { position: static; left: 0; box-shadow: none; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-width: 280px; }
+            .sidebar.collapsed { width: 0; min-width: 0; overflow: visible; border-right: none; }
             .sidebar-overlay { display: none !important; }
             .hamburger-btn { display: none !important; }
+            .sidebar-toggle-btn-desktop { display: block !important; }
+            .sidebar.collapsed .sidebar-header, .sidebar.collapsed .sidebar-menu { opacity: 0; pointer-events: none; }
             .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
             .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
             .content-grid::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
@@ -117,9 +123,10 @@
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
         .btn-icon.active { color: var(--color-up); }
 
-        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; }
+        .sidebar-toggle-btn-desktop { display: none; }
+        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; }
         .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
-        .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; transition: opacity 0.3s; }
         .menu-item { padding: 15px 25px; display: flex; align-items: center; font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s; }
         .menu-item:hover { background: #2c2c2e; }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
@@ -173,6 +180,7 @@
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
         .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
         .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
         .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .item-row-compact .item-label { opacity: 0.7; }
@@ -369,6 +377,7 @@
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                 <h1>資產總覽</h1>
                 <div class="btn-group">
+                    <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
                     <button class="btn-icon" id="addBtn" onclick="openModal()"><i class="fas fa-plus"></i></button>
                 </div>
@@ -602,7 +611,7 @@
     
     function hideCustomTooltip(){ document.getElementById('customTooltip').style.display='none'; }
 
-    function updateChartData() { 
+    function updateChartData(animate = true) { 
         if(!Highcharts)return; 
         let groups={'bank':0,'stock':0,'twstock':0,'crypto':0}; 
         currentDetails={'bank':[],'stock':[],'twstock':[],'crypto':[]}; 
@@ -636,12 +645,14 @@
             return;
         }
         
+        const animationConfig = animate ? {duration:800,easing:'easeOutQuart'} : {duration:0};
+        
         if(!chartInstance){ 
             chartInstance=Highcharts.chart('assetChart',{
                 chart:{type:'pie',backgroundColor:'transparent',spacing:[30,20,20,20],height:'100%',width:null,reflow:true,margin:[30,20,20,20]},
                 title:{text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
                 credits:{enabled:false},tooltip:{enabled:false},
-                plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
+                plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
                 series:[{name:'資產',data:chartData}]
             });
             disableChartHover();
@@ -649,10 +660,10 @@
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
                 chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}, animate); 
                     disableChartHover();
                 } else { 
-                    chartInstance.series[0].setData(chartData);
+                    chartInstance.series[0].setData(chartData, animate);
                     // 更新圖表大小
                     chartInstance.series[0].update({size:'90%'}, false);
                 } 
@@ -779,6 +790,8 @@
 
     // --- UI ---
     function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');}else{s.classList.add('active');o.classList.add('active');} }
+    function toggleSidebarCollapse() { const s=document.getElementById('sidebar'); const isCollapsed=s.classList.contains('collapsed'); if(isCollapsed){s.classList.remove('collapsed'); localStorage.setItem('sidebarCollapsed','false');}else{s.classList.add('collapsed'); localStorage.setItem('sidebarCollapsed','true');} }
+    function initSidebarState() { if(window.matchMedia('(min-width: 768px)').matches){ const collapsed=localStorage.getItem('sidebarCollapsed')==='true'; const s=document.getElementById('sidebar'); if(collapsed)s.classList.add('collapsed'); } }
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
@@ -786,8 +799,57 @@
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
     function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
     function updateAIButtonState() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='twstock'||t==='crypto'){ const symbol=document.getElementById('inpSymbol').value.trim(); const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=!symbol; } }
-    function syncNameFromSymbol() { const t=document.getElementById('inpType').value; if(t==='stock'||t==='twstock'||t==='crypto'){ const s=document.getElementById('inpSymbol').value.trim().toUpperCase(); if(s) { if(t==='stock'||t==='twstock') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } else if(t==='crypto') { document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); } } } }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("代碼?"); n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("代碼?"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    let nameQueryTimer = null;
+    async function fetchTWStockName(symbol) {
+        if(!settings.fugleKey || !symbol) return null;
+        // 驗證台股代號格式（通常是4位數字）
+        if(!/^\d{4}$/.test(symbol)) return null;
+        try {
+            // 使用 Fugle quote 端點獲取股票基本資料
+            const res = await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${symbol}`, {
+                headers: {'X-API-KEY': settings.fugleKey}
+            });
+            if (!res.ok) return null;
+            const j = await res.json();
+            // 根據參考代碼，回應中直接有 name 欄位
+            if(j && j.name) {
+                return j.name;
+            }
+            return null;
+        } catch(e) {
+            console.error('Failed to fetch stock name:', e);
+            return null;
+        }
+    }
+    async function syncNameFromSymbol() { 
+        const t=document.getElementById('inpType').value; 
+        if(t==='stock'||t==='twstock'||t==='crypto'){ 
+            const s=document.getElementById('inpSymbol').value.trim().toUpperCase(); 
+            if(s) { 
+                if(t==='twstock') {
+                    // 台股：先顯示代號
+                    document.getElementById('inpName').value = s;
+                    // 清除之前的計時器
+                    if(nameQueryTimer) clearTimeout(nameQueryTimer);
+                    // 驗證代號格式（4位數字）才查詢
+                    if(/^\d{4}$/.test(s)) {
+                        // 延遲查詢，避免頻繁請求（增加到800ms，確保輸入完成）
+                        nameQueryTimer = setTimeout(async () => {
+                            const companyName = await fetchTWStockName(s);
+                            if(companyName) {
+                                document.getElementById('inpName').value = companyName;
+                            }
+                        }, 800);
+                    }
+                } else if(t==='stock') { 
+                    document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); 
+                } else if(t==='crypto') { 
+                    document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); 
+                } 
+            } 
+        } 
+    }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value; let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("代碼?"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("代碼?"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("代碼?"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("名稱?"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1047,7 +1109,7 @@
     function renderTransactions(list) { const c = document.getElementById('txListContainer'); c.innerHTML = ''; if(!list || list.length === 0) { c.innerHTML = '<div class="tx-no-data">無明細</div>'; return; } list.forEach(tx => { c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div></div>`; }); }
 
     // Async Updates
-    async function refreshAllData() { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
+    async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{icon.classList.remove('fa-spin-fast');},500); }
     async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
     async function fetchPrices() { const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ if(acc.type==='twstock'){ if(!settings.fugleKey)continue; await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${acc.symbol}`,{headers:{'X-API-KEY':settings.fugleKey}}); const j=await res.json(); if(j){ const price=j.lastPrice||(j.trade&&j.trade.price)||(j.trades&&j.trades[0]&&j.trades[0].price)||0; const changePercent=j.changePercent||(j.trade&&j.trade.changePercent)||0; const prevClose=j.previousClose||(price&&changePercent?price/(1+changePercent/100):price)||price; acc.currentPrice=price; acc.dayChangePercent=changePercent||0; acc.dayChange=(price-prevClose)||0; } } else { if(!settings.apiKey)continue; let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } } }catch(e){} } saveData(); renderAssets(); }
     // Page Swiper Functions
@@ -1377,7 +1439,12 @@
                     } else {
                         line2 = `<div class="item-row">${acc.balance}股</div>`;
                     }
-                    htmlContent = `<div class="item-name">${acc.name}</div>${line1}${line2}`;
+                    // 台股：在公司名稱後加上代號（較小字體）
+                    let displayName = acc.name;
+                    if(acc.type === 'twstock' && acc.symbol && acc.name !== acc.symbol) {
+                        displayName = `${acc.name}<span class="symbol-small">${acc.symbol}</span>`;
+                    }
+                    htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                 } else {
                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
                 }
@@ -1463,6 +1530,7 @@
 
     // 4. Start the app only after everything is defined
     async function init() {
+        initSidebarState();
         initSwiper();
         chartLevel = 'root';
         currentPage = 0;
@@ -1609,7 +1677,7 @@
         
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
-        setInterval(() => { refreshAllData(); }, 60000);
+        setInterval(() => { refreshAllData(false); }, 60000);
     }
     
     init();
