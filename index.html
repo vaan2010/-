@@ -712,6 +712,7 @@
                         </div>
                         <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
                     </div>
+                    <div id="calendarTodayDate" style="text-align: center; font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 15px 0;"></div>
                     <div class="calendar-weekdays">
                         <div class="calendar-weekday">週日</div>
                         <div class="calendar-weekday">週一</div>
@@ -1151,11 +1152,13 @@
             brokerSelect.innerHTML = '<option value="cathay">國泰證券 (1.425%)</option><option value="cathay_fixed">國泰證券 (定期定額 固定1元)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
         } else if (t === 'stock') {
             brokerSelect.innerHTML = '<option value="cathay">國泰證券 (0.1%)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
+        } else if (t === 'crypto') {
+            brokerSelect.innerHTML = '<option value="none" selected>無手續費 (0%)</option>';
         } else {
             brokerSelect.innerHTML = '<option value="cathay">國泰證券 (0.1%)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
         }
     }
-    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=auto?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=auto?'股數':'金額'; if(auto) { updateBrokerOptions(); syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
+    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=(auto && t!=='crypto')?'flex':'none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=(t==='crypto')?'數量':(auto?'股數':'金額'); if(auto) { updateBrokerOptions(); syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } }
     function updateAIButtonState() { const btnAI=document.getElementById('btnAI'); if(btnAI) btnAI.disabled=false; }
     let nameQueryTimer = null;
     async function fetchTWStockName(symbol) {
@@ -1276,7 +1279,7 @@
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const balanceInput = document.getElementById('inpBalance').value.trim(); const b = balanceInput === '' ? 0 : (parseFloat(balanceInput) || 0); const costInput = document.getElementById('inpCost').value.trim(); const cost = costInput === '' ? 0 : (parseFloat(costInput) || 0); const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && balanceInput === '')return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id && newA.isAuto) { openDetailView(newA.id); } else if(currentDetailAcc && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const balanceInput = document.getElementById('inpBalance').value.trim(); const b = balanceInput === '' ? 0 : (parseFloat(balanceInput) || 0); const costInput = document.getElementById('inpCost').value.trim(); let cost = costInput === '' ? 0 : (parseFloat(costInput) || 0); const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入數量"); cost=0; if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && balanceInput === '')return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id && newA.isAuto) { openDetailView(newA.id); } else if(currentDetailAcc && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1480,8 +1483,9 @@
             const accountType = document.getElementById('inpType').value;
             const isTWStock = accountType === 'twstock';
             const isUSStock = accountType === 'stock';
+            const isCrypto = accountType === 'crypto';
             const isFixedFee = isTWStock && broker === 'cathay_fixed'; // 台股國泰定期定額固定1元
-            let fee = 0.1; 
+            let fee = isCrypto ? 0 : 0.1; // 加密貨幣預設手續費為0 
             if (isTWStock && broker === 'cathay') {
                 fee = 1.425; // 台股國泰一般交易1.425%
             } else if (isTWStock && broker === 'cathay_fixed') {
@@ -1493,7 +1497,14 @@
             } else if (broker === 'custom') {
                 fee = settings.feeRate || 0.1;
             }
-            const prompt = `Analyze brokerage screenshots. 1. Extract stock symbol/code if visible (look for stock ticker symbols like NVDA, TSLA, 2330, etc.). 2. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 3. Calculate TOTAL shares. 4. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price${isFixedFee ? ' + 1' : ` * (1 + ${fee}/100)`}. Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"symbol": "stock symbol if found", "transactions": [...], "totalShares": number, "avgCost": number}`;
+            let prompt = '';
+            if(accountType === 'crypto') {
+                // 加密貨幣：看圖左邊的代碼/名字和圖左邊下面的數量
+                prompt = `Analyze cryptocurrency wallet/exchange screenshots. 1. Extract cryptocurrency symbol/name from the LEFT side of the image (look for crypto symbols like BTC, ETH, SOL, etc. or names like Bitcoin, Ethereum, etc.). 2. Extract the QUANTITY/AMOUNT from BELOW the symbol/name on the LEFT side. Return JSON: {"symbol": "crypto symbol/name if found", "quantity": number}`;
+            } else {
+                // 美股、台股：原有邏輯
+                prompt = `Analyze brokerage screenshots. 1. Extract stock symbol/code if visible (look for stock ticker symbols like NVDA, TSLA, 2330, etc.). 2. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 3. Calculate TOTAL shares. 4. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price${isFixedFee ? ' + 1' : ` * (1 + ${fee}/100)`}. Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"symbol": "stock symbol if found", "transactions": [...], "totalShares": number, "avgCost": number}`;
+            }
             progressBar.style.width = '80%';
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...images] }] }) });
             progressBar.style.width = '90%';
@@ -1524,7 +1535,23 @@
                         throw new Error("無法解析 AI 回應的 JSON 格式，請重試或檢查圖片內容");
                     }
                 }
-                if(res.transactions && res.transactions.length > 0) {
+                if(accountType === 'crypto') {
+                    // 加密貨幣：處理 symbol 和 quantity
+                    if(res.symbol && res.symbol.trim()) {
+                        const symbolInput = document.getElementById('inpSymbol');
+                        if(symbolInput && !symbolInput.value.trim()) {
+                            symbolInput.value = res.symbol.trim().toUpperCase();
+                            syncNameFromSymbol();
+                        }
+                    }
+                    if(res.quantity !== undefined && res.quantity !== null) {
+                        document.getElementById('inpBalance').value = parseFloat(res.quantity) || 0;
+                    }
+                    progressBar.style.width = '100%';
+                    status.innerText = `成功! 已辨識代碼: ${res.symbol || '未找到'}，數量: ${res.quantity || 0}`; status.style.color = "#30d158"; 
+                    setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
+                } else if(res.transactions && res.transactions.length > 0) {
+                    // 美股、台股：處理交易明細
                     // 如果有提取到股票代碼，自動填入
                     if(res.symbol && res.symbol.trim()) {
                         const symbolInput = document.getElementById('inpSymbol');
@@ -1566,7 +1593,7 @@
                     setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
                     switchTab('detail');
                 } else { 
-                    throw new Error("AI 未辨識到交易資料，請確認圖片包含交易明細");
+                    throw new Error("AI 未辨識到資料，請確認圖片內容");
                 }
             } else {
                 throw new Error("AI 回應中未找到有效的 JSON 資料，請重試");
@@ -2092,23 +2119,23 @@
                     let line2 = '';
                     if(sym !== 'USDT' && sym !== 'USDC') {
                         line1 = chg ? `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${chg}${dailyPnLHtml}</div>` : `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${dailyPnLHtml}</div>`;
-                        // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股、加密貨幣）
-                        if(acc.cost && acc.cost > 0) {
+                        // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股；加密貨幣不顯示成本）
+                        if(acc.type !== 'crypto' && acc.cost && acc.cost > 0) {
                             if(acc.currentPrice && acc.currentPrice > 0) {
                                 let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
                                 let s = pnlPct >= 0 ? '+' : '';
                                 let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
                                 let costPrefix = '';
                                 // 簡化：只顯示成本和百分比，加上"成本"標籤
-                                // 美股、台股、加密貨幣：line2 不包含股數，股數會放在代碼行
+                                // 美股、台股：line2 不包含股數，股數會放在代碼行
                                 line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span>${costPnLHtml}</div>`;
                             } else {
                                 // 有成本但沒有當前價格，顯示成本和 N/A
                                 let costPrefix = '';
                                 line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span>N/A</span>${costPnLHtml}</div>`;
                             }
-                        } else {
-                            // 沒有成本時，顯示 N/A
+                        } else if(acc.type !== 'crypto') {
+                            // 沒有成本時，顯示 N/A（加密貨幣不顯示）
                             line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>N/A</span></div>`;
                         }
                     }
@@ -2127,12 +2154,28 @@
                             let balanceUnit = acc.type === 'crypto' ? '' : '股';
                             // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
                             let isStableCoin = (sym === 'USDT' || sym === 'USDC');
-                            let spacerHtml = isStableCoin ? '' : '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>';
+                            // 加密貨幣沒有成本行（line2），但 line1 要顯示在 line2 的位置，所以需要兩個 spacer
+                            let spacerHtml = '';
+                            let displayLine1 = '';
+                            let displayLine2 = '';
+                            if(isStableCoin) {
+                                spacerHtml = '';
+                                displayLine1 = '';
+                                displayLine2 = '';
+                            } else if(acc.type === 'crypto') {
+                                spacerHtml = '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>'; // 加密貨幣需要兩個 spacer，讓 line1 顯示在 line2 的位置
+                                displayLine1 = ''; // 第一個 spacer 位置留空
+                                displayLine2 = line1; // line1 顯示在 line2 的位置
+                            } else {
+                                spacerHtml = '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>'; // 美股、台股有 line1 和 line2，所以需要兩個 spacer
+                                displayLine1 = line1;
+                                displayLine2 = line2;
+                            }
                             if(sym) {
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${line1}${line2}</div>`;
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${displayLine1}${displayLine2}</div>`;
                             } else {
                                 // 沒有代碼時，也要保持排版結構，但代碼顯示 N/A
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${line1}${line2}</div>`;
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${displayLine1}${displayLine2}</div>`;
                             }
                         } else if(sym && displayName !== sym) {
                             // 其他類型：只有當 displayName !== sym 時才顯示代碼行
@@ -2173,7 +2216,15 @@
                         // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
                         let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
                         let isStableCoin = (sym === 'USDT' || sym === 'USDC');
-                        pnlHtml = isStableCoin ? '' : `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
+                        if(isStableCoin) {
+                            pnlHtml = '';
+                        } else if(acc.type === 'crypto') {
+                            // 加密貨幣只有一行（當日顯示在 line2 位置），所以只需要一個 spacer（對應第二個 symbol-spacer）
+                            pnlHtml = `<div class="amount-spacer"></div>`;
+                        } else {
+                            // 美股、台股有 line1 和 line2，所以需要兩個 spacer
+                            pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
+                        }
                     } else {
                         // 其他類型：保持原樣，在右側顯示盈虧
                         let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
@@ -2469,11 +2520,17 @@
             assetListTab?.classList.remove('active');
             calendarTabBtn?.classList.add('active');
             if(pageIndicator) {
-                const year = currentCalendarDate.getFullYear();
-                const month = currentCalendarDate.getMonth() + 1;
-                pageIndicator.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; padding: 0 20px;"><button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-left"></i></button><div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">${year}年${month}月</div><button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-right"></i></button></div>`;
+                pageIndicator.innerHTML = '';
             }
             if(navbarTitle) navbarTitle.textContent = '日期';
+            const todayDateEl = document.getElementById('calendarTodayDate');
+            if(todayDateEl) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth() + 1;
+                const day = today.getDate();
+                todayDateEl.textContent = `${year}年${month}月${day}日`;
+            }
             renderCalendar();
         } else {
             calendarPage.style.display = 'none';
@@ -2490,11 +2547,13 @@
     function changeCalendarMonth(delta) {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
         renderCalendar();
-        const pageIndicator = document.querySelector('.page-indicator');
-        if(pageIndicator && document.getElementById('calendarPage').style.display === 'block') {
-            const year = currentCalendarDate.getFullYear();
-            const month = currentCalendarDate.getMonth() + 1;
-            pageIndicator.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; padding: 0 20px;"><button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-left"></i></button><div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">${year}年${month}月</div><button class="calendar-nav-btn" onclick="changeCalendarMonth(1)" style="background: transparent; border: none; color: var(--text-primary); font-size: 18px; cursor: pointer; padding: 8px;"><i class="fas fa-chevron-right"></i></button></div>`;
+        const todayDateEl = document.getElementById('calendarTodayDate');
+        if(todayDateEl && document.getElementById('calendarPage').style.display === 'block') {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            todayDateEl.textContent = `${year}年${month}月${day}日`;
         }
     }
     function renderCalendar() {
