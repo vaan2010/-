@@ -1146,7 +1146,25 @@
         renderAssets();
     }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
-    function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
+    function openModal() { 
+        if(isEditMode)return; 
+        editingId=null; 
+        window.tempTransactions=[]; 
+        document.getElementById('modalTitle').innerText='新增'; 
+        document.getElementById('inpName').value=''; 
+        document.getElementById('inpSymbol').value=''; 
+        switchTab('basic'); 
+        // 根據當前分頁自動選擇對應的類型
+        if(currentPage > 0 && currentPage < PAGE_TYPES.length) {
+            const pageType = PAGE_TYPES[currentPage]; // 'bank', 'stock', 'twstock', 'crypto'
+            const typeSelect = document.getElementById('inpType');
+            if(typeSelect && pageType !== 'overview') {
+                typeSelect.value = pageType;
+            }
+        }
+        handleTypeChange(); 
+        document.getElementById('accountModal').style.display='block'; 
+    }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
     function updateBrokerOptions() {
@@ -2608,6 +2626,7 @@
 </script>
 </body>
 </html>
+
 
 
 
