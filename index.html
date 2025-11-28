@@ -191,7 +191,8 @@
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
         .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
-        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; }
+        .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
+        .item-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
         .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
         .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
@@ -406,6 +407,7 @@
                 <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
                 <div class="menu-label">更新</div>
                 <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
+                <div class="menu-item" onclick="refreshStockInfo(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">重新整理股票資訊</span></div>
             </div>
         </div>
 
@@ -684,7 +686,13 @@
             if(val>0){ 
                 if(groups[acc.type]!==undefined){ 
                     groups[acc.type]+=val; 
-                    currentDetails[acc.type].push({name:acc.name,y:Math.round(val)}); 
+                    // 美股顯示代碼，台股顯示公司名稱
+                    let displayName = acc.name;
+                    if(acc.type === 'stock') {
+                        let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                        displayName = sym || acc.name;
+                    }
+                    currentDetails[acc.type].push({name:displayName,y:Math.round(val)}); 
                 } 
             } 
         }); 
@@ -857,7 +865,7 @@
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
-    function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
+    function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
     function updateBrokerOptions() {
         const t = document.getElementById('inpType').value;
@@ -896,6 +904,23 @@
             return null;
         }
     }
+    async function fetchUSStockProfile(symbol) {
+        if(!settings.apiKey || !symbol) return null;
+        try {
+            const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${settings.apiKey}`);
+            if (!res.ok) return null;
+            const j = await res.json();
+            // 檢查是否回傳空物件（代表查無此股）
+            if (Object.keys(j).length === 0) return null;
+            return {
+                name: j.name || symbol,
+                logo: j.logo || null
+            };
+        } catch(e) {
+            console.error('Failed to fetch US stock profile:', e);
+            return null;
+        }
+    }
     async function syncNameFromSymbol() { 
         const t=document.getElementById('inpType').value; 
         if(t==='stock'||t==='twstock'||t==='crypto'){ 
@@ -917,14 +942,28 @@
                         }, 800);
                     }
                 } else if(t==='stock') { 
-                    document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); 
+                    // 美股：先顯示代號
+                    document.getElementById('inpName').value = s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                    // 清除之前的計時器
+                    if(nameQueryTimer) clearTimeout(nameQueryTimer);
+                    // 延遲查詢，避免頻繁請求
+                    nameQueryTimer = setTimeout(async () => {
+                        const profile = await fetchUSStockProfile(s);
+                        if(profile && profile.name) {
+                            document.getElementById('inpName').value = profile.name;
+                            // 儲存 logo URL 到隱藏欄位或直接保存（稍後在 saveAccount 中處理）
+                            if(profile.logo) {
+                                document.getElementById('inpSymbol').setAttribute('data-logo', profile.logo);
+                            }
+                        }
+                    }, 800);
                 } else if(t==='crypto') { 
                     document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); 
                 } 
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, currentPrice:editingId?(accounts.find(x=>x.id===editingId).currentPrice||0):0, dayChange:editingId?(accounts.find(x=>x.id===editingId).dayChange||0):0, dayChangePercent:editingId?(accounts.find(x=>x.id===editingId).dayChangePercent||0):0, order:editingId?(accounts.find(x=>x.id===editingId).order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1223,6 +1262,61 @@
     // Async Updates
     async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); if(icon) icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{if(icon) icon.classList.remove('fa-spin-fast');},500); }
     async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
+    async function refreshStockInfo() {
+        const stockAccounts = accounts.filter(acc => acc.type === 'stock' && acc.symbol);
+        const twstockAccounts = accounts.filter(acc => acc.type === 'twstock' && acc.symbol);
+        
+        if(stockAccounts.length === 0 && twstockAccounts.length === 0) {
+            alert('沒有需要重新整理的股票資訊');
+            return;
+        }
+        
+        let updated = 0;
+        let total = stockAccounts.length + twstockAccounts.length;
+        
+        // 重新整理美股資訊
+        for(let acc of stockAccounts) {
+            try {
+                const sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                const profile = await fetchUSStockProfile(sym);
+                if(profile) {
+                    if(profile.name) acc.name = profile.name;
+                    if(profile.logo) acc.logo = profile.logo;
+                    updated++;
+                }
+                // 避免請求過快，添加延遲
+                await new Promise(r => setTimeout(r, 200));
+            } catch(e) {
+                console.error(`Failed to refresh stock info for ${acc.symbol}:`, e);
+            }
+        }
+        
+        // 重新整理台股資訊
+        for(let acc of twstockAccounts) {
+            try {
+                const sym = acc.symbol;
+                if(/^\d{4}$/.test(sym)) {
+                    const companyName = await fetchTWStockName(sym);
+                    if(companyName) {
+                        acc.name = companyName;
+                        updated++;
+                    }
+                }
+                // 避免請求過快，添加延遲
+                await new Promise(r => setTimeout(r, 150));
+            } catch(e) {
+                console.error(`Failed to refresh twstock info for ${acc.symbol}:`, e);
+            }
+        }
+        
+        // 保存更新後的資料
+        saveData();
+        // 重新渲染列表和圖表
+        renderAssets();
+        updateChartData();
+        
+        alert(`已重新整理 ${updated}/${total} 個股票資訊`);
+    }
     async function fetchPrices() { const autos=accounts.filter(a=>a.isAuto&&a.symbol); for(let acc of autos){ try{ if(acc.type==='twstock'){ if(!settings.fugleKey)continue; await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/${acc.symbol}`,{headers:{'X-API-KEY':settings.fugleKey}}); const j=await res.json(); if(j){ const price=j.lastPrice||(j.trade&&j.trade.price)||(j.trades&&j.trades[0]&&j.trades[0].price)||0; const changePercent=j.changePercent||(j.trade&&j.trade.changePercent)||0; const prevClose=j.previousClose||(price&&changePercent?price/(1+changePercent/100):price)||price; acc.currentPrice=price; acc.dayChangePercent=changePercent||0; acc.dayChange=(price-prevClose)||0; } } else { if(!settings.apiKey)continue; let sym=acc.symbol; if(acc.type==='crypto'){ if(acc.symbol==='USDT'||acc.symbol==='USDC'){acc.currentPrice=1;acc.dayChange=0;acc.dayChangePercent=0;continue;} if(!sym.includes(':'))sym=`COINBASE:${sym}-USD`; } await new Promise(r=>setTimeout(r,150)); const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${settings.apiKey}`); const j=await res.json(); if(j.c){ acc.currentPrice=j.c; acc.dayChange=j.d||0; acc.dayChangePercent=j.dp||0; } } }catch(e){} } saveData(); renderAssets(); }
     // Page Swiper Functions
     function switchToPage(pageIndex) {
@@ -1576,10 +1670,10 @@
                     } else {
                         line2 = `<div class="item-row">${acc.balance}股</div>`;
                     }
-                    // 台股：在公司名稱後加上代號（較小字體）
+                    // 台股和美股：在公司名稱後加上代號（較小字體）
                     let displayName = acc.name;
-                    if(acc.type === 'twstock' && acc.symbol && acc.name !== acc.symbol) {
-                        displayName = `${acc.name}<span class="symbol-small">${acc.symbol}</span>`;
+                    if((acc.type === 'twstock' || acc.type === 'stock') && sym && acc.name !== sym) {
+                        displayName = `${acc.name}<span class="symbol-small"> ${sym}</span>`;
                     }
                     htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                 } else {
@@ -1617,7 +1711,14 @@
                     }
                 }
                 
-                html += `<div class="list-item" ${clk} data-id="${acc.id}"><div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
+                // 美股且有 logo 時顯示 logo，否則顯示 icon
+                let iconHtml = '';
+                if(acc.type === 'stock' && acc.logo) {
+                    iconHtml = `<div class="item-icon ${g.s}"><img src="${acc.logo}" alt="${acc.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas ${g.i}\\'></i>';"></div>`;
+                } else {
+                    iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
+                }
+                html += `<div class="list-item" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
             });
             
             let pHtml = groupPnL !== 0 ? `<span class="group-pnl">${formatPnL(groupPnL)}</span>` : '';
