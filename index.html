@@ -153,7 +153,7 @@
         .total-label-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
+        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; margin-left: 30px; font-family: 'Roboto', sans-serif; }
         .eye-toggle-btn { background: none; border: none; color: #0a84ff; font-size: 16px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
         .eye-toggle-btn:hover { opacity: 0.8; }
         
@@ -316,9 +316,11 @@
         .item-name { font-size: 19px; font-weight: 500; margin-bottom: 3px; line-height: 1.3; }
         .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
-        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; justify-content: space-between; width: 100%; }
+        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 100%; }
         .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
         .item-row-compact span { white-space: nowrap; min-width: 0; }
+        .item-row-compact .price-label { margin-right: 4px; }
+        .item-row-compact > span:last-child { margin-left: auto; }
         .price-label { font-size: 11px; color: var(--text-secondary); opacity: 0.7; margin-right: 4px; flex-shrink: 0; }
         .item-amount-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0; margin-left: 8px; flex-shrink: 0; }
         .item-amount-name-row { height: 19px; margin-bottom: 3px; }
@@ -354,11 +356,64 @@
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
         .amount-green { color: var(--color-up); } .amount-red { color: var(--color-down); } .sub-green { color: var(--color-up); } .sub-red { color: var(--color-down); }
         .drag-handle { display: none; color: #666; font-size: 20px; padding-left: 15px; cursor: grab; }
+        /* 排序模式下，整個卡片可以拖動 */
+        .list-item:has(.drag-handle) { cursor: grab; }
+        .list-item:has(.drag-handle):active { cursor: grabbing; }
 
         .tab-bar { position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 200; }
         .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; width: 30%; }
         .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; } .tab-item.active { color: #0a84ff; }
         .fa-spin-fast { animation: fa-spin 1s infinite linear; }
+        
+        /* Currency Toggle Button */
+        .currency-toggle-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(28, 28, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 199;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+            gap: 2px;
+        }
+        .currency-toggle-btn:hover {
+            transform: scale(1.05);
+            background: rgba(28, 28, 30, 0.9);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+        .currency-toggle-btn:active {
+            transform: scale(0.95);
+        }
+        .currency-toggle-btn i {
+            font-size: 18px;
+            margin: 0;
+        }
+        .currency-toggle-btn span {
+            font-size: 11px;
+            line-height: 1;
+        }
+        @media (max-width: 767px) {
+            .currency-toggle-btn {
+                bottom: 80px;
+                right: 15px;
+                width: 56px;
+                height: 56px;
+            }
+        }
 
         /* Page Swiper */
         .page-swiper { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
@@ -550,18 +605,18 @@
         <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <div id="sidebar" class="sidebar">
             <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
-            <div class="sidebar-header"><h2>設定</h2></div>
+            <div class="sidebar-header"><h2>功能選單</h2></div>
             <div class="sidebar-menu">
+                <div class="menu-label">更新</div>
+                <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
+                <div class="menu-item" onclick="refreshStockInfo(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">重新整理</span></div>
+                <div class="menu-label">資料管理</div>
+                <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
+                <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
                 <div class="menu-label">API 設定</div>
                 <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (美股報價)</span></div>
                 <div class="menu-item" onclick="setApiKey('fugle'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Fugle Key (台股報價)</span></div>
                 <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
-                <div class="menu-label">資料管理</div>
-                <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
-                <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
-                <div class="menu-label">更新</div>
-                <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
-                <div class="menu-item" onclick="refreshStockInfo(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">重新整理股票資訊</span></div>
             </div>
         </div>
 
@@ -608,6 +663,12 @@
                         <div id="customTooltip"><div class="tt-header">類別</div><div class="tt-body"><span class="tt-dot"></span>資產: 0</div></div>
                         <div id="assetChart" style="width:100%; height:100%;"></div>
                     </div>
+                    
+                    <!-- Currency Toggle Button -->
+                    <button id="currencyToggleBtn" class="currency-toggle-btn" onclick="event.stopPropagation(); toggleCurrency();" title="切換幣別">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span id="currencyToggleText">TWD</span>
+                    </button>
                 </div>
 
                 <div class="list-section page-swiper" id="pageSwiper">
@@ -767,6 +828,9 @@
     // Page Swiper
     let currentPage = 0;
     const PAGE_TYPES = ['overview', 'bank', 'stock', 'twstock', 'crypto'];
+    
+    // Currency Display
+    let currentDisplayCurrency = localStorage.getItem('displayCurrency') || 'TWD'; // 'TWD' or 'USD'
     const PAGE_NAMES = ['總覽', '銀行/現金', '美股', '台股', '加密貨幣'];
     let touchStartX = 0;
     let touchEndX = 0;
@@ -823,7 +887,8 @@
         const t=document.getElementById('customTooltip'); 
         const w=document.getElementById('chartWrapper'); 
         t.querySelector('.tt-header').innerText=p.name; 
-        t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${Math.round(p.y).toLocaleString()}`; 
+        const formattedAmount = currentDisplayCurrency === 'USD' ? parseFloat(p.y).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : Math.round(p.y).toLocaleString();
+        t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${formattedAmount} ${currentDisplayCurrency}`; 
         t.className=''; t.style.display='block'; 
         let cx=e.chartX; let cy=e.chartY; 
         if(!cx&&e.clientX){const r=w.getBoundingClientRect();cx=e.clientX-r.left;cy=e.clientY-r.top;} 
@@ -843,7 +908,7 @@
         
         accounts.forEach(acc=>{ 
             if(acc.type==='debt')return; 
-            let val=calculateTWD(acc); 
+            let val=calculateValue(acc); 
             if(val>0){ 
                 if(groups[acc.type]!==undefined){ 
                     groups[acc.type]+=val; 
@@ -853,7 +918,7 @@
                         let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
                         displayName = sym || acc.name;
                     }
-                    currentDetails[acc.type].push({name:displayName,y:Math.round(val)}); 
+                    currentDetails[acc.type].push({name:displayName,y:currentDisplayCurrency === 'USD' ? parseFloat(val) : Math.round(val)}); 
                 } 
             } 
         }); 
@@ -1014,10 +1079,30 @@
 
     // --- Calculations ---
     function calculateTWD(acc) { let val=0; if(acc.isAuto){ let p=acc.currentPrice||0; if(acc.type==='twstock')val=acc.balance*p; else if(acc.currency==='USD')val=acc.balance*p*settings.usdRate; else if(acc.type==='crypto')val=acc.balance*p*settings.usdtRate*settings.usdRate; else val=acc.balance*p*settings.usdRate; } else { if(acc.currency==='USD')val=acc.balance*settings.usdRate; else val=acc.balance; } return safeParseFloat(val); }
+    function calculateUSD(acc) { let val=0; if(acc.isAuto){ let p=acc.currentPrice||0; if(acc.type==='twstock')val=acc.balance*p/settings.usdRate; else if(acc.currency==='USD')val=acc.balance*p; else if(acc.type==='crypto')val=acc.balance*p*settings.usdtRate; else val=acc.balance*p; } else { if(acc.currency==='USD')val=acc.balance; else val=acc.balance/settings.usdRate; } return safeParseFloat(val); }
+    function calculateValue(acc) { return currentDisplayCurrency === 'USD' ? calculateUSD(acc) : calculateTWD(acc); }
     function calculateDailyPnL_TWD(acc) { if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.type==='twstock')pnl=acc.balance*acc.dayChange; else if(acc.currency==='USD')pnl=acc.balance*acc.dayChange*settings.usdRate; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate*settings.usdRate; else pnl=acc.balance*acc.dayChange*settings.usdRate; return safeParseFloat(pnl); }
+    function calculateDailyPnL_USD(acc) { if(!acc.isAuto||!acc.dayChange)return 0; let pnl=0; if(acc.type==='twstock')pnl=acc.balance*acc.dayChange/settings.usdRate; else if(acc.currency==='USD')pnl=acc.balance*acc.dayChange; else if(acc.type==='crypto')pnl=acc.balance*acc.dayChange*settings.usdtRate; else pnl=acc.balance*acc.dayChange; return safeParseFloat(pnl); }
+    function calculateDailyPnL(acc) { return currentDisplayCurrency === 'USD' ? calculateDailyPnL_USD(acc) : calculateDailyPnL_TWD(acc); }
     function calculateCostPnL_TWD(acc) { if(!acc.cost||acc.cost<=0||!acc.isAuto)return 0; let cur=calculateTWD(acc); let cost=acc.type==='twstock'?acc.balance*acc.cost:acc.balance*acc.cost*settings.usdRate; return safeParseFloat(cur-cost); }
+    function calculateCostPnL_USD(acc) { if(!acc.cost||acc.cost<=0||!acc.isAuto)return 0; let cur=calculateUSD(acc); let cost=acc.type==='twstock'?acc.balance*acc.cost/settings.usdRate:acc.balance*acc.cost; return safeParseFloat(cur-cost); }
+    function calculateCostPnL(acc) { return currentDisplayCurrency === 'USD' ? calculateCostPnL_USD(acc) : calculateCostPnL_TWD(acc); }
     function calculatePnL_TWD(acc) { if(acc.cost>0&&acc.isAuto){ return calculateCostPnL_TWD(acc); } return calculateDailyPnL_TWD(acc); }
-    function formatPnL(val) { if(!val)return''; const sign=val>0?'+':''; const cls=val>0?'pnl-up':(val<0?'pnl-down':''); return `<span class="${cls}">${sign}${Math.round(val).toLocaleString()}</span>`; }
+    function calculatePnL(acc) { return currentDisplayCurrency === 'USD' ? (acc.cost>0&&acc.isAuto?calculateCostPnL_USD(acc):calculateDailyPnL_USD(acc)) : calculatePnL_TWD(acc); }
+    function formatAmount(val) { 
+        if(currentDisplayCurrency === 'USD') {
+            return parseFloat(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        } else {
+            return Math.round(val).toLocaleString();
+        }
+    }
+    function formatPnL(val) { 
+        if(!val)return''; 
+        const sign=val>0?'+':''; 
+        const cls=val>0?'pnl-up':(val<0?'pnl-down':''); 
+        const formatted = currentDisplayCurrency === 'USD' ? parseFloat(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : Math.round(val).toLocaleString();
+        return `<span class="${cls}">${sign}${formatted}</span>`; 
+    }
 
     // --- UI ---
     function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('collapsed');}}else{s.classList.add('active');o.classList.add('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('collapsed');}} }
@@ -1315,28 +1400,26 @@
         if (!currentDetailAcc.isAuto) { editAccount(id); return; }
         document.getElementById('dName').innerText = currentDetailAcc.name; document.getElementById('dSymbol').innerText = currentDetailAcc.symbol; document.getElementById('dQty').innerText = currentDetailAcc.balance;
         let price = currentDetailAcc.currentPrice || 0; let priceUnit = currentDetailAcc.type === 'twstock' ? 'TWD' : 'USD'; document.getElementById('dPrice').innerText = `${price.toLocaleString()}`;
-        let valTWD = calculateTWD(currentDetailAcc); document.getElementById('dVal').innerText = `${Math.round(valTWD).toLocaleString()}`;
+        let val = calculateValue(currentDetailAcc); document.getElementById('dVal').innerText = formatAmount(val);
         let cost = currentDetailAcc.cost || 0; let fee = settings.feeRate || 0.1;
         
         // 當天損益
-        let dailyPnL = calculateDailyPnL_TWD(currentDetailAcc);
+        let dailyPnL = calculateDailyPnL(currentDetailAcc);
         let dailySign = dailyPnL >= 0 ? '+' : '';
         let dailyColor = dailyPnL >= 0 ? 'var(--color-up)' : (dailyPnL < 0 ? 'var(--color-down)' : '#fff');
-        document.getElementById('dDailyPnlVal').innerHTML = `<span style="color:${dailyColor}">${dailySign}${Math.round(dailyPnL).toLocaleString()}</span>`;
+        document.getElementById('dDailyPnlVal').innerHTML = `<span style="color:${dailyColor}">${dailySign}${formatAmount(dailyPnL)}</span>`;
         
         // 持股成本損益
-        let costPnL = calculateCostPnL_TWD(currentDetailAcc);
-        let costPnLUSD = (price - cost) * currentDetailAcc.balance;
-        let costPnLTWD = currentDetailAcc.type === 'twstock' ? costPnLUSD : costPnLUSD * settings.usdRate;
+        let costPnL = calculateCostPnL(currentDetailAcc);
         let costPnlPct = (cost > 0) ? ((price - cost) / cost) * 100 : 0;
-        let costSign = costPnLTWD >= 0 ? '+' : '';
+        let costSign = costPnL >= 0 ? '+' : '';
         let costColor = '#fff';
         if (cost > 0) {
-            costColor = costPnLTWD >= 0 ? 'var(--color-up)' : 'var(--color-down)';
+            costColor = costPnL >= 0 ? 'var(--color-up)' : 'var(--color-down)';
         }
         if (cost > 0) {
             document.getElementById('dCostPnl').style.display = 'block';
-            document.getElementById('dCostPnlVal').innerHTML = `<span style="color:${costColor}">${costSign}${Math.round(costPnLTWD).toLocaleString()} (${costPnlPct.toFixed(2)}%)</span>`;
+            document.getElementById('dCostPnlVal').innerHTML = `<span style="color:${costColor}">${costSign}${formatAmount(costPnL)} (${costPnlPct.toFixed(2)}%)</span>`;
         } else {
             document.getElementById('dCostPnl').style.display = 'none';
         }
@@ -1345,8 +1428,10 @@
             currentDetailAcc.transactions.forEach(tx => {
                 let txPnlHtml = '';
                 if (price > 0 && tx.price > 0) {
-                     let txCost = tx.price * (1 + fee/100); let txProfit = (price - txCost) * tx.shares; let txProfitTWD = txProfit * settings.usdRate; let txSign = txProfitTWD >= 0 ? '+' : ''; let txColor = txProfitTWD >= 0 ? 'val-green' : 'val-red'; let txPct = ((price - txCost) / txCost) * 100;
-                     txPnlHtml = `<div class="tx-row"><span class="tx-label">損益</span><span class="tx-val ${txColor}">${txSign}${Math.round(txProfitTWD).toLocaleString()} (${txPct.toFixed(1)}%)</span></div>`;
+                     let txCost = tx.price * (1 + fee/100); let txProfit = (price - txCost) * tx.shares; 
+                     let txProfitConverted = currentDetailAcc.type === 'twstock' ? (currentDisplayCurrency === 'USD' ? txProfit / settings.usdRate : txProfit) : (currentDisplayCurrency === 'USD' ? txProfit : txProfit * settings.usdRate);
+                     let txSign = txProfitConverted >= 0 ? '+' : ''; let txColor = txProfitConverted >= 0 ? 'val-green' : 'val-red'; let txPct = ((price - txCost) / txCost) * 100;
+                     txPnlHtml = `<div class="tx-row"><span class="tx-label">損益</span><span class="tx-val ${txColor}">${txSign}${formatAmount(txProfitConverted)} (${txPct.toFixed(1)}%)</span></div>`;
                 }
                 txList.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div>${txPnlHtml}</div>`;
             });
@@ -1776,25 +1861,25 @@
         if(currentPage === 0) {
             // 總覽分頁：計算總淨資產（包含所有資產減去負債）
             accounts.forEach(acc => {
-                let val = calculateTWD(acc);
+                let val = calculateValue(acc);
                 if(acc.type === 'debt') displayAmount -= val;
                 else displayAmount += val;
-                if(acc.isAuto) totalDailyPnL += calculateDailyPnL_TWD(acc);
+                if(acc.isAuto) totalDailyPnL += calculateDailyPnL(acc);
             });
         } else {
             // 其他分頁：只計算該分頁類別的總額
             const currentType = PAGE_TYPES[currentPage];
             accounts.forEach(acc => {
                 if(acc.type === currentType) {
-                    let val = calculateTWD(acc);
+                    let val = calculateValue(acc);
                     displayAmount += val;
-                    if(acc.isAuto) totalDailyPnL += calculateDailyPnL_TWD(acc);
+                    if(acc.isAuto) totalDailyPnL += calculateDailyPnL(acc);
                 }
             });
         }
         
         // 更新總資產顯示
-        document.getElementById('totalNetWorth').innerText = `${Math.round(displayAmount).toLocaleString()}`;
+        document.getElementById('totalNetWorth').innerText = formatAmount(displayAmount);
         const b = document.getElementById('totalPnLBlock');
         const bd = document.getElementById('totalPnLBadge');
         if(Math.abs(totalDailyPnL) > 1) {
@@ -1806,7 +1891,7 @@
             bd.style.padding = '';
             const s = totalDailyPnL > 0 ? '+' : '';
             const c = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
-            bd.innerHTML = `損益: <span class="${c}">${s}${Math.round(totalDailyPnL).toLocaleString()}</span>`;
+            bd.innerHTML = `損益: <span class="${c}">${s}${formatAmount(totalDailyPnL)}</span>`;
         } else {
             // 即使沒有損益也顯示空白區塊，保持與其他分頁對齊（完全不可見但佔位）
             b.style.display = 'block';
@@ -1846,9 +1931,9 @@
                     let sum = 0;
                     let groupPnL = 0;
                     items.forEach(acc => {
-                        let val = calculateTWD(acc);
+                        let val = calculateValue(acc);
                         sum += val;
-                        groupPnL += calculatePnL_TWD(acc);
+                        groupPnL += calculatePnL(acc);
                     });
                     // 即使沒有資產也要顯示，顯示為 0
                     allItems.push({type: type, name: g.t, icon: g.i, iconClass: g.s, sum: sum, pnl: groupPnL});
@@ -1876,11 +1961,35 @@
                         pnlHtml = `<div class="amount-pnl item-numbers">${formatPnL(item.pnl)}</div>`;
                     }
                     
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${Math.round(item.sum).toLocaleString()}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers('category-${item.type}')" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div></div>`;
+                    let categoryClick = isEditMode ? '' : `onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})"`;
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${categoryClick} data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${formatAmount(item.sum)}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers('category-${item.type}')" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div></div>`;
                 });
                 
                 let pHtml = totalPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(totalPnL)}</span>` : '';
-                c.innerHTML = `<div class="group-header"><span>總覽</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(totalSum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-overview">${html}</div>`;
+                c.innerHTML = `<div class="group-header"><span>總覽</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(totalSum)}</span>${pHtml}</div></div><div class="list-container" id="group-overview">${html}</div>`;
+                
+                // 設置總覽分頁的拖曳排序（類別卡片排序）
+                if(isEditMode) {
+                    let el = document.getElementById('group-overview');
+                    if(el) {
+                        sortables.push(Sortable.create(el, {
+                            animation: 150,
+                            onEnd: function(evt) { 
+                                // 總覽分頁的排序是類別順序，保存到 localStorage
+                                let ids = Array.from(evt.from.children).map(c => {
+                                    let dataId = c.getAttribute('data-id');
+                                    if(dataId && dataId.startsWith('category-')) {
+                                        return dataId.replace('category-', '');
+                                    }
+                                    return null;
+                                }).filter(id => id !== null);
+                                
+                                // 保存類別順序到 localStorage
+                                localStorage.setItem('categoryOrder', JSON.stringify(ids));
+                            }
+                        }));
+                    }
+                }
             }
         }
         
@@ -1914,8 +2023,8 @@
             let html = '';
             
             items.forEach(acc => {
-                let val = calculateTWD(acc);
-                let pnl = calculatePnL_TWD(acc);
+                let val = calculateValue(acc);
+                let pnl = calculatePnL(acc);
                 sum += val;
                 groupPnL += pnl;
                 
@@ -1925,19 +2034,34 @@
                     // 台股和美股/加密貨幣都統一格式，不使用前綴
                     let pricePrefix = '';
                     // 簡化價格顯示，去掉單位（台股和美股都統一格式），沒有資料時顯示 N/A
-                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()}` : 'N/A';
+                    // 對於 USDT/USDC 等穩定幣，價格顯示為 1.00
+                    let price = '';
+                    if(acc.currentPrice) {
+                        if((sym === 'USDT' || sym === 'USDC') && acc.currentPrice === 1) {
+                            price = '1.00';
+                        } else {
+                            price = `${pricePrefix}${acc.currentPrice.toLocaleString()}`;
+                        }
+                    } else {
+                        price = 'N/A';
+                    }
                     let chg = '';
                     if(acc.dayChangePercent !== undefined && acc.dayChangePercent !== null) {
-                        let s = acc.dayChangePercent > 0 ? '+' : '';
-                        let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
-                        chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
-                    } else if(acc.currentPrice) {
-                        // 有價格但沒有漲跌幅，顯示 N/A
+                        // 對於 USDT/USDC 等穩定幣，如果漲跌幅為 0，不顯示
+                        if((sym === 'USDT' || sym === 'USDC') && acc.dayChangePercent === 0) {
+                            chg = '';
+                        } else {
+                            let s = acc.dayChangePercent > 0 ? '+' : '';
+                            let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
+                            chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
+                        }
+                    } else if(acc.currentPrice && (sym !== 'USDT' && sym !== 'USDC')) {
+                        // 有價格但沒有漲跌幅，且不是穩定幣，顯示 N/A
                         chg = `<span>N/A</span>`;
                     }
                     // 計算盈虧（用於顯示在當日和成本行的右邊）
-                    let dailyPnL = acc.isAuto ? calculateDailyPnL_TWD(acc) : 0;
-                    let costPnL = acc.isAuto ? calculateCostPnL_TWD(acc) : 0;
+                    let dailyPnL = acc.isAuto ? calculateDailyPnL(acc) : 0;
+                    let costPnL = acc.isAuto ? calculateCostPnL(acc) : 0;
                     let dailyPnLHtml = '';
                     let costPnLHtml = '';
                     
@@ -1952,26 +2076,30 @@
                     }
                     
                     // 第一行：當日標籤 + 價格 + 當天漲跌幅 + 當日盈虧（美股、台股、加密貨幣）
-                    let line1 = chg ? `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${chg}${dailyPnLHtml}</div>` : `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${dailyPnLHtml}</div>`;
-                    // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股、加密貨幣）
+                    // USDT/USDC 特別處理：不顯示當日和成本行
+                    let line1 = '';
                     let line2 = '';
-                    if(acc.cost && acc.cost > 0) {
-                        if(acc.currentPrice && acc.currentPrice > 0) {
-                            let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
-                            let s = pnlPct >= 0 ? '+' : '';
-                            let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
-                            let costPrefix = '';
-                            // 簡化：只顯示成本和百分比，加上"成本"標籤
-                            // 美股、台股、加密貨幣：line2 不包含股數，股數會放在代碼行
-                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span>${costPnLHtml}</div>`;
+                    if(sym !== 'USDT' && sym !== 'USDC') {
+                        line1 = chg ? `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${chg}${dailyPnLHtml}</div>` : `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${dailyPnLHtml}</div>`;
+                        // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股、加密貨幣）
+                        if(acc.cost && acc.cost > 0) {
+                            if(acc.currentPrice && acc.currentPrice > 0) {
+                                let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
+                                let s = pnlPct >= 0 ? '+' : '';
+                                let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
+                                let costPrefix = '';
+                                // 簡化：只顯示成本和百分比，加上"成本"標籤
+                                // 美股、台股、加密貨幣：line2 不包含股數，股數會放在代碼行
+                                line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span>${costPnLHtml}</div>`;
+                            } else {
+                                // 有成本但沒有當前價格，顯示成本和 N/A
+                                let costPrefix = '';
+                                line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span>N/A</span>${costPnLHtml}</div>`;
+                            }
                         } else {
-                            // 有成本但沒有當前價格，顯示成本和 N/A
-                            let costPrefix = '';
-                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span>N/A</span>${costPnLHtml}</div>`;
+                            // 沒有成本時，顯示 N/A
+                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>N/A</span></div>`;
                         }
-                    } else {
-                        // 沒有成本時，顯示 N/A
-                        line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>N/A</span></div>`;
                     }
                     // 美股、台股、加密貨幣：分開顯示公司名稱和代號
                     let displayName = acc.type === 'stock' ? cleanCompanyName(acc.name) : acc.name;
@@ -1986,11 +2114,14 @@
                         if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
                             // 美股、台股、加密貨幣：股數放在代碼同一行的最右邊，當日和成本往下移兩行
                             let balanceUnit = acc.type === 'crypto' ? '' : '股';
+                            // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
+                            let isStableCoin = (sym === 'USDT' || sym === 'USDC');
+                            let spacerHtml = isStableCoin ? '' : '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>';
                             if(sym) {
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div><div class="symbol-spacer"></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${line1}${line2}</div>`;
                             } else {
                                 // 沒有代碼時，也要保持排版結構，但代碼顯示 N/A
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div><div class="symbol-spacer"></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${line1}${line2}</div>`;
                             }
                         } else if(sym && displayName !== sym) {
                             // 其他類型：只有當 displayName !== sym 時才顯示代碼行
@@ -2020,15 +2151,18 @@
                 
                 let color = 'amount-green';
                 let hdl = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
-                let clk = `onclick="openDetailView(${acc.id})"`;
-                let dailyPnL = acc.isAuto ? calculateDailyPnL_TWD(acc) : 0;
-                let costPnL = acc.isAuto ? calculateCostPnL_TWD(acc) : 0;
+                let clk = isEditMode ? '' : `onclick="openDetailView(${acc.id})"`;
+                let dailyPnL = acc.isAuto ? calculateDailyPnL(acc) : 0;
+                let costPnL = acc.isAuto ? calculateCostPnL(acc) : 0;
                 let pnlHtml = '';
                 
                 if(acc.isAuto) {
                     // 美股、台股、加密貨幣：盈虧已經顯示在當日和成本行的右邊，所以右側不需要顯示盈虧
                     if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
+                        // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
+                        let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                        let isStableCoin = (sym === 'USDT' || sym === 'USDC');
+                        pnlHtml = isStableCoin ? '' : `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
                     } else {
                         // 其他類型：保持原樣，在右側顯示盈虧
                         let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
@@ -2067,28 +2201,29 @@
                 }
                  // 美股、台股、加密貨幣使用新佈局：第一行只顯示公司名稱，金額從第二行開始
                  if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                     // 美股、台股、加密貨幣：現值金額往下移一行（對齊代碼+股數），盈虧也要往下移以對齊「當日」和「成本」行
-                     // 美股、台股、加密貨幣需要在現值金額和盈虧之間添加兩個空白行，讓當日盈虧與「當日」行對齊
-                     // 因為左側有兩個 symbol-spacer（各6px），所以右側也需要兩個對應的空白行
+                     // 檢查是否為 USDT/USDC 穩定幣
+                     let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                     let isStableCoin = (sym === 'USDT' || sym === 'USDC');
+                     // 美股、台股、加密貨幣：現值金額往下移一行（對齊代碼+股數）
+                     // USDT/USDC 特別處理：不顯示當日和成本行，所以只需要一個空白行，不需要兩個 spacer
                      let nameRowHeight = (acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '19px' : '0';
-                     let pnlSpacer = (acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '<div class="amount-spacer"></div><div class="amount-spacer"></div>' : '';
+                     let pnlSpacer = isStableCoin ? '' : ((acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '<div class="amount-spacer"></div><div class="amount-spacer"></div>' : '');
                      // 美股、台股、加密貨幣：現值金額放在第二行（對齊代碼+股數），需要 item-amount-name-row
-                     html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row" style="height: ${nameRowHeight}; margin-bottom: ${nameRowHeight === '19px' ? '3px' : '0'};"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlSpacer}${pnlHtml}</div></div>${hdl}</div>`;
+                     html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row" style="height: ${nameRowHeight}; margin-bottom: ${nameRowHeight === '19px' ? '3px' : '0'};"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${formatAmount(val)}</div>${pnlSpacer}${pnlHtml}</div></div>${hdl}</div>`;
                 } else {
                     // 其他分類（銀行等）：眼睛按鈕放在金額右邊
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div>${hdl}</div>`;
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${formatAmount(val)}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div>${hdl}</div>`;
                 }
             });
             
             let pHtml = groupPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(groupPnL)}</span>` : '';
-            c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(sum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
+            c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(sum)}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
             
             // 設置拖曳排序
             if(isEditMode) {
                 let el = document.getElementById(`group-${type}`);
                 if(el) {
                     sortables.push(Sortable.create(el, {
-                        handle: '.drag-handle',
                         animation: 150,
                         onEnd: function(evt) { updateOrder(type, evt.from); }
                     }));
@@ -2117,23 +2252,48 @@
         let html = '';
         
         debtItems.forEach(acc => {
-            let val = calculateTWD(acc);
+            let val = calculateValue(acc);
             totalDebt += val;
             // 檢查該項目是否被隱藏
             let itemHidden = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
             let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
             
-            html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers amount-red">${Math.round(val).toLocaleString()}</div></div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
+            let debtClick = isEditMode ? '' : `onclick="openDetailView(${acc.id})"`;
+            html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${debtClick} data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers amount-red">${formatAmount(val)}</div></div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
         });
         
-        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(totalDebt).toLocaleString()}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
+        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(totalDebt)}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
     }
 
+    // Currency Toggle Function
+    function toggleCurrency() {
+        currentDisplayCurrency = currentDisplayCurrency === 'TWD' ? 'USD' : 'TWD';
+        localStorage.setItem('displayCurrency', currentDisplayCurrency);
+        updateCurrencyButton();
+        renderAssets();
+        // 只有在詳細視圖已經打開的情況下才更新詳細視圖，不要重新打開已關閉的視圖
+        const detailView = document.getElementById('detailView');
+        if(currentDetailAcc && detailView && detailView.classList.contains('active')) {
+            openDetailView(currentDetailAcc.id);
+        }
+    }
+    
+    function updateCurrencyButton() {
+        const btn = document.getElementById('currencyToggleBtn');
+        const text = document.getElementById('currencyToggleText');
+        if(btn && text) {
+            // 顯示當前幣別
+            text.innerText = currentDisplayCurrency;
+            btn.title = `當前顯示: ${currentDisplayCurrency}，點擊切換至 ${currentDisplayCurrency === 'TWD' ? 'USD' : 'TWD'}`;
+        }
+    }
+    
     // 4. Start the app only after everything is defined
     async function init() {
         initSidebarState();
         initNumbersState();
         initSwiper();
+        updateCurrencyButton();
         chartLevel = 'root';
         currentPage = 0;
         renderAssets();
