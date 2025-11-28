@@ -35,7 +35,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 120px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -100,7 +100,7 @@
             .hamburger-btn { display: none !important; }
             .sidebar-toggle-btn-desktop { display: block !important; }
             .sidebar.collapsed .sidebar-header, .sidebar.collapsed .sidebar-menu { opacity: 0; pointer-events: none; }
-            .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; width: 100%; padding-top: 120px; }
+            .main-content { display: grid; grid-template-rows: auto 1fr; overflow: hidden; width: 100%; padding-top: 150px; }
             .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; height: 100%; scrollbar-width: none; -ms-overflow-style: none; align-items: start; }
             .content-grid::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
             .content-grid::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
@@ -150,8 +150,41 @@
 
         /* chart-section 樣式在 content-grid 中定義 */
         .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; min-height: 0; }
+        .total-label-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
+        .eye-toggle-btn { background: none; border: none; color: #0a84ff; font-size: 16px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
+        .eye-toggle-btn:hover { opacity: 0.8; }
+        
+        /* 隱藏數字樣式 */
+        .numbers-hidden .numbers-content {
+            visibility: hidden;
+            position: relative;
+        }
+        .numbers-hidden .numbers-content::after {
+            content: '****';
+            visibility: visible;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            font-size: inherit;
+            font-weight: inherit;
+            border-radius: inherit;
+        }
+        .numbers-hidden .total-amount::after { font-size: 40px; }
+        .numbers-hidden .pnl-badge::after { font-size: 14px; }
+        .numbers-hidden .rate-badge::after { font-size: 12px; }
+        .numbers-hidden .amount-val::after { font-size: 17px; }
+        .numbers-hidden .amount-pnl::after { font-size: 11px; }
+        .numbers-hidden .group-total::after { font-size: inherit; }
+        .numbers-hidden .group-pnl::after { font-size: 11px; }
         .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
         .pnl-up { color: var(--color-up); } .pnl-down { color: var(--color-down); }
         .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 3px; margin-bottom: 5px; }
@@ -443,12 +476,17 @@
             <div class="content-grid">
                 <div class="chart-section">
                     <div class="summary-card">
-                        <div class="total-label" id="summaryLabel">總淨資產 (TWD)</div>
-                        <div class="total-amount" id="totalNetWorth">NT$ --</div>
-                        <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge" id="totalPnLBadge">今日: +0</div></div>
+                        <div class="total-label-wrapper">
+                            <div class="total-label" id="summaryLabel">總淨資產 (TWD)</div>
+                            <button class="eye-toggle-btn" id="toggleNumbersBtn" onclick="toggleNumbers()" title="隱藏/顯示數字">
+                                <i class="fas fa-eye" id="toggleNumbersIcon"></i>
+                            </button>
+                        </div>
+                        <div class="total-amount numbers-content" id="totalNetWorth">NT$ --</div>
+                        <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge numbers-content" id="totalPnLBadge">今日: +0</div></div>
                         <div class="rate-info">
-                            <div class="rate-badge"><i class="fas fa-coins"></i><span id="rateUsdt">USDT ...</span></div>
-                            <div class="rate-badge"><i class="fas fa-exchange-alt"></i><span id="rateUsd">USD ...</span></div>
+                            <div class="rate-badge numbers-content"><i class="fas fa-coins"></i><span id="rateUsdt">USDT ...</span></div>
+                            <div class="rate-badge numbers-content"><i class="fas fa-exchange-alt"></i><span id="rateUsd">USD ...</span></div>
                         </div>
                     </div>
 
@@ -872,6 +910,28 @@
     function toggleSidebarCollapse() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); const isCollapsed=s.classList.contains('collapsed'); if(isCollapsed){s.classList.remove('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('active'); o.classList.add('active');} localStorage.setItem('sidebarCollapsed','false');}else{s.classList.add('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('active'); o.classList.remove('active');} localStorage.setItem('sidebarCollapsed','true');} }
     function initSidebarState() { if(window.matchMedia('(min-width: 768px)').matches){ const collapsed=localStorage.getItem('sidebarCollapsed')==='true'; const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(collapsed){s.classList.add('collapsed'); s.classList.remove('active'); o.classList.remove('active');}else{s.classList.remove('collapsed'); s.classList.add('active'); o.classList.add('active');} } }
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
+    function toggleNumbers() {
+        const body = document.body;
+        const icon = document.getElementById('toggleNumbersIcon');
+        const isHidden = body.classList.toggle('numbers-hidden');
+        icon.classList.toggle('fa-eye', !isHidden);
+        icon.classList.toggle('fa-eye-slash', isHidden);
+        localStorage.setItem('numbersHidden', isHidden);
+    }
+    function initNumbersState() {
+        const isHidden = localStorage.getItem('numbersHidden') === 'true';
+        const body = document.body;
+        const icon = document.getElementById('toggleNumbersIcon');
+        if (isHidden) {
+            body.classList.add('numbers-hidden');
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            body.classList.remove('numbers-hidden');
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
     function switchTab(t) { document.querySelectorAll('.modal-tab').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); document.getElementById('content'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active'); }
     function openModal() { if(isEditMode)return; editingId=null; window.tempTransactions=[]; document.getElementById('modalTitle').innerText='新增'; document.getElementById('inpName').value=''; document.getElementById('inpSymbol').value=''; switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
@@ -1634,16 +1694,16 @@
                     let pnlHtml = '';
                     
                     if(Math.abs(item.pnl) > 0.01) {
-                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl">${formatPnL(item.pnl)}</div>`;
+                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl numbers-content">${formatPnL(item.pnl)}</div>`;
                     } else {
                         pnlHtml = `<div class="amount-spacer"></div><div class="item-sub">TWD</div>`;
                     }
                     
-                    html += `<div class="list-item" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div></div>`;
+                    html += `<div class="list-item" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val numbers-content ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div></div>`;
                 });
                 
-                let pHtml = totalPnL !== 0 ? `<span class="group-pnl">${formatPnL(totalPnL)}</span>` : '';
-                c.innerHTML = `<div class="group-header"><span>總覽</span><div class="group-total-block"><span class="group-total">${Math.round(totalSum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-overview">${html}</div>`;
+                let pHtml = totalPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(totalPnL)}</span>` : '';
+                c.innerHTML = `<div class="group-header"><span>總覽</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(totalSum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-overview">${html}</div>`;
             }
         }
         
@@ -1737,14 +1797,14 @@
                         pnlLines.push(`成本 ${formatPnL(costPnL)}`);
                     }
                     if(pnlLines.length > 0) {
-                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl">${line}</div>`).join('');
+                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl numbers-content">${line}</div>`).join('');
                     } else {
                         pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
                     }
                 } else {
                     pnlHtml = `<div class="amount-spacer"></div>`;
                     if(pnl !== 0) {
-                        pnlHtml += `<div class="amount-pnl">${formatPnL(pnl)}</div>`;
+                        pnlHtml += `<div class="amount-pnl numbers-content">${formatPnL(pnl)}</div>`;
                     } else {
                         pnlHtml += '<div class="item-sub">TWD</div>';
                     }
@@ -1757,11 +1817,11 @@
                 } else {
                     iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
                 }
-                html += `<div class="list-item" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
+                html += `<div class="list-item" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount"><div class="amount-val numbers-content ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div>${hdl}</div>`;
             });
             
-            let pHtml = groupPnL !== 0 ? `<span class="group-pnl">${formatPnL(groupPnL)}</span>` : '';
-            c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total">${Math.round(sum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
+            let pHtml = groupPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(groupPnL)}</span>` : '';
+            c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(sum).toLocaleString()}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
             
             // 設置拖曳排序
             if(isEditMode) {
@@ -1799,15 +1859,16 @@
         debtItems.forEach(acc => {
             let val = calculateTWD(acc);
             totalDebt += val;
-            html += `<div class="list-item" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount"><div class="amount-val amount-red">${Math.round(val).toLocaleString()}</div></div></div>`;
+            html += `<div class="list-item" onclick="openDetailView(${acc.id})" data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount"><div class="amount-val numbers-content amount-red">${Math.round(val).toLocaleString()}</div></div></div>`;
         });
         
-        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total">${Math.round(totalDebt).toLocaleString()}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
+        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${Math.round(totalDebt).toLocaleString()}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
     }
 
     // 4. Start the app only after everything is defined
     async function init() {
         initSidebarState();
+        initNumbersState();
         initSwiper();
         chartLevel = 'root';
         currentPage = 0;
@@ -2044,4 +2105,5 @@
 </script>
 </body>
 </html>
+
 
