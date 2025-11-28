@@ -17,13 +17,21 @@
     <style>
         :root {
             --bg-color: #000000; --card-bg: #1c1c1e; --text-primary: #ffffff; --text-secondary: #8e8e93;
-            --color-bank: #64d2ff; --color-stock: #bf5af2; --color-crypto: #ff9f0a; --color-debt: #ff453a;
+            --color-bank: #64d2ff; --color-stock: #bf5af2; --color-twstock: #0a84ff; --color-crypto: #ff9f0a; --color-debt: #ff453a;
             --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
         }
         * { box-sizing: border-box; }
         body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
         body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
+        *::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
+        *::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
+        * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
+        *::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
+        *::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
@@ -162,7 +170,7 @@
         .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
         .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; }
-        .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
+        .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
         .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
         .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
@@ -195,7 +203,7 @@
             justify-content: center;
             align-items: center;
             gap: 6px; 
-            padding: 12px 16px 10px 16px; 
+            padding: 18px 20px 16px 20px; 
             position: sticky; 
             top: 60px; 
             z-index: 95; 
@@ -238,9 +246,9 @@
             background: transparent !important;
         }
         .page-tab { 
-            padding: 10px 18px;
-            border-radius: 18px;
-            font-size: 16px;
+            padding: 14px 22px;
+            border-radius: 20px;
+            font-size: 18px;
             font-weight: 500;
             color: var(--text-secondary);
             background: rgba(142, 142, 147, 0.1);
@@ -256,17 +264,17 @@
             color: #ffffff;
             background: #0a84ff;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 18px;
             box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
         }
         
         @media (min-width: 480px) {
             .page-tab { 
-                padding: 12px 24px;
-                font-size: 18px;
+                padding: 16px 28px;
+                font-size: 20px;
             }
             .page-tab.active { 
-                font-size: 18px;
+                font-size: 20px;
             }
         }
         .page-tab:active {
@@ -473,7 +481,8 @@
                     <div style="margin-bottom: 10px; padding: 0 5px;">
                         <span style="font-size: 12px; color: #8e8e93;">選擇券商 (手續費率)</span>
                         <select id="brokerSelect" class="form-input" style="background: #333; border-radius: 8px; padding: 5px; margin-top: 5px;" onchange="updateFeeDisplay()">
-                            <option value="cathay">國泰證券 (0.1%)</option>
+                            <option value="cathay">國泰證券 (1.425%)</option>
+                            <option value="cathay_fixed">國泰證券 (定期定額 固定1元)</option>
                             <option value="fubon">富邦證券 (0.25%)</option>
                             <option value="custom">自訂...</option>
                         </select>
@@ -507,7 +516,7 @@
     const STORAGE_KEY_DATA = 'my_assets_stable_data';
     const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
     
-    const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#bf5af2', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
+    const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#0a84ff', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
     const TYPE_NAMES = { 'bank': '銀行', 'stock': '投資理財', 'twstock': '投資理財 (台股)', 'crypto': '加密貨幣', 'debt': '負債' };
 
     let editingId = null;
@@ -736,6 +745,26 @@
         if(typeof Highcharts==='undefined')return; 
         Highcharts.setOptions({chart:{style:{fontFamily:'sans-serif'},events:{click:function(e){if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}activeInactivePoints.clear();if(this.series[0]){this.series[0].points.forEach(p=>{p.slice(false);p.setState('normal');const pEl = p.graphic?.element;if(pEl) pEl.style.setProperty('opacity', '1', 'important');});}hideCustomTooltip();}}},title:{text:''},tooltip:{enabled:false},plotOptions:{pie:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}}}}}}); 
         updateChartData(); 
+        // 確保圖表在初始化時正確渲染，特別是手機模式
+        setTimeout(() => {
+            if(chartInstance) {
+                const chartWrapper = document.getElementById('chartWrapper');
+                if(chartWrapper) {
+                    const wrapperWidth = chartWrapper.clientWidth;
+                    const wrapperHeight = chartWrapper.clientHeight;
+                    if(wrapperWidth > 0 && wrapperHeight > 0) {
+                        chartInstance.setSize(wrapperWidth, wrapperHeight, false);
+                        chartInstance.reflow();
+                        // 再次確保文字正確顯示
+                        setTimeout(() => {
+                            if(chartInstance) {
+                                chartInstance.reflow();
+                            }
+                        }, 100);
+                    }
+                }
+            }
+        }, 300); 
         document.getElementById('chartWrapper').addEventListener('click',function(e){const t=e.target;if(t.tagName!=='path'&&!t.closest('.highcharts-point')&&chartInstance){if(clickTimer)clearTimeout(clickTimer);activeInactivePoints.clear();if(chartInstance.series[0]){chartInstance.series[0].points.forEach(p=>{p.slice(false);p.setState('normal');const pEl = p.graphic?.element;if(pEl) pEl.style.setProperty('opacity', '1', 'important');});}hideCustomTooltip();}}); 
     }
 
@@ -947,8 +976,20 @@
             progressBar.style.width = '60%';
             status.innerText = `AI 分析中...`; status.style.color = "#0a84ff";
             const broker = document.getElementById('brokerSelect').value;
-            let fee = 0.1; if (broker === 'fubon') fee = 0.25; else if (broker === 'custom') fee = settings.feeRate || 0.1;
-            const prompt = `Analyze brokerage screenshots. 1. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 2. Calculate TOTAL shares. 3. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price * (1 + ${fee}/100). Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"transactions": [...], "totalShares": number, "avgCost": number}`;
+            const accountType = document.getElementById('inpType').value;
+            const isTWStock = accountType === 'twstock';
+            const isFixedFee = isTWStock && broker === 'cathay_fixed'; // 台股國泰定期定額固定1元
+            let fee = 0.1; 
+            if (isTWStock && broker === 'cathay') {
+                fee = 1.425; // 台股國泰一般交易1.425%
+            } else if (isTWStock && broker === 'cathay_fixed') {
+                fee = 0; // 台股國泰定期定額固定1元，fee設為0（會在計算時直接加1元）
+            } else if (broker === 'fubon') {
+                fee = 0.25;
+            } else if (broker === 'custom') {
+                fee = settings.feeRate || 0.1;
+            }
+            const prompt = `Analyze brokerage screenshots. 1. Extract transaction list: [{"date": "MM/DD", "shares": number, "price": number (raw price without fee)}] 2. Calculate TOTAL shares. 3. Calculate Weighted Average Cost PER SHARE. IMPORTANT: For each transaction, Cost = Price${isFixedFee ? ' + 1' : ` * (1 + ${fee}/100)`}. Final Avg Cost = (Sum of (Shares * Cost)) / Total Shares. Return JSON: {"transactions": [...], "totalShares": number, "avgCost": number}`;
             progressBar.style.width = '80%';
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...images] }] }) });
             progressBar.style.width = '90%';
@@ -969,7 +1010,12 @@
                     allTx.forEach(tx => {
                         const shares = parseFloat(tx.shares) || 0;
                         const price = parseFloat(tx.price) || 0;
-                        const costPerShare = price * (1 + fee / 100);
+                        let costPerShare;
+                        if (isFixedFee) {
+                            costPerShare = price + 1; // 台股定期定額固定加1元
+                        } else {
+                            costPerShare = price * (1 + fee / 100);
+                        }
                         totalShares += shares;
                         totalCost += shares * costPerShare;
                     });
@@ -981,7 +1027,8 @@
                     document.getElementById('inpCost').value = avgCost.toFixed(4);
                     renderTransactions(window.tempTransactions);
                     progressBar.style.width = '100%';
-                    status.innerText = `成功! 已累積 ${allTx.length} 筆交易，總股數: ${totalShares}，已含 ${fee}% 手續費`; status.style.color = "#30d158"; 
+                    const feeText = isFixedFee ? '固定1元' : `${fee}%`;
+                    status.innerText = `成功! 已累積 ${allTx.length} 筆交易，總股數: ${totalShares}，已含 ${feeText} 手續費`; status.style.color = "#30d158"; 
                     setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
                     switchTab('detail');
                 } else { throw new Error("No data"); }
@@ -1214,7 +1261,7 @@
                 const categoryConfig = {
                     'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
                     'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
-                    'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-stock'},
+                    'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-twstock'},
                     'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
                 };
                 
@@ -1277,7 +1324,7 @@
             const groupConfig = {
                 'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
                 'stock': {t:'投資理財 (美股)', i:'fa-chart-line', s:'icon-stock'},
-                'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-stock'},
+                'twstock': {t:'投資理財 (台股)', i:'fa-chart-line', s:'icon-twstock'},
                 'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
             };
             const g = groupConfig[type];
@@ -1423,6 +1470,26 @@
         setTimeout(() => { 
             initChart(); 
             // 初始化時不自動居中，只在用戶切換分頁時才居中
+            // 確保圖表在手機模式下正確渲染
+            setTimeout(() => {
+                if(chartInstance) {
+                    const chartWrapper = document.getElementById('chartWrapper');
+                    if(chartWrapper) {
+                        const wrapperWidth = chartWrapper.clientWidth;
+                        const wrapperHeight = chartWrapper.clientHeight;
+                        if(wrapperWidth > 0 && wrapperHeight > 0) {
+                            chartInstance.setSize(wrapperWidth, wrapperHeight, false);
+                            chartInstance.reflow();
+                            // 再次確保文字正確顯示
+                            setTimeout(() => {
+                                if(chartInstance) {
+                                    chartInstance.reflow();
+                                }
+                            }, 100);
+                        }
+                    }
+                }
+            }, 200);
         }, 500);
         
         // 監聽窗口大小改變，重新調整圖表
