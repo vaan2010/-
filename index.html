@@ -271,138 +271,40 @@
         .group-header { padding: 15px 20px 8px 20px; font-size: 13px; color: var(--text-secondary); background-color: var(--bg-color); display: flex; justify-content: space-between; text-transform: uppercase; }
         .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; text-align: right;}
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
-        .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; }
+        .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; position: relative; }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
+        .list-item:has(.item-name-row) { padding-top: 40px; }
+        .list-item:has(.item-name-row) .item-icon { align-self: flex-start; margin-top: 0; }
         .item-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; flex-shrink: 0; align-self: flex-start; margin-top: 0; overflow: hidden; }
         .item-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
         .icon-bank { color: var(--color-bank); background: rgba(100, 210, 255, 0.15); } .icon-crypto { color: var(--color-crypto); background: rgba(255, 159, 10, 0.15); } .icon-stock { color: var(--color-stock); background: rgba(191, 90, 242, 0.15); } .icon-twstock { color: var(--color-twstock); background: rgba(10, 132, 255, 0.15); } .icon-debt { color: var(--color-debt); background: rgba(255, 69, 58, 0.15); }
-        .item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
-        .item-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .item-content { flex: 1 1 0%; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+        .item-name-row { display: flex; align-items: center; margin-bottom: 0; position: absolute; left: 0; right: 0; padding-left: 67px; padding-right: 50px; top: 12px; z-index: 1; }
+        .item-name-row .item-name { font-size: 19px; font-weight: 500; line-height: 1.3; flex: 1; }
+        .item-name-row .item-eye-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 3; margin: 0; }
+        .item-symbol-row { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-top: 0; margin-bottom: 0; padding-left: 67px; padding-right: 16px; position: absolute; top: 50px; left: 0; right: 0; z-index: 1; display: flex; flex-direction: column; gap: 0; }
+        .item-symbol-row .symbol-text { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-right: 8px; display: inline-block; }
+        .item-symbol-row > div { min-height: 18px; display: flex; align-items: center; }
+        .list-item:has(.item-name-row) { padding-top: 50px; }
+        .list-item:has(.item-name-row) .item-icon { position: absolute; left: 16px; top: 20px; z-index: 2; display: flex; align-items: center; justify-content: center; }
+        .item-detail-row { display: flex; flex-direction: column; margin-top: 3px; gap: 0; }
+        .item-detail-row > div { min-height: 18px; display: flex; align-items: center; }
+        .list-item:has(.item-name-row) .item-amount-name-row { height: 0; margin-bottom: 0; }
+        .item-amount-name-row { height: 19px; margin-bottom: 3px; flex-shrink: 0; }
+        .item-name { font-size: 19px; font-weight: 500; margin-bottom: 3px; line-height: 1.3; }
         .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
         .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
         .item-row-compact span { white-space: nowrap; min-width: 0; }
-        .item-amount-wrapper { display: flex; align-items: flex-start; gap: 4px; margin-left: 8px; flex-shrink: 1; min-width: 0; }
-        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; }
+        .item-amount-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0; margin-left: 8px; flex-shrink: 0; }
+        .item-amount-name-row { height: 19px; margin-bottom: 3px; }
+        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; gap: 0; }
+        .item-amount > div { min-height: 18px; display: flex; align-items: center; justify-content: flex-end; }
+        .item-amount > div { min-height: 18px; display: flex; align-items: center; justify-content: flex-end; }
         .amount-val { font-size: 18px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; }
         .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
         
-        /* 只針對美股和台股列表應用響應式縮小 */
-        #group-stock .list-item,
-        #group-twstock .list-item {
-            padding: clamp(6px, 1.5vw, 12px) clamp(8px, 2vw, 16px);
-        }
-        #group-stock .item-icon,
-        #group-twstock .item-icon {
-            width: clamp(28px, 4vw, 40px);
-            height: clamp(28px, 4vw, 40px);
-            margin-right: clamp(8px, 1.5vw, 15px);
-            font-size: clamp(12px, 2vw, 18px);
-        }
-        #group-stock .item-name,
-        #group-twstock .item-name {
-            font-size: clamp(12px, 2.2vw, 17px);
-            margin-bottom: clamp(1px, 0.3vw, 3px);
-        }
-        #group-stock .item-name .symbol-small,
-        #group-twstock .item-name .symbol-small {
-            font-size: clamp(10px, 1.8vw, 13px);
-            margin-left: clamp(2px, 0.5vw, 6px);
-        }
-        #group-stock .item-row,
-        #group-twstock .item-row {
-            font-size: clamp(9px, 1.5vw, 12px);
-            margin-bottom: clamp(1px, 0.3vw, 2px);
-        }
-        #group-stock .item-row-compact,
-        #group-twstock .item-row-compact {
-            font-size: clamp(9px, 1.5vw, 11px);
-            margin-bottom: clamp(1px, 0.3vw, 2px);
-            gap: clamp(1px, 0.4vw, 4px);
-        }
-        #group-stock .item-amount-wrapper,
-        #group-twstock .item-amount-wrapper {
-            gap: clamp(1px, 0.3vw, 4px);
-            margin-left: clamp(2px, 0.5vw, 8px);
-        }
-        #group-stock .amount-val,
-        #group-twstock .amount-val {
-            font-size: clamp(12px, 2vw, 18px);
-            margin-bottom: clamp(1px, 0.3vw, 2px);
-        }
-        #group-stock .amount-pnl,
-        #group-twstock .amount-pnl {
-            font-size: clamp(8px, 1.3vw, 11px);
-            margin-bottom: 0;
-            line-height: 1.2;
-        }
-        #group-stock .item-eye-btn,
-        #group-twstock .item-eye-btn {
-            font-size: clamp(10px, 1.5vw, 14px);
-            padding: clamp(2px, 0.3vw, 4px);
-            margin-left: clamp(1px, 0.3vw, 4px);
-            min-width: clamp(18px, 2.5vw, 24px);
-        }
-        
-        /* 當視窗足夠大時，恢復正常大小 */
-        @media (min-width: 600px) {
-            #group-stock .list-item,
-            #group-twstock .list-item {
-                padding: 12px 16px;
-            }
-            #group-stock .item-icon,
-            #group-twstock .item-icon {
-                width: 40px;
-                height: 40px;
-                margin-right: 15px;
-                font-size: 18px;
-            }
-            #group-stock .item-name,
-            #group-twstock .item-name {
-                font-size: 17px;
-                margin-bottom: 3px;
-            }
-            #group-stock .item-name .symbol-small,
-            #group-twstock .item-name .symbol-small {
-                font-size: 13px;
-                margin-left: 6px;
-            }
-            #group-stock .item-row,
-            #group-twstock .item-row {
-                font-size: 12px;
-                margin-bottom: 2px;
-            }
-            #group-stock .item-row-compact,
-            #group-twstock .item-row-compact {
-                font-size: 11px;
-                margin-bottom: 2px;
-                gap: 4px;
-            }
-            #group-stock .item-amount-wrapper,
-            #group-twstock .item-amount-wrapper {
-                gap: 4px;
-                margin-left: 8px;
-            }
-            #group-stock .amount-val,
-            #group-twstock .amount-val {
-                font-size: 18px;
-                margin-bottom: 2px;
-            }
-            #group-stock .amount-pnl,
-            #group-twstock .amount-pnl {
-                font-size: 11px;
-                margin-bottom: 1px;
-                line-height: 1.3;
-            }
-            #group-stock .item-eye-btn,
-            #group-twstock .item-eye-btn {
-                font-size: 14px;
-                padding: 4px;
-                margin-left: 4px;
-                min-width: 24px;
-            }
-        }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
@@ -937,7 +839,7 @@
                 credits:{enabled:false},tooltip:{enabled:false},
                 plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
                 series:[{name:'資產',data:chartData}]
-            });
+            }); 
             disableChartHover();
         } else { 
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
@@ -1145,6 +1047,15 @@
             return null;
         }
     }
+    function cleanCompanyName(name) {
+        if(!name) return name;
+        // 移除常見的公司後綴（不區分大小寫）
+        // 處理有逗號的情況：", INC" 或 ", INC."
+        name = name.replace(/,\s*(INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|LLC|CO|COMPANY|PLC|SA|AG|NV|BV|LP|LLP)\.?$/i, '');
+        // 處理沒有逗號的情況：" INC" 或 " INC." 或 "INC"
+        name = name.replace(/\s+(INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|LLC|CO|COMPANY|PLC|SA|AG|NV|BV|LP|LLP)\.?$/i, '');
+        return name.trim();
+    }
     async function fetchUSStockProfile(symbol) {
         if(!settings.apiKey || !symbol) return null;
         try {
@@ -1154,11 +1065,30 @@
             // 檢查是否回傳空物件（代表查無此股）
             if (Object.keys(j).length === 0) return null;
             return {
-                name: j.name || symbol,
+                name: cleanCompanyName(j.name) || symbol,
                 logo: j.logo || null
             };
         } catch(e) {
             console.error('Failed to fetch US stock profile:', e);
+            return null;
+        }
+    }
+    async function fetchCryptoLogo(symbol) {
+        if(!symbol) return null;
+        try {
+            // 清理代號 (移除 USD, USDT 等後綴，CoinCap 只需要純代號)
+            const cleanSymbol = symbol.replace('COINBASE:', '').replace('-USD', '').replace('-USDT', '').toUpperCase();
+            // 組合 CoinCap 網址 (必須轉小寫)
+            const logoUrl = `https://assets.coincap.io/assets/icons/${cleanSymbol.toLowerCase()}@2x.png`;
+            // 嘗試載入圖片來驗證是否存在
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(logoUrl);
+                img.onerror = () => resolve(null);
+                img.src = logoUrl;
+            });
+        } catch(e) {
+            console.error('Failed to fetch crypto logo:', e);
             return null;
         }
     }
@@ -1199,12 +1129,22 @@
                         }
                     }, 800);
                 } else if(t==='crypto') { 
-                    document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); 
+                    // 加密貨幣：先顯示代號
+                    document.getElementById('inpName').value=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
+                    // 清除之前的計時器
+                    if(nameQueryTimer) clearTimeout(nameQueryTimer);
+                    // 延遲查詢，避免頻繁請求
+                    nameQueryTimer = setTimeout(async () => {
+                        const logoUrl = await fetchCryptoLogo(s);
+                        if(logoUrl) {
+                            document.getElementById('inpSymbol').setAttribute('data-logo', logoUrl);
+                        }
+                    }, 800);
                 } 
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const b=parseFloat(document.getElementById('inpBalance').value)||0; const cost=parseFloat(document.getElementById('inpCost').value)||0; const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && !b)return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id) openDetailView(newA.id); if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -1506,8 +1446,9 @@
     async function refreshStockInfo() {
         const stockAccounts = accounts.filter(acc => acc.type === 'stock' && acc.symbol);
         const twstockAccounts = accounts.filter(acc => acc.type === 'twstock' && acc.symbol);
+        const cryptoAccounts = accounts.filter(acc => acc.type === 'crypto' && acc.symbol);
         
-        if(stockAccounts.length === 0 && twstockAccounts.length === 0) {
+        if(stockAccounts.length === 0 && twstockAccounts.length === 0 && cryptoAccounts.length === 0) {
             alert('沒有需要重新整理的股票資訊');
             return;
         }
@@ -1523,13 +1464,13 @@
         progressText.innerText = '準備中...';
         
         let updated = 0;
-        let total = stockAccounts.length + twstockAccounts.length;
+        let total = stockAccounts.length + twstockAccounts.length + cryptoAccounts.length;
         let current = 0;
         
         // 重新整理美股資訊
         for(let acc of stockAccounts) {
             current++;
-            progressBar.style.width = `${5 + (current / total) * 50}%`;
+            progressBar.style.width = `${5 + (current / total) * 33}%`;
             progressText.innerText = `更新美股: ${acc.symbol} (${current}/${total})`;
             
             try {
@@ -1550,7 +1491,7 @@
         // 重新整理台股資訊
         for(let acc of twstockAccounts) {
             current++;
-            progressBar.style.width = `${55 + ((current - stockAccounts.length) / Math.max(twstockAccounts.length, 1)) * 40}%`;
+            progressBar.style.width = `${38 + ((current - stockAccounts.length) / Math.max(twstockAccounts.length, 1)) * 33}%`;
             progressText.innerText = `更新台股: ${acc.symbol} (${current}/${total})`;
             
             try {
@@ -1566,6 +1507,26 @@
                 await new Promise(r => setTimeout(r, 150));
             } catch(e) {
                 console.error(`Failed to refresh twstock info for ${acc.symbol}:`, e);
+            }
+        }
+        
+        // 重新整理加密貨幣資訊
+        for(let acc of cryptoAccounts) {
+            current++;
+            progressBar.style.width = `${71 + ((current - stockAccounts.length - twstockAccounts.length) / Math.max(cryptoAccounts.length, 1)) * 24}%`;
+            progressText.innerText = `更新加密貨幣: ${acc.symbol} (${current}/${total})`;
+            
+            try {
+                const sym = acc.symbol;
+                const logoUrl = await fetchCryptoLogo(sym);
+                if(logoUrl) {
+                    acc.logo = logoUrl;
+                    updated++;
+                }
+                // 避免請求過快，添加延遲
+                await new Promise(r => setTimeout(r, 150));
+            } catch(e) {
+                console.error(`Failed to refresh crypto info for ${acc.symbol}:`, e);
             }
         }
         
@@ -1941,12 +1902,20 @@
                     } else {
                         line2 = `<div class="item-row">${acc.balance}股</div>`;
                     }
-                    // 台股和美股：在公司名稱後加上代號（較小字體）
-                    let displayName = acc.name;
-                    if((acc.type === 'twstock' || acc.type === 'stock') && sym && acc.name !== sym) {
-                        displayName = `${acc.name}<span class="symbol-small"> ${sym}</span>`;
+                    // 台股和美股：分開顯示公司名稱和代號
+                    let displayName = acc.type === 'stock' ? cleanCompanyName(acc.name) : acc.name;
+                    // 只有美股和台股使用新佈局：第一行公司名稱，第二行代號+價格資訊
+                    if(acc.type === 'stock' || acc.type === 'twstock') {
+                        // 檢查該項目是否被隱藏（需要在這裡檢查，因為後面會用到 eyeIcon）
+                        let itemHiddenTemp = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
+                        let eyeIconTemp = itemHiddenTemp ? 'fa-eye-slash' : 'fa-eye';
+                        // 第二行：代號 + 價格資訊（line1 和 line2）
+                        let symbolRow = sym && displayName !== sym ? `<div class="item-symbol-row"><span class="symbol-text">${sym}</span>${line1}${line2}</div>` : `<div class="item-symbol-row">${line1}${line2}</div>`;
+                        htmlContent = `<div class="item-name-row"><div class="item-name">${displayName}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIconTemp}"></i></button></div>${symbolRow}`;
+                    } else {
+                        // 其他分類保持原來的佈局
+                        htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                     }
-                    htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                 } else {
                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
                 }
@@ -1963,7 +1932,7 @@
                     // 合併當天損益和成本損益到更緊湊的格式
                     let pnlLines = [];
                     if(Math.abs(dailyPnL) > 0.01) {
-                        pnlLines.push(`當天${formatPnL(dailyPnL)}`);
+                        pnlLines.push(`當日${formatPnL(dailyPnL)}`);
                     }
                     if(hasLine3 && Math.abs(costPnL) > 0.01) {
                         pnlLines.push(`成本${formatPnL(costPnL)}`);
@@ -1986,14 +1955,20 @@
                 let itemHidden = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
                 let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
                 
-                // 美股且有 logo 時顯示 logo，否則顯示 icon
+                // 美股和加密貨幣且有 logo 時顯示 logo，否則顯示 icon
                 let iconHtml = '';
-                if(acc.type === 'stock' && acc.logo) {
+                if((acc.type === 'stock' || acc.type === 'crypto') && acc.logo) {
                     iconHtml = `<div class="item-icon ${g.s}"><img src="${acc.logo}" alt="${acc.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas ${g.i}\\'></i>';"></div>`;
                 } else {
                     iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
                 }
-                html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${hdl}</div>`;
+                // 只有美股和台股使用新佈局：第一行只顯示公司名稱，金額從第二行開始
+                if(acc.type === 'stock' || acc.type === 'twstock') {
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div></div>${hdl}</div>`;
+                } else {
+                    // 其他分類保持原來的佈局
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${hdl}</div>`;
+                }
             });
             
             let pHtml = groupPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(groupPnL)}</span>` : '';
