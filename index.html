@@ -124,6 +124,14 @@
         .btn-icon.active { color: var(--color-up); }
 
         .sidebar-toggle-btn-desktop { display: none; }
+        .sidebar-toggle-btn-navbar { display: none; }
+        @media (min-width: 768px) {
+            .sidebar-toggle-btn-desktop { display: block !important; position: absolute; top: 15px; left: 20px; z-index: 1001; }
+            .sidebar.collapsed .sidebar-toggle-btn-desktop { display: none !important; }
+            .sidebar-toggle-btn-navbar { display: none !important; }
+            .sidebar.collapsed ~ .main-content .sidebar-toggle-btn-navbar { display: block !important; }
+            .sidebar { position: relative; }
+        }
         .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; }
         .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
         .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; transition: opacity 0.3s; }
@@ -359,6 +367,7 @@
         <!-- Sidebar & Overlay -->
         <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <div id="sidebar" class="sidebar">
+            <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
             <div class="sidebar-header"><h2>設定</h2></div>
             <div class="sidebar-menu">
                 <div class="menu-label">API 設定</div>
@@ -377,7 +386,7 @@
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                 <h1>資產總覽</h1>
                 <div class="btn-group">
-                    <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
+                    <button class="btn-icon sidebar-toggle-btn-navbar" id="sidebarToggleBtnNavbar" onclick="toggleSidebarCollapse()" title="展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
                     <button class="btn-icon" id="addBtn" onclick="openModal()"><i class="fas fa-plus"></i></button>
                 </div>
