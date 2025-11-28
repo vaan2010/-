@@ -344,6 +344,65 @@
             margin-left: clamp(1px, 0.3vw, 4px);
             min-width: clamp(18px, 2.5vw, 24px);
         }
+        
+        /* 當視窗足夠大時，恢復正常大小 */
+        @media (min-width: 600px) {
+            #group-stock .list-item,
+            #group-twstock .list-item {
+                padding: 12px 16px;
+            }
+            #group-stock .item-icon,
+            #group-twstock .item-icon {
+                width: 40px;
+                height: 40px;
+                margin-right: 15px;
+                font-size: 18px;
+            }
+            #group-stock .item-name,
+            #group-twstock .item-name {
+                font-size: 17px;
+                margin-bottom: 3px;
+            }
+            #group-stock .item-name .symbol-small,
+            #group-twstock .item-name .symbol-small {
+                font-size: 13px;
+                margin-left: 6px;
+            }
+            #group-stock .item-row,
+            #group-twstock .item-row {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+            #group-stock .item-row-compact,
+            #group-twstock .item-row-compact {
+                font-size: 11px;
+                margin-bottom: 2px;
+                gap: 4px;
+            }
+            #group-stock .item-amount-wrapper,
+            #group-twstock .item-amount-wrapper {
+                gap: 4px;
+                margin-left: 8px;
+            }
+            #group-stock .amount-val,
+            #group-twstock .amount-val {
+                font-size: 18px;
+                margin-bottom: 2px;
+            }
+            #group-stock .amount-pnl,
+            #group-twstock .amount-pnl {
+                font-size: 11px;
+                margin-bottom: 1px;
+                line-height: 1.3;
+            }
+            #group-stock .item-eye-btn,
+            #group-twstock .item-eye-btn {
+                font-size: 14px;
+                padding: 4px;
+                margin-left: 4px;
+                min-width: 24px;
+            }
+        }
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
         .amount-spacer { font-size: 13px; line-height: 1.35; visibility: hidden; height: 0; }
