@@ -27,7 +27,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow-y: auto; position: relative; scrollbar-width: none; -ms-overflow-style: none; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -38,9 +38,9 @@
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
         .sidebar.active { left: 0; }
         
-        .content-grid { display: flex; flex-direction: column; }
-        .chart-section { display: flex; flex-direction: column; flex-shrink: 0; }
-        .list-section { flex: 1; overflow-y: auto; min-height: 0; position: relative; scrollbar-width: none; -ms-overflow-style: none; }
+        .content-grid { display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow-x: hidden; min-height: 0; }
+        .chart-section { display: flex; flex-direction: column; flex-shrink: 0; width: 100%; max-width: 100%; min-width: 0; }
+        .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; }
         .list-section::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .list-section::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .list-section::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -96,10 +96,11 @@
             body { padding-bottom: 0; }
             .modal { align-items: center; justify-content: center; display: flex; }
             .modal-content-wrapper { width: 500px !important; height: 80% !important; max-height: 700px; border-radius: 16px; border: 1px solid var(--border-color); position: relative !important; overflow: hidden; display: flex; flex-direction: column; }
-            #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; flex: 0 0 auto; min-height: 320px; }
-            #assetChart { max-width: 100% !important; width: 100% !important; height: 100% !important; }
-            #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
-            #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
+            #chartWrapper { max-width: 100%; overflow: hidden; padding: 0 10px; flex: 0 0 auto; min-height: 320px; width: 100%; }
+            #assetChart { max-width: 100% !important; width: 100% !important; height: 100% !important; min-width: 0; min-height: 0; }
+            #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; width: 100% !important; height: 100% !important; }
+            #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; width: 100% !important; height: 100% !important; }
+            #chartWrapper svg { max-width: 100% !important; height: auto !important; }
         }
 
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: var(--bg-color); position: sticky; top: 0; z-index: 100; height: 60px; width: 100%; }
@@ -118,7 +119,7 @@
         .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
 
         /* chart-section 樣式在 content-grid 中定義 */
-        .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; }
+        .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; min-height: 0; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
         .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
@@ -127,10 +128,11 @@
         .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
-        #chartWrapper { flex: 1; background: transparent; position: relative; min-height: 320px; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; margin: auto 0; }
-        #assetChart { max-width: 100% !important; box-sizing: border-box !important; width: 100% !important; height: 100% !important; }
-        #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; }
-        #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; }
+        #chartWrapper { flex: 0 0 auto; background: transparent; position: relative; min-height: 280px; max-height: 40vh; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; margin: auto 0; }
+        #assetChart { max-width: 100% !important; box-sizing: border-box !important; width: 100% !important; height: 100% !important; min-width: 0; min-height: 0; }
+        #chartWrapper .highcharts-container { max-width: 100% !important; overflow: hidden !important; width: 100% !important; height: 100% !important; }
+        #chartWrapper .highcharts-root { max-width: 100% !important; overflow: hidden !important; width: 100% !important; height: 100% !important; }
+        #chartWrapper svg { max-width: 100% !important; height: auto !important; }
         #chartWrapper .highcharts-point { transition: none !important; pointer-events: auto !important; }
         #chartWrapper .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
         #chartWrapper .highcharts-series .highcharts-point:hover { opacity: 1 !important; filter: brightness(1) !important; fill-opacity: 1 !important; }
@@ -183,6 +185,9 @@
 
         /* Page Swiper */
         .page-swiper { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
+        @media (max-width: 767px) {
+            .list-section.page-swiper { overflow: visible; touch-action: auto; }
+        }
         .page-container { display: flex; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .page-item { min-width: 100%; flex-shrink: 0; }
         .page-indicator { 
@@ -444,7 +449,7 @@
                 <div id="dCostPnl">
                     <div style="font-size: 18px; font-weight: 600;">持股成本損益</div>
                     <span id="dCostPnlVal" style="font-size: 24px; font-weight: 700;">+0 (0%)</span>
-                    <div style="font-size: 12px; color: #8e8e93; margin-top: 5px;">參考損益 (含手續費)</div>
+                <div style="font-size: 12px; color: #8e8e93; margin-top: 5px;">參考損益 (含手續費)</div>
                 </div>
             </div>
         </div>
@@ -620,12 +625,12 @@
             return;
         }
         
-        if(!chartInstance){
+        if(!chartInstance){ 
             chartInstance=Highcharts.chart('assetChart',{
                 chart:{type:'pie',backgroundColor:'transparent',spacing:[30,20,20,20],height:'100%',width:null,reflow:true,margin:[30,20,20,20]},
                 title:{text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
                 credits:{enabled:false},tooltip:{enabled:false},
-                plotOptions:{pie:{innerSize:'55%',size:'55%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
+                plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
                 series:[{name:'資產',data:chartData}]
             });
             disableChartHover();
@@ -633,10 +638,12 @@
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
                 chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'55%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:800,easing:'easeOutQuart'},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}); 
                     disableChartHover();
-                } else {
-                    chartInstance.series[0].setData(chartData); 
+                } else { 
+                    chartInstance.series[0].setData(chartData);
+                    // 更新圖表大小
+                    chartInstance.series[0].update({size:'90%'}, false);
                 } 
             } else if(chartLevel === 'detail') {
                 // 詳細模式不在此更新，由enterDetailLevel處理
@@ -655,8 +662,8 @@
         }
         
         if(chartInstance.series[0])chartInstance.series[0].remove(false); 
-        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'55%', size:'55%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
-        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
+        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
+        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
         disableChartHover();
     }
     
@@ -1448,6 +1455,16 @@
                         
                         // 如果媒體查詢改變或寬度變化較大，需要更徹底地重新渲染
                         if(mediaQueryChanged || widthChanged) {
+                            // 強制清除圖表的固定尺寸
+                            const svg = chartWrapper.querySelector('svg');
+                            if(svg) {
+                                svg.removeAttribute('width');
+                                svg.removeAttribute('height');
+                                svg.style.width = '100%';
+                                svg.style.height = '100%';
+                                svg.style.maxWidth = '100%';
+                            }
+                            
                             // 強制設置圖表大小
                             if(wrapperWidth > 0 && wrapperHeight > 0) {
                                 chartInstance.setSize(wrapperWidth, wrapperHeight, false);
@@ -1458,25 +1475,35 @@
                             
                             // 多次嘗試確保更新完成
                             requestAnimationFrame(() => {
-                                if(chartInstance && wrapperWidth > 0 && wrapperHeight > 0) {
-                                    chartInstance.setSize(wrapperWidth, wrapperHeight, false);
-                                    chartInstance.reflow();
-                                    setTimeout(() => {
-                                        if(chartInstance) {
-                                            const newWidth = chartWrapper.clientWidth;
-                                            const newHeight = chartWrapper.clientHeight;
-                                            if(newWidth > 0 && newHeight > 0) {
-                                                chartInstance.setSize(newWidth, newHeight, false);
-                                                chartInstance.reflow();
-                                                // 最後一次確保
-                                                requestAnimationFrame(() => {
-                                                    if(chartInstance) {
-                                                        chartInstance.reflow();
-                                                    }
-                                                });
+                                if(chartInstance) {
+                                    const newWidth = chartWrapper.clientWidth;
+                                    const newHeight = chartWrapper.clientHeight;
+                                    if(newWidth > 0 && newHeight > 0) {
+                                        chartInstance.setSize(newWidth, newHeight, false);
+                                        chartInstance.reflow();
+                                        setTimeout(() => {
+                                            if(chartInstance) {
+                                                const finalWidth = chartWrapper.clientWidth;
+                                                const finalHeight = chartWrapper.clientHeight;
+                                                if(finalWidth > 0 && finalHeight > 0) {
+                                                    chartInstance.setSize(finalWidth, finalHeight, false);
+                                                    chartInstance.reflow();
+                                                    // 最後一次確保 SVG 尺寸正確
+                                                    requestAnimationFrame(() => {
+                                                        if(chartInstance) {
+                                                            chartInstance.reflow();
+                                                            const svg = chartWrapper.querySelector('svg');
+                                                            if(svg) {
+                                                                svg.style.width = '100%';
+                                                                svg.style.height = '100%';
+                                                                svg.style.maxWidth = '100%';
+                                                            }
+                                                        }
+                                                    });
+                                                }
                                             }
-                                        }
-                                    }, 100);
+                                        }, 150);
+                                    }
                                 }
                             });
                         } else {
@@ -1491,8 +1518,8 @@
                                     const newHeight = chartWrapper.clientHeight;
                                     if(newWidth > 0 && newHeight > 0) {
                                         chartInstance.setSize(newWidth, newHeight, false);
+                                        chartInstance.reflow();
                                     }
-                                    chartInstance.reflow();
                                 }
                             }, 100);
                         }
@@ -1520,3 +1547,4 @@
 </script>
 </body>
 </html>
+
