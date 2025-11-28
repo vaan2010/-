@@ -152,6 +152,7 @@
         .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; min-height: 0; }
         .total-label-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .total-amount-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; }
         .eye-toggle-btn { background: none; border: none; color: #0a84ff; font-size: 16px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
         .eye-toggle-btn:hover { opacity: 0.8; }
@@ -272,6 +273,8 @@
         .group-total { color: var(--text-primary); font-weight: 600; display: block;} .group-pnl { font-size: 11px; display: block; margin-top: 2px; text-align: right;}
         .list-container { background-color: var(--card-bg); border-radius: 12px; margin: 0 16px 10px 16px; overflow: hidden; }
         .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; position: relative; }
+        /* 總覽頁面：讓標題和金額對齊 */
+        #group-overview .list-item { align-items: center; }
         .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
         .list-item:has(.item-name-row) { padding-top: 40px; }
         .list-item:has(.item-name-row) .item-icon { align-self: flex-start; margin-top: 0; }
@@ -281,11 +284,30 @@
         .item-content { flex: 1 1 0%; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
         .item-name-row { display: flex; align-items: center; margin-bottom: 0; position: absolute; left: 0; right: 0; padding-left: 67px; padding-right: 50px; top: 12px; z-index: 1; }
         .item-name-row .item-name { font-size: 19px; font-weight: 500; line-height: 1.3; flex: 1; }
-        .item-name-row .item-eye-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 3; margin: 0; }
-        .item-symbol-row { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-top: 0; margin-bottom: 0; padding-left: 67px; padding-right: 16px; position: absolute; top: 50px; left: 0; right: 0; z-index: 1; display: flex; flex-direction: column; gap: 0; }
-        .item-symbol-row .symbol-text { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-right: 8px; display: inline-block; }
+        .item-name-row .item-eye-wrapper { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .item-name-row .item-eye-btn { margin: 0; }
+        .item-name-row .item-balance-below-eye { font-size: 12px; color: var(--text-secondary); opacity: 0.7; white-space: nowrap; }
+        .item-symbol-row { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-top: 0; margin-bottom: 0; padding-left: 67px; padding-right: 16px; position: absolute; top: 38px; left: 0; right: 0; z-index: 1; display: flex; flex-direction: column; gap: 0; }
+        .item-symbol-row .symbol-text-row { min-height: 18px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .item-symbol-row .symbol-text { font-size: 13px; color: var(--text-secondary); opacity: 0.7; display: inline-block; }
+        .item-symbol-row .symbol-balance { font-size: 13px; color: var(--text-secondary); opacity: 0.7; margin-left: auto; }
+        .item-symbol-row .symbol-spacer { height: 3px; visibility: hidden; }
+        /* 美股：增加 symbol-spacer 的高度，增加垂直間距 */
+        #group-stock .item-symbol-row .symbol-spacer { height: 6px; }
+        /* 台股：比照美股，增加 symbol-spacer 的高度 */
+        #group-twstock .item-symbol-row .symbol-spacer { height: 6px; }
+        /* 美股：確保右側空白行與左側 symbol-spacer 對齊 */
+        #group-stock .item-amount .amount-spacer { min-height: 6px; height: 6px; line-height: 6px; }
+        /* 台股：比照美股，確保右側空白行與左側 symbol-spacer 對齊 */
+        #group-twstock .item-amount .amount-spacer { min-height: 6px; height: 6px; line-height: 6px; }
+        /* 加密貨幣：比照美股，確保右側空白行與左側 symbol-spacer 對齊 */
+        #group-crypto .item-amount .amount-spacer { min-height: 6px; height: 6px; line-height: 6px; }
         .item-symbol-row > div { min-height: 18px; display: flex; align-items: center; }
-        .list-item:has(.item-name-row) { padding-top: 50px; }
+        .list-item:has(.item-name-row) { padding-top: 50px; padding-bottom: 20px; }
+        /* 美股：增加更多垂直空間，避免內容溢出 */
+        #group-stock .list-item:has(.item-name-row) { padding-top: 50px; padding-bottom: 30px; min-height: 140px; }
+        /* 台股：比照美股，增加更多垂直空間，避免內容溢出 */
+        #group-twstock .list-item:has(.item-name-row) { padding-top: 50px; padding-bottom: 30px; min-height: 140px; }
         .list-item:has(.item-name-row) .item-icon { position: absolute; left: 16px; top: 20px; z-index: 2; display: flex; align-items: center; justify-content: center; }
         .item-detail-row { display: flex; flex-direction: column; margin-top: 3px; gap: 0; }
         .item-detail-row > div { min-height: 18px; display: flex; align-items: center; }
@@ -294,16 +316,38 @@
         .item-name { font-size: 19px; font-weight: 500; margin-bottom: 3px; line-height: 1.3; }
         .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
-        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; justify-content: space-between; width: 100%; }
         .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
         .item-row-compact span { white-space: nowrap; min-width: 0; }
+        .price-label { font-size: 11px; color: var(--text-secondary); opacity: 0.7; margin-right: 4px; flex-shrink: 0; }
         .item-amount-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0; margin-left: 8px; flex-shrink: 0; }
         .item-amount-name-row { height: 19px; margin-bottom: 3px; }
-        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; gap: 0; }
-        .item-amount > div { min-height: 18px; display: flex; align-items: center; justify-content: flex-end; }
-        .item-amount > div { min-height: 18px; display: flex; align-items: center; justify-content: flex-end; }
-        .amount-val { font-size: 18px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; }
-        .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+        .item-amount { text-align: right; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; gap: 0; align-items: flex-end; }
+        .item-amount > div { min-height: 18px; display: flex; align-items: center; justify-content: flex-end; width: 100%; }
+        .amount-val-wrapper { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        /* 總覽和銀行分頁：讓眼睛按鈕對齊到金額中線 */
+        #group-overview .amount-val-wrapper, #group-bank .amount-val-wrapper { align-items: center; }
+        #group-overview .item-eye-btn, #group-bank .item-eye-btn { align-self: center; }
+        .amount-val { font-size: 18px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; }
+        /* 總覽頁面：讓金額和標題對齊 */
+        #group-overview .list-item { align-items: baseline; }
+        #group-overview .item-content { display: flex; flex-direction: column; justify-content: flex-start; }
+        #group-overview .item-amount-wrapper { align-items: flex-start; }
+        #group-overview .amount-val-wrapper { align-items: baseline; }
+        #group-overview .amount-val { font-size: 19px; line-height: 1.3; margin-bottom: 3px; }
+        /* 銀行分頁：讓金額和標題對齊 */
+        #group-bank .list-item { align-items: baseline; }
+        #group-bank .item-content { display: flex; flex-direction: column; justify-content: flex-start; }
+        #group-bank .item-amount-wrapper { align-items: flex-start; }
+        #group-bank .amount-val-wrapper { align-items: baseline; }
+        #group-bank .amount-val { font-size: 19px; line-height: 1.3; margin-bottom: 3px; }
+        .amount-pnl { font-size: 11px; margin-top: 0; margin-bottom: 1px; font-weight: 500; line-height: 1.3; white-space: nowrap; text-align: right; }
+        /* 美股：增加行間距 */
+        #group-stock .item-row-compact { margin-bottom: 4px; line-height: 1.4; }
+        /* 台股：比照美股，增加行間距 */
+        #group-twstock .item-row-compact { margin-bottom: 4px; line-height: 1.4; }
+        /* 加密貨幣：比照美股，增加行間距 */
+        #group-crypto .item-row-compact { margin-bottom: 4px; line-height: 1.4; }
         
         .amount-spacer { font-size: 13px; line-height: 1.35; color: transparent; margin: 0; padding: 0; min-height: 1.35em; display: block; }
         .amount-spacer::before { content: '\00a0'; }
@@ -545,12 +589,14 @@
                 <div class="chart-section">
                     <div class="summary-card">
                         <div class="total-label-wrapper">
-                            <div class="total-label" id="summaryLabel">總淨資產 (TWD)</div>
+                            <div class="total-label" id="summaryLabel">總淨資產</div>
+                        </div>
+                        <div class="total-amount-wrapper">
+                            <div class="total-amount numbers-content" id="totalNetWorth">--</div>
                             <button class="eye-toggle-btn" id="toggleNumbersBtn" onclick="toggleNumbers()" title="隱藏/顯示數字">
                                 <i class="fas fa-eye" id="toggleNumbersIcon"></i>
                             </button>
                         </div>
-                        <div class="total-amount numbers-content" id="totalNetWorth">NT$ --</div>
                         <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge numbers-content" id="totalPnLBadge">今日: +0</div></div>
                         <div class="rate-info">
                             <div class="rate-badge numbers-content"><i class="fas fa-coins"></i><span id="rateUsdt">USDT ...</span></div>
@@ -636,8 +682,8 @@
             <div class="detail-subtitle" id="dSymbol">NVIDIA Corp</div>
             <div class="detail-stats">
                 <div class="stat-item"><span class="stat-val" id="dQty">0</span><span class="stat-lbl">持有股數</span></div>
-                <div class="stat-item"><span class="stat-val" id="dPrice">$0</span><span class="stat-lbl">現價 (USD)</span></div>
-                <div class="stat-item"><span class="stat-val" id="dVal">NT$0</span><span class="stat-lbl">參考市值</span></div>
+                <div class="stat-item"><span class="stat-val" id="dPrice">0</span><span class="stat-lbl">現價 (USD)</span></div>
+                <div class="stat-item"><span class="stat-val" id="dVal">0</span><span class="stat-lbl">參考市值</span></div>
             </div>
             <div style="margin-top: 15px; text-align: center;">
                 <div id="dDailyPnl" style="margin-bottom: 15px;">
@@ -777,7 +823,7 @@
         const t=document.getElementById('customTooltip'); 
         const w=document.getElementById('chartWrapper'); 
         t.querySelector('.tt-header').innerText=p.name; 
-        t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${Math.round(p.y).toLocaleString()} TWD`; 
+        t.querySelector('.tt-body').innerHTML=`<span class="tt-dot" style="background-color:${p.color}"></span>資產: ${Math.round(p.y).toLocaleString()}`; 
         t.className=''; t.style.display='block'; 
         let cx=e.chartX; let cy=e.chartY; 
         if(!cx&&e.clientX){const r=w.getBoundingClientRect();cx=e.clientX-r.left;cy=e.clientY-r.top;} 
@@ -1268,15 +1314,15 @@
         if (!currentDetailAcc) return;
         if (!currentDetailAcc.isAuto) { editAccount(id); return; }
         document.getElementById('dName').innerText = currentDetailAcc.name; document.getElementById('dSymbol').innerText = currentDetailAcc.symbol; document.getElementById('dQty').innerText = currentDetailAcc.balance;
-        let price = currentDetailAcc.currentPrice || 0; let priceUnit = currentDetailAcc.type === 'twstock' ? 'TWD' : 'USD'; document.getElementById('dPrice').innerText = `${currentDetailAcc.type === 'twstock' ? 'NT$' : '$'}${price.toLocaleString()}`;
-        let valTWD = calculateTWD(currentDetailAcc); document.getElementById('dVal').innerText = `NT$ ${Math.round(valTWD).toLocaleString()}`;
+        let price = currentDetailAcc.currentPrice || 0; let priceUnit = currentDetailAcc.type === 'twstock' ? 'TWD' : 'USD'; document.getElementById('dPrice').innerText = `${price.toLocaleString()}`;
+        let valTWD = calculateTWD(currentDetailAcc); document.getElementById('dVal').innerText = `${Math.round(valTWD).toLocaleString()}`;
         let cost = currentDetailAcc.cost || 0; let fee = settings.feeRate || 0.1;
         
         // 當天損益
         let dailyPnL = calculateDailyPnL_TWD(currentDetailAcc);
         let dailySign = dailyPnL >= 0 ? '+' : '';
         let dailyColor = dailyPnL >= 0 ? 'var(--color-up)' : (dailyPnL < 0 ? 'var(--color-down)' : '#fff');
-        document.getElementById('dDailyPnlVal').innerHTML = `<span style="color:${dailyColor}">${dailySign}NT$ ${Math.round(dailyPnL).toLocaleString()}</span>`;
+        document.getElementById('dDailyPnlVal').innerHTML = `<span style="color:${dailyColor}">${dailySign}${Math.round(dailyPnL).toLocaleString()}</span>`;
         
         // 持股成本損益
         let costPnL = calculateCostPnL_TWD(currentDetailAcc);
@@ -1290,7 +1336,7 @@
         }
         if (cost > 0) {
             document.getElementById('dCostPnl').style.display = 'block';
-            document.getElementById('dCostPnlVal').innerHTML = `<span style="color:${costColor}">${costSign}NT$ ${Math.round(costPnLTWD).toLocaleString()} (${costPnlPct.toFixed(2)}%)</span>`;
+            document.getElementById('dCostPnlVal').innerHTML = `<span style="color:${costColor}">${costSign}${Math.round(costPnLTWD).toLocaleString()} (${costPnlPct.toFixed(2)}%)</span>`;
         } else {
             document.getElementById('dCostPnl').style.display = 'none';
         }
@@ -1300,7 +1346,7 @@
                 let txPnlHtml = '';
                 if (price > 0 && tx.price > 0) {
                      let txCost = tx.price * (1 + fee/100); let txProfit = (price - txCost) * tx.shares; let txProfitTWD = txProfit * settings.usdRate; let txSign = txProfitTWD >= 0 ? '+' : ''; let txColor = txProfitTWD >= 0 ? 'val-green' : 'val-red'; let txPct = ((price - txCost) / txCost) * 100;
-                     txPnlHtml = `<div class="tx-row"><span class="tx-label">損益</span><span class="tx-val ${txColor}">${txSign}NT$ ${Math.round(txProfitTWD).toLocaleString()} (${txPct.toFixed(1)}%)</span></div>`;
+                     txPnlHtml = `<div class="tx-row"><span class="tx-label">損益</span><span class="tx-val ${txColor}">${txSign}${Math.round(txProfitTWD).toLocaleString()} (${txPct.toFixed(1)}%)</span></div>`;
                 }
                 txList.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div>${txPnlHtml}</div>`;
             });
@@ -1748,7 +1794,7 @@
         }
         
         // 更新總資產顯示
-        document.getElementById('totalNetWorth').innerText = `NT$ ${Math.round(displayAmount).toLocaleString()}`;
+        document.getElementById('totalNetWorth').innerText = `${Math.round(displayAmount).toLocaleString()}`;
         const b = document.getElementById('totalPnLBlock');
         const bd = document.getElementById('totalPnLBadge');
         if(Math.abs(totalDailyPnL) > 1) {
@@ -1760,7 +1806,7 @@
             bd.style.padding = '';
             const s = totalDailyPnL > 0 ? '+' : '';
             const c = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
-            bd.innerHTML = `損益: <span class="${c}">${s}NT$ ${Math.round(totalDailyPnL).toLocaleString()} TWD</span>`;
+            bd.innerHTML = `損益: <span class="${c}">${s}${Math.round(totalDailyPnL).toLocaleString()}</span>`;
         } else {
             // 即使沒有損益也顯示空白區塊，保持與其他分頁對齊（完全不可見但佔位）
             b.style.display = 'block';
@@ -1774,9 +1820,9 @@
         // 更新摘要標籤
         const summaryLabelEl = document.getElementById('summaryLabel');
         if(currentPage === 0) {
-            if(summaryLabelEl) summaryLabelEl.innerText = '總淨資產 (TWD)';
+            if(summaryLabelEl) summaryLabelEl.innerText = '總淨資產';
         } else {
-            if(summaryLabelEl) summaryLabelEl.innerText = `${PAGE_NAMES[currentPage]} 總額 (TWD)`;
+            if(summaryLabelEl) summaryLabelEl.innerText = `${PAGE_NAMES[currentPage]} 總額`;
         }
         
         // 渲染總覽分頁（第0頁）- 顯示各類別卡片（與其他分頁格式一致）
@@ -1789,7 +1835,7 @@
                     'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
                     'stock': {t:'美股', i:'fa-chart-line', s:'icon-stock'},
                     'twstock': {t:'台股', i:'fa-chart-line', s:'icon-twstock'},
-                    'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
+                    'crypto': {t:'加密貨幣', i:'fa-bitcoin', s:'icon-crypto'}
                 };
                 
                 let allItems = [];
@@ -1820,19 +1866,17 @@
                     
                     let htmlContent = `<div class="item-name">${item.name}</div><div class="item-row">總覽</div>`;
                     let color = 'amount-green';
-                    let pnlHtml = '';
-                    
-                    if(Math.abs(item.pnl) > 0.01) {
-                        pnlHtml = `<div class="amount-spacer"></div><div class="amount-pnl item-numbers">${formatPnL(item.pnl)}</div>`;
-                    } else {
-                        pnlHtml = `<div class="amount-spacer"></div><div class="item-sub">TWD</div>`;
-                    }
                     
                     // 檢查該項目是否被隱藏
                     let itemHidden = localStorage.getItem(`itemHidden_category-${item.type}`) === 'true';
                     let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
                     
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(item.sum).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers('category-${item.type}')" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
+                    let pnlHtml = '';
+                    if(Math.abs(item.pnl) > 0.01) {
+                        pnlHtml = `<div class="amount-pnl item-numbers">${formatPnL(item.pnl)}</div>`;
+                    }
+                    
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" onclick="switchToPage(${PAGE_TYPES.indexOf(item.type)})" data-id="category-${item.type}"><div class="item-icon ${item.iconClass}"><i class="fas ${item.icon}"></i></div><div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${Math.round(item.sum).toLocaleString()}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers('category-${item.type}')" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div></div>`;
                 });
                 
                 let pHtml = totalPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(totalPnL)}</span>` : '';
@@ -1852,7 +1896,7 @@
                 'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
                 'stock': {t:'美股', i:'fa-chart-line', s:'icon-stock'},
                 'twstock': {t:'台股', i:'fa-chart-line', s:'icon-twstock'},
-                'crypto': {t:'加密貨幣 (USD)', i:'fa-bitcoin', s:'icon-crypto'}
+                'crypto': {t:'加密貨幣', i:'fa-bitcoin', s:'icon-crypto'}
             };
             const g = groupConfig[type];
             if(!g) return;
@@ -1878,47 +1922,101 @@
                 let htmlContent = '';
                 if(acc.isAuto) {
                     let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
-                    // 台股使用 NT$，美股/加密貨幣使用 $
-                    let pricePrefix = acc.type === 'twstock' ? 'NT$' : '$';
-                    // 簡化價格顯示，去掉單位（台股和美股都統一格式）
-                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()}` : '--';
+                    // 台股和美股/加密貨幣都統一格式，不使用前綴
+                    let pricePrefix = '';
+                    // 簡化價格顯示，去掉單位（台股和美股都統一格式），沒有資料時顯示 N/A
+                    let price = acc.currentPrice ? `${pricePrefix}${acc.currentPrice.toLocaleString()}` : 'N/A';
                     let chg = '';
-                    if(acc.dayChangePercent) {
+                    if(acc.dayChangePercent !== undefined && acc.dayChangePercent !== null) {
                         let s = acc.dayChangePercent > 0 ? '+' : '';
                         let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
                         chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
+                    } else if(acc.currentPrice) {
+                        // 有價格但沒有漲跌幅，顯示 N/A
+                        chg = `<span>N/A</span>`;
                     }
-                    // 第一行：當天漲跌幅 + 價格（更緊湊）
-                    let line1 = chg ? `<div class="item-row-compact">${chg}<span class="item-label">•</span><span>${price}</span></div>` : `<div class="item-row">${price}</div>`;
-                    // 第二行：數量 + 成本百分比（簡化顯示）
+                    // 計算盈虧（用於顯示在當日和成本行的右邊）
+                    let dailyPnL = acc.isAuto ? calculateDailyPnL_TWD(acc) : 0;
+                    let costPnL = acc.isAuto ? calculateCostPnL_TWD(acc) : 0;
+                    let dailyPnLHtml = '';
+                    let costPnLHtml = '';
+                    
+                    // 美股、台股、加密貨幣：將盈虧顯示在當日和成本行的最右邊
+                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
+                        if(Math.abs(dailyPnL) > 0.01) {
+                            dailyPnLHtml = `<span style="margin-left: auto;">${formatPnL(dailyPnL)}</span>`;
+                        }
+                        if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0 && Math.abs(costPnL) > 0.01) {
+                            costPnLHtml = `<span style="margin-left: auto;">${formatPnL(costPnL)}</span>`;
+                        }
+                    }
+                    
+                    // 第一行：當日標籤 + 價格 + 當天漲跌幅 + 當日盈虧（美股、台股、加密貨幣）
+                    let line1 = chg ? `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${chg}${dailyPnLHtml}</div>` : `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${dailyPnLHtml}</div>`;
+                    // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股、加密貨幣）
                     let line2 = '';
-                    if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0) {
-                        let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
-                        let s = pnlPct >= 0 ? '+' : '';
-                        let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
-                        let costPrefix = acc.type === 'twstock' ? 'NT$' : '$';
-                        // 簡化：只顯示成本和百分比，去掉"成本"文字
-                        line2 = `<div class="item-row-compact"><span>${acc.balance}股</span><span class="item-label">•</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span></div>`;
+                    if(acc.cost && acc.cost > 0) {
+                        if(acc.currentPrice && acc.currentPrice > 0) {
+                            let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
+                            let s = pnlPct >= 0 ? '+' : '';
+                            let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
+                            let costPrefix = '';
+                            // 簡化：只顯示成本和百分比，加上"成本"標籤
+                            // 美股、台股、加密貨幣：line2 不包含股數，股數會放在代碼行
+                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span>${costPnLHtml}</div>`;
+                        } else {
+                            // 有成本但沒有當前價格，顯示成本和 N/A
+                            let costPrefix = '';
+                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span>N/A</span>${costPnLHtml}</div>`;
+                        }
                     } else {
-                        line2 = `<div class="item-row">${acc.balance}股</div>`;
+                        // 沒有成本時，顯示 N/A
+                        line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>N/A</span></div>`;
                     }
-                    // 台股和美股：分開顯示公司名稱和代號
+                    // 美股、台股、加密貨幣：分開顯示公司名稱和代號
                     let displayName = acc.type === 'stock' ? cleanCompanyName(acc.name) : acc.name;
-                    // 只有美股和台股使用新佈局：第一行公司名稱，第二行代號+價格資訊
-                    if(acc.type === 'stock' || acc.type === 'twstock') {
+                    // 美股、台股、加密貨幣使用新佈局：第一行公司名稱，第二行代號+價格資訊
+                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
                         // 檢查該項目是否被隱藏（需要在這裡檢查，因為後面會用到 eyeIcon）
                         let itemHiddenTemp = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
                         let eyeIconTemp = itemHiddenTemp ? 'fa-eye-slash' : 'fa-eye';
-                        // 第二行：代號 + 價格資訊（line1 和 line2）
-                        let symbolRow = sym && displayName !== sym ? `<div class="item-symbol-row"><span class="symbol-text">${sym}</span>${line1}${line2}</div>` : `<div class="item-symbol-row">${line1}${line2}</div>`;
-                        htmlContent = `<div class="item-name-row"><div class="item-name">${displayName}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIconTemp}"></i></button></div>${symbolRow}`;
+                        // 第二行：代號，第三行開始：價格資訊（line1 和 line2）
+                        let symbolRow = '';
+                        // 美股、台股、加密貨幣：即使 displayName === sym 也要顯示代碼行（因為需要顯示股數和正確的排版）
+                        if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
+                            // 美股、台股、加密貨幣：股數放在代碼同一行的最右邊，當日和成本往下移兩行
+                            let balanceUnit = acc.type === 'crypto' ? '' : '股';
+                            if(sym) {
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div><div class="symbol-spacer"></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
+                            } else {
+                                // 沒有代碼時，也要保持排版結構，但代碼顯示 N/A
+                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div><div class="symbol-spacer"></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
+                            }
+                        } else if(sym && displayName !== sym) {
+                            // 其他類型：只有當 displayName !== sym 時才顯示代碼行
+                            symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym}</span></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
+                        } else {
+                            // 沒有代碼時，直接顯示價格資訊
+                            symbolRow = `<div class="item-symbol-row">${line1}${line2}</div>`;
+                        }
+                        // 股數顯示位置
+                        let balanceDisplay = '';
+                        if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
+                            // 美股、台股、加密貨幣：股數已移到代碼行，眼睛下方不顯示
+                            balanceDisplay = '';
+                        } else {
+                            // 其他類型：股數放在眼睛按鈕下方
+                            balanceDisplay = `<div class="item-balance-below-eye">${acc.balance || 'N/A'}</div>`;
+                        }
+                        htmlContent = `<div class="item-name-row"><div class="item-name">${displayName}</div><div class="item-eye-wrapper"><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIconTemp}"></i></button>${balanceDisplay}</div></div>${symbolRow}`;
                     } else {
                         // 其他分類保持原來的佈局
                         htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                     }
-                } else {
-                    htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div>`;
-                }
+                 } else {
+                     // 銀行項目：移除幣別顯示，添加"帳戶"標籤
+                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">帳戶</div>`;
+                 }
                 
                 let color = 'amount-green';
                 let hdl = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
@@ -1928,26 +2026,31 @@
                 let pnlHtml = '';
                 
                 if(acc.isAuto) {
-                    let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
-                    // 合併當天損益和成本損益到更緊湊的格式
-                    let pnlLines = [];
-                    if(Math.abs(dailyPnL) > 0.01) {
-                        pnlLines.push(`當日${formatPnL(dailyPnL)}`);
-                    }
-                    if(hasLine3 && Math.abs(costPnL) > 0.01) {
-                        pnlLines.push(`成本${formatPnL(costPnL)}`);
-                    }
-                    if(pnlLines.length > 0) {
-                        pnlHtml = pnlLines.map(line => `<div class="amount-pnl item-numbers">${line}</div>`).join('');
-                    } else {
+                    // 美股、台股、加密貨幣：盈虧已經顯示在當日和成本行的右邊，所以右側不需要顯示盈虧
+                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
                         pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
+                    } else {
+                        // 其他類型：保持原樣，在右側顯示盈虧
+                        let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
+                        let pnlLines = [];
+                        if(Math.abs(dailyPnL) > 0.01) {
+                            pnlLines.push(formatPnL(dailyPnL));
+                        }
+                        if(hasLine3 && Math.abs(costPnL) > 0.01) {
+                            pnlLines.push(formatPnL(costPnL));
+                        }
+                        if(pnlLines.length > 0) {
+                            pnlHtml = pnlLines.map(value => `<div class="amount-pnl item-numbers">${value}</div>`).join('');
+                        } else {
+                            pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
+                        }
                     }
                 } else {
                     pnlHtml = `<div class="amount-spacer"></div>`;
                     if(pnl !== 0) {
                         pnlHtml += `<div class="amount-pnl item-numbers">${formatPnL(pnl)}</div>`;
                     } else {
-                        pnlHtml += '<div class="item-sub">TWD</div>';
+                        pnlHtml += '';
                     }
                 }
                 
@@ -1962,12 +2065,18 @@
                 } else {
                     iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
                 }
-                // 只有美股和台股使用新佈局：第一行只顯示公司名稱，金額從第二行開始
-                if(acc.type === 'stock' || acc.type === 'twstock') {
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div></div>${hdl}</div>`;
+                 // 美股、台股、加密貨幣使用新佈局：第一行只顯示公司名稱，金額從第二行開始
+                 if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
+                     // 美股、台股、加密貨幣：現值金額往下移一行（對齊代碼+股數），盈虧也要往下移以對齊「當日」和「成本」行
+                     // 美股、台股、加密貨幣需要在現值金額和盈虧之間添加兩個空白行，讓當日盈虧與「當日」行對齊
+                     // 因為左側有兩個 symbol-spacer（各6px），所以右側也需要兩個對應的空白行
+                     let nameRowHeight = (acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '19px' : '0';
+                     let pnlSpacer = (acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '<div class="amount-spacer"></div><div class="amount-spacer"></div>' : '';
+                     // 美股、台股、加密貨幣：現值金額放在第二行（對齊代碼+股數），需要 item-amount-name-row
+                     html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row" style="height: ${nameRowHeight}; margin-bottom: ${nameRowHeight === '19px' ? '3px' : '0'};"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlSpacer}${pnlHtml}</div></div>${hdl}</div>`;
                 } else {
-                    // 其他分類保持原來的佈局
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div>${pnlHtml}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${hdl}</div>`;
+                    // 其他分類（銀行等）：眼睛按鈕放在金額右邊
+                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${Math.round(val).toLocaleString()}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div>${hdl}</div>`;
                 }
             });
             
@@ -2260,5 +2369,6 @@
 </script>
 </body>
 </html>
+
 
 
