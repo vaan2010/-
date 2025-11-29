@@ -21,7 +21,7 @@
             --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
         }
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; overscroll-behavior: none; overscroll-behavior-y: none; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
         body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
@@ -35,7 +35,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; padding-bottom: 0; overscroll-behavior: none; overscroll-behavior-y: none; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; padding-bottom: 0; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -55,24 +55,16 @@
         
         .content-grid { display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow-x: hidden; min-height: 0; }
         .chart-section { display: flex; flex-direction: column; flex-shrink: 0; width: 100%; max-width: 100%; min-width: 0; }
-        .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; overscroll-behavior: none; overscroll-behavior-y: none; }
+        .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; }
         /* 手機版：確保 page-item 內容緊貼，避免多餘空白 */
         @media (max-width: 767px) {
             .page-item { 
                 display: flex; 
                 flex-direction: column; 
                 padding-bottom: 60px; /* 為底部 tab-bar 留空間，替代 mobile-spacer */
-                overscroll-behavior: none;
-                overscroll-behavior-y: none;
             }
             .page-item .mobile-spacer {
                 display: none; /* 隱藏 mobile-spacer，使用 padding-bottom 代替 */
-            }
-            /* 禁用 iOS 彈性滾動 */
-            .main-content {
-                overscroll-behavior: none;
-                overscroll-behavior-y: none;
-                -webkit-overflow-scrolling: touch;
             }
         }
         .list-section::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
@@ -2377,7 +2369,6 @@
             const c = document.getElementById('assetsContainer');
             if(c) {
                 c.innerHTML = '';
-                const categoryTypes = ['bank', 'stock', 'twstock', 'crypto'];
                 const categoryConfig = {
                     'bank': {t:'銀行 / 現金', i:'fa-university', s:'icon-bank'},
                     'stock': {t:'美股', i:'fa-chart-line', s:'icon-stock'},
@@ -2385,10 +2376,14 @@
                     'crypto': {t:'加密貨幣', i:'fa-bitcoin', s:'icon-crypto'}
                 };
                 
+                // 按照 pageOrder 順序獲取分類類型（排除總覽，只包含啟用的分頁）
+                const orderedCategoryTypes = pageOrder
+                    .filter(index => index !== 0) // 排除總覽
+                    .map(index => PAGE_TYPES[index]) // 轉換為類型名稱
+                    .filter(type => pageVisibility[type] !== false); // 只包含啟用的分頁
+                
                 let allItems = [];
-                categoryTypes.forEach(type => {
-                    // 只顯示啟用的分頁
-                    if(!pageVisibility[type]) return;
+                orderedCategoryTypes.forEach(type => {
                     
                     const g = categoryConfig[type];
                     if(!g) return;
@@ -2440,8 +2435,8 @@
                         sortables.push(Sortable.create(el, {
                             animation: 150,
                             onEnd: function(evt) { 
-                                // 總覽分頁的排序是類別順序，保存到 localStorage
-                                let ids = Array.from(evt.from.children).map(c => {
+                                // 獲取新的類別順序
+                                let newCategoryOrder = Array.from(evt.from.children).map(c => {
                                     let dataId = c.getAttribute('data-id');
                                     if(dataId && dataId.startsWith('category-')) {
                                         return dataId.replace('category-', '');
@@ -2449,8 +2444,22 @@
                                     return null;
                                 }).filter(id => id !== null);
                                 
-                                // 保存類別順序到 localStorage
-                                localStorage.setItem('categoryOrder', JSON.stringify(ids));
+                                // 將類別順序轉換為分頁索引順序，更新 pageOrder
+                                const newPageOrder = [0]; // 總覽始終在第一位
+                                newCategoryOrder.forEach(type => {
+                                    const pageIndex = PAGE_TYPES.indexOf(type);
+                                    if(pageIndex > 0) {
+                                        newPageOrder.push(pageIndex);
+                                    }
+                                });
+                                
+                                // 更新 pageOrder
+                                pageOrder = newPageOrder;
+                                savePageOrder();
+                                
+                                // 重新渲染界面以反映新的順序
+                                renderPageIndicator();
+                                renderPageVisibilitySettings();
                             }
                         }));
                     }
@@ -2949,7 +2958,6 @@
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
         
-        // 防止 iOS 彈性滾動（overscroll）- 只使用 CSS，不阻止正常滾動
         
         // 初始化選單區塊狀態
         initMenuSections();
