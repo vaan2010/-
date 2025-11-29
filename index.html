@@ -1062,6 +1062,44 @@
         return orderedPages[displayIndex] || 0;
     }
     
+    // 重新排列 page-item 的 DOM 順序，使其與 pageOrder 一致
+    function reorderPageItems() {
+        const container = document.getElementById('pageContainer');
+        if(!container) return -1;
+        
+        // 獲取排序後的順序（只包含啟用的分頁）
+        const orderedPages = getOrderedPages();
+        
+        // 獲取所有 page-item
+        const pageItems = Array.from(container.children);
+        
+        // 按照 orderedPages 的順序重新排列
+        const sortedItems = [];
+        orderedPages.forEach(pageIndex => {
+            const item = pageItems.find(item => parseInt(item.getAttribute('data-page')) === pageIndex);
+            if(item) {
+                sortedItems.push(item);
+            }
+        });
+        
+        // 將未啟用的分頁放在最後
+        pageItems.forEach(item => {
+            const pageIndex = parseInt(item.getAttribute('data-page'));
+            if(!orderedPages.includes(pageIndex)) {
+                sortedItems.push(item);
+            }
+        });
+        
+        // 重新插入到 DOM 中
+        sortedItems.forEach(item => {
+            container.appendChild(item);
+        });
+        
+        // 返回當前分頁在重新排列後的 DOM 索引
+        const domIndex = sortedItems.findIndex(item => parseInt(item.getAttribute('data-page')) === currentPage);
+        return domIndex >= 0 ? domIndex : -1;
+    }
+    
     // 檢查分頁是否啟用
     function isPageEnabled(pageIndex) {
         if(pageIndex === 0) return pageVisibility['overview']; // 總覽始終可用
@@ -1122,8 +1160,9 @@
                     filter: 'input, label', // 排除 checkbox 和 label，只允許通過 drag-handle 拖曳
                     preventOnFilter: false,
                     onEnd: function(evt) {
-                        // 獲取新的順序
-                        const newOrder = Array.from(container.children).map(item => {
+                        // 獲取新的順序（使用外層的 container，這是 pageVisibilitySettings 容器）
+                        const settingsContainer = container;
+                        const newOrder = Array.from(settingsContainer.children).map(item => {
                             return parseInt(item.getAttribute('data-page-index'));
                         });
                         
@@ -1131,10 +1170,25 @@
                         pageOrder = [0, ...newOrder];
                         savePageOrder();
                         
-                        // 重新渲染界面
+                        // 重新排列 page-item 的 DOM 順序（必須在 renderPageIndicator 之前）
+                        const domIndex = reorderPageItems();
+                        
+                        // 重新渲染界面（renderPageIndicator 會根據新的 pageOrder 重新渲染）
                         renderPageIndicator();
+                        // 注意：不要在這裡調用 renderPageVisibilitySettings()，因為這會重新初始化 Sortable
+                        // 只需要更新主畫面的順序即可
                         renderAssets();
                         updateChartData();
+                        
+                        // 確保當前分頁的位置正確
+                        const pageContainer = document.getElementById('pageContainer');
+                        if(pageContainer) {
+                            const finalIndex = domIndex >= 0 ? domIndex : getDisplayIndex(currentPage);
+                            pageContainer.style.transform = `translateX(-${finalIndex * 100}%)`;
+                        }
+                        
+                        // 更新導航箭頭狀態
+                        updatePageNavArrows();
                     }
                 });
             } else {
@@ -2077,11 +2131,15 @@
             }
         }
         currentPage = pageIndex;
+        
+        // 重新排列 page-item 的 DOM 順序，使其與 pageOrder 一致
+        const domIndex = reorderPageItems();
+        
         const container = document.getElementById('pageContainer');
         if(container) {
-            // page-item 是按照原始順序（0,1,2,3,4）排列的
-            // 所以直接使用 pageIndex 來移動
-            container.style.transform = `translateX(-${pageIndex * 100}%)`;
+            // 重新排列後，直接使用 DOM 索引（因為 DOM 已經按照順序排列了）
+            const finalIndex = domIndex >= 0 ? domIndex : getDisplayIndex(pageIndex);
+            container.style.transform = `translateX(-${finalIndex * 100}%)`;
         }
         
         // 更新分頁指示器（使用 data-page 屬性匹配，而不是 DOM 索引）
@@ -2457,9 +2515,19 @@
                                 pageOrder = newPageOrder;
                                 savePageOrder();
                                 
+                                // 重新排列 page-item 的 DOM 順序
+                                const domIndex = reorderPageItems();
+                                
                                 // 重新渲染界面以反映新的順序
                                 renderPageIndicator();
                                 renderPageVisibilitySettings();
+                                
+                                // 確保當前分頁的位置正確
+                                const container = document.getElementById('pageContainer');
+                                if(container) {
+                                    const finalIndex = domIndex >= 0 ? domIndex : getDisplayIndex(currentPage);
+                                    container.style.transform = `translateX(-${finalIndex * 100}%)`;
+                                }
                             }
                         }));
                     }
@@ -2964,15 +3032,6 @@
         
         // 初始化分頁顯示設置
         renderPageVisibilitySettings();
-        renderPageIndicator();
-        
-        // 確保當前分頁是啟用的
-        if(!isPageEnabled(currentPage)) {
-            const orderedPages = getOrderedPages();
-            if(orderedPages.length > 0) {
-                switchToPage(orderedPages[0]);
-            }
-        }
         
         // 初始化時確保 pageOrder 包含所有分頁
         if(pageOrder.length !== PAGE_TYPES.length) {
@@ -2983,6 +3042,27 @@
                 }
             });
             savePageOrder();
+        }
+        
+        // 重新排列 page-item 的 DOM 順序
+        const domIndex = reorderPageItems();
+        
+        // 渲染分頁指示器
+        renderPageIndicator();
+        
+        // 確保當前分頁是啟用的
+        if(!isPageEnabled(currentPage)) {
+            const orderedPages = getOrderedPages();
+            if(orderedPages.length > 0) {
+                switchToPage(orderedPages[0]);
+            }
+        } else {
+            // 確保當前分頁的位置正確
+            const container = document.getElementById('pageContainer');
+            if(container) {
+                const finalIndex = domIndex >= 0 ? domIndex : getDisplayIndex(currentPage);
+                container.style.transform = `translateX(-${finalIndex * 100}%)`;
+            }
         }
     }
     
