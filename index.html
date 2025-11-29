@@ -35,7 +35,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; padding-bottom: 0; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -61,9 +61,10 @@
             .page-item { 
                 display: flex; 
                 flex-direction: column; 
+                padding-bottom: 60px; /* 為底部 tab-bar 留空間，替代 mobile-spacer */
             }
             .page-item .mobile-spacer {
-                flex-shrink: 0;
+                display: none; /* 隱藏 mobile-spacer，使用 padding-bottom 代替 */
             }
         }
         .list-section::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
@@ -158,9 +159,21 @@
         .menu-text { flex: 1; }
         .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
         .page-visibility-item { padding: 12px 25px; display: flex; align-items: center; font-size: 16px; color: #fff; }
-        .page-visibility-item label { display: flex; align-items: center; cursor: pointer; width: 100%; }
+        .page-visibility-item label { display: flex; align-items: center; cursor: pointer; width: 100%; flex: 1; }
         .page-visibility-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: #0a84ff; }
         .page-visibility-item span { flex: 1; }
+        .page-visibility-item .drag-handle { 
+            color: #666; 
+            font-size: 18px; 
+            margin-right: 10px; 
+            cursor: grab; 
+            display: block !important;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .page-visibility-item .drag-handle:active { cursor: grabbing; }
+        .page-visibility-item.sortable-chosen { opacity: 0.5; background: rgba(255, 255, 255, 0.05); }
+        .page-visibility-item.sortable-ghost { opacity: 0.3; }
 
         /* chart-section 樣式在 content-grid 中定義 */
         .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; min-height: 0; }
@@ -428,10 +441,11 @@
         }
         @media (max-width: 767px) {
             .currency-toggle-btn {
-                bottom: 80px;
+                bottom: 90px; /* 提高位置，確保在 tab-bar 上方且不被遮蓋 */
                 right: 15px;
                 width: 56px;
                 height: 56px;
+                z-index: 10001; /* 確保在最上層 */
             }
         }
 
@@ -907,9 +921,42 @@
         'crypto': true
     };
     
+    // 分頁順序設置（預設順序：總覽、銀行、美股、台股、加密）
+    let pageOrder = JSON.parse(localStorage.getItem('pageOrder')) || [0, 1, 2, 3, 4];
+    
     // 保存分頁顯示設置
     function savePageVisibility() {
         localStorage.setItem('pageVisibility', JSON.stringify(pageVisibility));
+    }
+    
+    // 保存分頁順序
+    function savePageOrder() {
+        localStorage.setItem('pageOrder', JSON.stringify(pageOrder));
+    }
+    
+    // 獲取排序後的分頁順序（只包含啟用的分頁）
+    function getOrderedPages() {
+        // 先按照 pageOrder 排序，然後過濾出啟用的分頁
+        const ordered = pageOrder.filter(index => isPageEnabled(index));
+        // 確保總覽始終在第一位（如果啟用）
+        if(ordered.includes(0)) {
+            const overviewIndex = ordered.indexOf(0);
+            ordered.splice(overviewIndex, 1);
+            ordered.unshift(0);
+        }
+        return ordered;
+    }
+    
+    // 根據順序獲取分頁在顯示中的位置索引
+    function getDisplayIndex(pageIndex) {
+        const orderedPages = getOrderedPages();
+        return orderedPages.indexOf(pageIndex);
+    }
+    
+    // 根據顯示位置索引獲取實際的分頁索引
+    function getPageIndexByDisplay(displayIndex) {
+        const orderedPages = getOrderedPages();
+        return orderedPages[displayIndex] || 0;
     }
     
     // 檢查分頁是否啟用
@@ -934,42 +981,82 @@
         
         container.innerHTML = '';
         
-        PAGE_TYPES.forEach((type, index) => {
-            // 跳過總覽分頁（index 0），因為總覽一定會有
-            if(index === 0) return;
-            
-            const pageName = PAGE_NAMES[index];
-            const isEnabled = isPageEnabled(index);
+        // 按照 pageOrder 順序渲染（排除總覽）
+        const orderedPages = pageOrder.filter(index => index !== 0);
+        
+        orderedPages.forEach((pageIndex) => {
+            const pageName = PAGE_NAMES[pageIndex];
+            const isEnabled = isPageEnabled(pageIndex);
             
             const item = document.createElement('div');
             item.className = 'page-visibility-item';
+            item.setAttribute('data-page-index', pageIndex);
             item.innerHTML = `
+                <i class="fas fa-grip-vertical drag-handle"></i>
                 <label>
                     <input type="checkbox" ${isEnabled ? 'checked' : ''} 
-                           onchange="togglePageVisibility(${index}, this.checked)">
+                           onchange="togglePageVisibility(${pageIndex}, this.checked)">
                     <span>${pageName}</span>
                 </label>
             `;
             container.appendChild(item);
         });
+        
+        // 設置拖曳排序
+        // 使用 setTimeout 確保 DOM 完全渲染後再初始化 Sortable
+        setTimeout(() => {
+            if(typeof Sortable !== 'undefined') {
+                // 銷毀舊的實例
+                const existingSortable = container.sortableInstance;
+                if(existingSortable) {
+                    existingSortable.destroy();
+                }
+                
+                // 創建新的 Sortable 實例
+                container.sortableInstance = Sortable.create(container, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    filter: 'input, label', // 排除 checkbox 和 label，只允許通過 drag-handle 拖曳
+                    preventOnFilter: false,
+                    onEnd: function(evt) {
+                        // 獲取新的順序
+                        const newOrder = Array.from(container.children).map(item => {
+                            return parseInt(item.getAttribute('data-page-index'));
+                        });
+                        
+                        // 更新 pageOrder（保持總覽在第一位）
+                        pageOrder = [0, ...newOrder];
+                        savePageOrder();
+                        
+                        // 重新渲染界面
+                        renderPageIndicator();
+                        renderAssets();
+                        updateChartData();
+                    }
+                });
+            } else {
+                console.warn('Sortable library not loaded');
+            }
+        }, 100);
     }
     
-    // 渲染分頁指示器（只顯示啟用的分頁）
+    // 渲染分頁指示器（只顯示啟用的分頁，按照順序）
     function renderPageIndicator() {
         const indicator = document.querySelector('.page-indicator');
         if(!indicator) return;
         
         indicator.innerHTML = '';
         
-        PAGE_TYPES.forEach((type, index) => {
-            if(!isPageEnabled(index)) return; // 跳過未啟用的分頁
-            
-            const pageName = PAGE_NAMES[index];
-            const shortName = index === 0 ? '總覽' : (index === 1 ? '銀行' : (index === 2 ? '美股' : (index === 3 ? '台股' : '加密')));
+        // 按照排序後的順序顯示
+        const orderedPages = getOrderedPages();
+        
+        orderedPages.forEach((pageIndex) => {
+            const pageName = PAGE_NAMES[pageIndex];
+            const shortName = pageIndex === 0 ? '總覽' : (pageIndex === 1 ? '銀行' : (pageIndex === 2 ? '美股' : (pageIndex === 3 ? '台股' : '加密')));
             const tab = document.createElement('button');
-            tab.className = `page-tab ${currentPage === index ? 'active' : ''}`;
-            tab.setAttribute('data-page', index);
-            tab.onclick = () => switchToPage(index);
+            tab.className = `page-tab ${currentPage === pageIndex ? 'active' : ''}`;
+            tab.setAttribute('data-page', pageIndex);
+            tab.onclick = () => switchToPage(pageIndex);
             tab.textContent = shortName;
             indicator.appendChild(tab);
         });
@@ -985,9 +1072,9 @@
         
         // 如果當前分頁被隱藏，切換到第一個啟用的分頁
         if(!enabled && currentPage === pageIndex) {
-            const enabledPages = getEnabledPages();
-            if(enabledPages.length > 0) {
-                switchToPage(enabledPages[0]);
+            const orderedPages = getOrderedPages();
+            if(orderedPages.length > 0) {
+                switchToPage(orderedPages[0]);
             }
         }
         
@@ -1888,11 +1975,16 @@
         }
         currentPage = pageIndex;
         const container = document.getElementById('pageContainer');
-        if(container) container.style.transform = `translateX(-${pageIndex * 100}%)`;
+        if(container) {
+            // page-item 是按照原始順序（0,1,2,3,4）排列的
+            // 所以直接使用 pageIndex 來移動
+            container.style.transform = `translateX(-${pageIndex * 100}%)`;
+        }
         
-        // 更新分頁指示器
-        document.querySelectorAll('.page-tab').forEach((tab, idx) => {
-            tab.classList.toggle('active', idx === pageIndex);
+        // 更新分頁指示器（使用 data-page 屬性匹配，而不是 DOM 索引）
+        document.querySelectorAll('.page-tab').forEach((tab) => {
+            const tabPageIndex = parseInt(tab.getAttribute('data-page'));
+            tab.classList.toggle('active', tabPageIndex === pageIndex);
         });
         
         // 確保選中的標籤在可見範圍內（但不居中）
@@ -1952,19 +2044,19 @@
     
     // 切換到上一頁
     function switchToPrevPage() {
-        const enabledPages = getEnabledPages();
-        const currentIndex = enabledPages.indexOf(currentPage);
+        const orderedPages = getOrderedPages();
+        const currentIndex = orderedPages.indexOf(currentPage);
         if(currentIndex > 0) {
-            switchToPage(enabledPages[currentIndex - 1]);
+            switchToPage(orderedPages[currentIndex - 1]);
         }
     }
     
     // 切換到下一頁
     function switchToNextPage() {
-        const enabledPages = getEnabledPages();
-        const currentIndex = enabledPages.indexOf(currentPage);
-        if(currentIndex < enabledPages.length - 1) {
-            switchToPage(enabledPages[currentIndex + 1]);
+        const orderedPages = getOrderedPages();
+        const currentIndex = orderedPages.indexOf(currentPage);
+        if(currentIndex < orderedPages.length - 1) {
+            switchToPage(orderedPages[currentIndex + 1]);
         }
     }
     
@@ -1972,8 +2064,8 @@
     function updatePageNavArrows() {
         const prevBtn = document.getElementById('prevPageBtn');
         const nextBtn = document.getElementById('nextPageBtn');
-        const enabledPages = getEnabledPages();
-        const currentIndex = enabledPages.indexOf(currentPage);
+        const orderedPages = getOrderedPages();
+        const currentIndex = orderedPages.indexOf(currentPage);
         
         if(prevBtn) {
             if(currentIndex <= 0) {
@@ -1984,7 +2076,7 @@
         }
         
         if(nextBtn) {
-            if(currentIndex >= enabledPages.length - 1) {
+            if(currentIndex >= orderedPages.length - 1) {
                 nextBtn.classList.add('disabled');
             } else {
                 nextBtn.classList.remove('disabled');
@@ -2022,20 +2114,20 @@
     function handleSwipe() {
         const swipeThreshold = 50;
         const diff = touchStartX - touchEndX;
-        const enabledPages = getEnabledPages();
+        const orderedPages = getOrderedPages();
         
         if(Math.abs(diff) > swipeThreshold) {
             if(diff > 0) {
-                // 向右滑動，切換到下一個啟用的分頁
-                const currentIndex = enabledPages.indexOf(currentPage);
-                if(currentIndex < enabledPages.length - 1) {
-                    switchToPage(enabledPages[currentIndex + 1]);
+                // 向右滑動，切換到下一個分頁（按照順序）
+                const currentIndex = orderedPages.indexOf(currentPage);
+                if(currentIndex < orderedPages.length - 1) {
+                    switchToPage(orderedPages[currentIndex + 1]);
                 }
             } else {
-                // 向左滑動，切換到上一個啟用的分頁
-                const currentIndex = enabledPages.indexOf(currentPage);
+                // 向左滑動，切換到上一個分頁（按照順序）
+                const currentIndex = orderedPages.indexOf(currentPage);
                 if(currentIndex > 0) {
-                    switchToPage(enabledPages[currentIndex - 1]);
+                    switchToPage(orderedPages[currentIndex - 1]);
                 }
             }
         }
@@ -2715,10 +2807,21 @@
         
         // 確保當前分頁是啟用的
         if(!isPageEnabled(currentPage)) {
-            const enabledPages = getEnabledPages();
-            if(enabledPages.length > 0) {
-                switchToPage(enabledPages[0]);
+            const orderedPages = getOrderedPages();
+            if(orderedPages.length > 0) {
+                switchToPage(orderedPages[0]);
             }
+        }
+        
+        // 初始化時確保 pageOrder 包含所有分頁
+        if(pageOrder.length !== PAGE_TYPES.length) {
+            // 如果順序不完整，補充缺失的分頁
+            PAGE_TYPES.forEach((type, index) => {
+                if(!pageOrder.includes(index)) {
+                    pageOrder.push(index);
+                }
+            });
+            savePageOrder();
         }
     }
     
