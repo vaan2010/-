@@ -21,7 +21,7 @@
             --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
         }
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
         body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
@@ -56,6 +56,16 @@
         .content-grid { display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow-x: hidden; min-height: 0; }
         .chart-section { display: flex; flex-direction: column; flex-shrink: 0; width: 100%; max-width: 100%; min-width: 0; }
         .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; }
+        /* 手機版：確保 page-item 內容緊貼，避免多餘空白 */
+        @media (max-width: 767px) {
+            .page-item { 
+                display: flex; 
+                flex-direction: column; 
+            }
+            .page-item .mobile-spacer {
+                flex-shrink: 0;
+            }
+        }
         .list-section::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .list-section::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .list-section::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -147,6 +157,10 @@
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
         .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
+        .page-visibility-item { padding: 12px 25px; display: flex; align-items: center; font-size: 16px; color: #fff; }
+        .page-visibility-item label { display: flex; align-items: center; cursor: pointer; width: 100%; }
+        .page-visibility-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: #0a84ff; }
+        .page-visibility-item span { flex: 1; }
 
         /* chart-section 樣式在 content-grid 中定義 */
         .summary-card { padding: 5px 20px 0 20px; text-align: center; position: relative; z-index: 90; flex-shrink: 0; min-height: 0; }
@@ -624,6 +638,8 @@
                 <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (美股報價)</span></div>
                 <div class="menu-item" onclick="setApiKey('fugle'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Fugle Key (台股報價)</span></div>
                 <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
+                <div class="menu-label">分頁顯示</div>
+                <div id="pageVisibilitySettings"></div>
             </div>
         </div>
 
@@ -687,23 +703,31 @@
                     </button>
                     <div class="page-container" id="pageContainer">
                         <div class="page-item" data-page="0">
-                    <div id="assetsContainer"></div>
+                            <div id="assetsContainer"></div>
+                            <div class="debt-container" id="debtContainer0" style="margin-top: 20px;"></div>
+                            <div style="height: 60px;" class="mobile-spacer"></div>
                         </div>
                         <div class="page-item" data-page="1">
                             <div id="assetsContainer1"></div>
+                            <div class="debt-container" id="debtContainer1" style="margin-top: 20px;"></div>
+                            <div style="height: 60px;" class="mobile-spacer"></div>
                         </div>
                         <div class="page-item" data-page="2">
                             <div id="assetsContainer2"></div>
+                            <div class="debt-container" id="debtContainer2" style="margin-top: 20px;"></div>
+                            <div style="height: 60px;" class="mobile-spacer"></div>
                         </div>
                         <div class="page-item" data-page="3">
                             <div id="assetsContainer3"></div>
+                            <div class="debt-container" id="debtContainer3" style="margin-top: 20px;"></div>
+                            <div style="height: 60px;" class="mobile-spacer"></div>
                         </div>
                         <div class="page-item" data-page="4">
                             <div id="assetsContainer4"></div>
+                            <div class="debt-container" id="debtContainer4" style="margin-top: 20px;"></div>
+                            <div style="height: 60px;" class="mobile-spacer"></div>
                         </div>
                     </div>
-                    <div id="debtContainer" style="margin-top: 20px;"></div>
-                    <div style="height: 60px;" class="mobile-spacer"></div>
                 </div>
             </div>
 
@@ -873,6 +897,106 @@
         cost: safeParseFloat(a.cost || 0), order: (a.order!==undefined)?a.order:index, transactions: a.transactions || [] 
     }));
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 };
+    
+    // 分頁顯示設置（預設全部顯示）
+    let pageVisibility = JSON.parse(localStorage.getItem('pageVisibility')) || {
+        'overview': true,
+        'bank': true,
+        'stock': true,
+        'twstock': true,
+        'crypto': true
+    };
+    
+    // 保存分頁顯示設置
+    function savePageVisibility() {
+        localStorage.setItem('pageVisibility', JSON.stringify(pageVisibility));
+    }
+    
+    // 檢查分頁是否啟用
+    function isPageEnabled(pageIndex) {
+        if(pageIndex === 0) return pageVisibility['overview']; // 總覽始終可用
+        const pageType = PAGE_TYPES[pageIndex];
+        return pageVisibility[pageType] !== false; // 預設為 true
+    }
+    
+    // 獲取所有啟用的分頁索引
+    function getEnabledPages() {
+        return PAGE_TYPES.map((type, index) => {
+            if(index === 0) return pageVisibility['overview'] ? 0 : null;
+            return pageVisibility[type] !== false ? index : null;
+        }).filter(index => index !== null);
+    }
+    
+    // 渲染分頁顯示設置
+    function renderPageVisibilitySettings() {
+        const container = document.getElementById('pageVisibilitySettings');
+        if(!container) return;
+        
+        container.innerHTML = '';
+        
+        PAGE_TYPES.forEach((type, index) => {
+            // 跳過總覽分頁（index 0），因為總覽一定會有
+            if(index === 0) return;
+            
+            const pageName = PAGE_NAMES[index];
+            const isEnabled = isPageEnabled(index);
+            
+            const item = document.createElement('div');
+            item.className = 'page-visibility-item';
+            item.innerHTML = `
+                <label>
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''} 
+                           onchange="togglePageVisibility(${index}, this.checked)">
+                    <span>${pageName}</span>
+                </label>
+            `;
+            container.appendChild(item);
+        });
+    }
+    
+    // 渲染分頁指示器（只顯示啟用的分頁）
+    function renderPageIndicator() {
+        const indicator = document.querySelector('.page-indicator');
+        if(!indicator) return;
+        
+        indicator.innerHTML = '';
+        
+        PAGE_TYPES.forEach((type, index) => {
+            if(!isPageEnabled(index)) return; // 跳過未啟用的分頁
+            
+            const pageName = PAGE_NAMES[index];
+            const shortName = index === 0 ? '總覽' : (index === 1 ? '銀行' : (index === 2 ? '美股' : (index === 3 ? '台股' : '加密')));
+            const tab = document.createElement('button');
+            tab.className = `page-tab ${currentPage === index ? 'active' : ''}`;
+            tab.setAttribute('data-page', index);
+            tab.onclick = () => switchToPage(index);
+            tab.textContent = shortName;
+            indicator.appendChild(tab);
+        });
+    }
+    
+    // 切換分頁顯示
+    function togglePageVisibility(pageIndex, enabled) {
+        // 總覽分頁（index 0）不會出現在選項中，所以這裡不需要檢查
+        const pageType = PAGE_TYPES[pageIndex];
+        pageVisibility[pageType] = enabled;
+        
+        savePageVisibility();
+        
+        // 如果當前分頁被隱藏，切換到第一個啟用的分頁
+        if(!enabled && currentPage === pageIndex) {
+            const enabledPages = getEnabledPages();
+            if(enabledPages.length > 0) {
+                switchToPage(enabledPages[0]);
+            }
+        }
+        
+        // 重新渲染界面
+        renderPageVisibilitySettings();
+        renderPageIndicator();
+        renderAssets();
+        updateChartData();
+    }
 
     // 3. Define ALL Functions (Chart, UI, Logic)
 
@@ -915,7 +1039,13 @@
         currentDetails={'bank':[],'stock':[],'twstock':[],'crypto':[]}; 
         
         accounts.forEach(acc=>{ 
-            if(acc.type==='debt')return; 
+            if(acc.type==='debt')return;
+            // 只計算啟用分頁的資產
+            if(acc.type === 'bank' && !pageVisibility['bank']) return;
+            if(acc.type === 'stock' && !pageVisibility['stock']) return;
+            if(acc.type === 'twstock' && !pageVisibility['twstock']) return;
+            if(acc.type === 'crypto' && !pageVisibility['crypto']) return;
+            
             let val=calculateValue(acc); 
             if(val>0){ 
                 if(groups[acc.type]!==undefined){ 
@@ -1746,6 +1876,16 @@
     // Page Swiper Functions
     function switchToPage(pageIndex) {
         if(pageIndex < 0 || pageIndex >= PAGE_TYPES.length) return;
+        // 檢查分頁是否啟用
+        if(!isPageEnabled(pageIndex)) {
+            // 如果分頁未啟用，切換到第一個啟用的分頁
+            const enabledPages = getEnabledPages();
+            if(enabledPages.length > 0) {
+                pageIndex = enabledPages[0];
+            } else {
+                pageIndex = 0; // 如果沒有啟用的分頁，默認顯示總覽
+            }
+        }
         currentPage = pageIndex;
         const container = document.getElementById('pageContainer');
         if(container) container.style.transform = `translateX(-${pageIndex * 100}%)`;
@@ -1812,15 +1952,19 @@
     
     // 切換到上一頁
     function switchToPrevPage() {
-        if(currentPage > 0) {
-            switchToPage(currentPage - 1);
+        const enabledPages = getEnabledPages();
+        const currentIndex = enabledPages.indexOf(currentPage);
+        if(currentIndex > 0) {
+            switchToPage(enabledPages[currentIndex - 1]);
         }
     }
     
     // 切換到下一頁
     function switchToNextPage() {
-        if(currentPage < PAGE_TYPES.length - 1) {
-            switchToPage(currentPage + 1);
+        const enabledPages = getEnabledPages();
+        const currentIndex = enabledPages.indexOf(currentPage);
+        if(currentIndex < enabledPages.length - 1) {
+            switchToPage(enabledPages[currentIndex + 1]);
         }
     }
     
@@ -1828,9 +1972,11 @@
     function updatePageNavArrows() {
         const prevBtn = document.getElementById('prevPageBtn');
         const nextBtn = document.getElementById('nextPageBtn');
+        const enabledPages = getEnabledPages();
+        const currentIndex = enabledPages.indexOf(currentPage);
         
         if(prevBtn) {
-            if(currentPage === 0) {
+            if(currentIndex <= 0) {
                 prevBtn.classList.add('disabled');
             } else {
                 prevBtn.classList.remove('disabled');
@@ -1838,7 +1984,7 @@
         }
         
         if(nextBtn) {
-            if(currentPage >= PAGE_TYPES.length - 1) {
+            if(currentIndex >= enabledPages.length - 1) {
                 nextBtn.classList.add('disabled');
             } else {
                 nextBtn.classList.remove('disabled');
@@ -1876,14 +2022,21 @@
     function handleSwipe() {
         const swipeThreshold = 50;
         const diff = touchStartX - touchEndX;
+        const enabledPages = getEnabledPages();
         
         if(Math.abs(diff) > swipeThreshold) {
-            if(diff > 0 && currentPage < PAGE_TYPES.length - 1) {
-                // 向右滑動，切換到下一個分頁
-                switchToPage(currentPage + 1);
-            } else if(diff < 0 && currentPage > 0) {
-                // 向左滑動，切換到上一個分頁
-                switchToPage(currentPage - 1);
+            if(diff > 0) {
+                // 向右滑動，切換到下一個啟用的分頁
+                const currentIndex = enabledPages.indexOf(currentPage);
+                if(currentIndex < enabledPages.length - 1) {
+                    switchToPage(enabledPages[currentIndex + 1]);
+                }
+            } else {
+                // 向左滑動，切換到上一個啟用的分頁
+                const currentIndex = enabledPages.indexOf(currentPage);
+                if(currentIndex > 0) {
+                    switchToPage(enabledPages[currentIndex - 1]);
+                }
             }
         }
     }
@@ -1921,8 +2074,15 @@
         let totalDailyPnL = 0;
         
         if(currentPage === 0) {
-            // 總覽分頁：計算總淨資產（包含所有資產減去負債）
+            // 總覽分頁：計算總淨資產（只包含啟用分頁的資產減去負債）
             accounts.forEach(acc => {
+                // 只計算啟用分頁的資產
+                if(acc.type !== 'debt') {
+                    if(acc.type === 'bank' && !pageVisibility['bank']) return;
+                    if(acc.type === 'stock' && !pageVisibility['stock']) return;
+                    if(acc.type === 'twstock' && !pageVisibility['twstock']) return;
+                    if(acc.type === 'crypto' && !pageVisibility['crypto']) return;
+                }
                 let val = calculateValue(acc);
                 if(acc.type === 'debt') displayAmount -= val;
                 else displayAmount += val;
@@ -1987,6 +2147,9 @@
                 
                 let allItems = [];
                 categoryTypes.forEach(type => {
+                    // 只顯示啟用的分頁
+                    if(!pageVisibility[type]) return;
+                    
                     const g = categoryConfig[type];
                     if(!g) return;
                     let items = accounts.filter(a => a.type === type);
@@ -2058,6 +2221,14 @@
         // 渲染其他分頁（第1-4頁）
         PAGE_TYPES.forEach((type, pageIdx) => {
             if(pageIdx === 0) return; // 跳過總覽分頁
+            
+            // 只渲染啟用的分頁
+            if(!isPageEnabled(pageIdx)) {
+                const containerId = pageIdx === 1 ? 'assetsContainer1' : (pageIdx === 2 ? 'assetsContainer2' : (pageIdx === 3 ? 'assetsContainer3' : 'assetsContainer4'));
+                const c = document.getElementById(containerId);
+                if(c) c.innerHTML = '';
+                return;
+            }
             
             const containerId = pageIdx === 1 ? 'assetsContainer1' : (pageIdx === 2 ? 'assetsContainer2' : (pageIdx === 3 ? 'assetsContainer3' : 'assetsContainer4'));
             const c = document.getElementById(containerId);
@@ -2324,8 +2495,16 @@
         updateChartData();
     }
     
-    function renderDebt() {
-        const debtContainer = document.getElementById('debtContainer');
+    function renderDebt(containerId = null) {
+        // 如果沒有指定容器，為每個分頁渲染負債
+        if(!containerId) {
+            for(let i = 0; i < 5; i++) {
+                renderDebt(`debtContainer${i}`);
+            }
+            return;
+        }
+        
+        const debtContainer = document.getElementById(containerId);
         if(!debtContainer) return;
         
         let debtItems = accounts.filter(a => a.type === 'debt').sort((a,b) => (a.order||0) - (b.order||0));
@@ -2348,7 +2527,7 @@
             html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${debtClick} data-id="${acc.id}"><div class="item-icon icon-debt"><i class="fas fa-hand-holding-usd"></i></div><div class="item-content"><div class="item-name">${acc.name}</div><div class="item-row">${acc.currency}</div></div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val item-numbers amount-red">${formatAmount(val)}</div></div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div></div>`;
         });
         
-        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(totalDebt)}</span></div></div><div class="list-container" id="group-debt">${html}</div>`;
+        debtContainer.innerHTML = `<div class="group-header"><span>負債</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(totalDebt)}</span></div></div><div class="list-container" id="group-debt-${containerId}">${html}</div>`;
         
         // 負債不允許拖動排序，即使是在編輯模式下
         // 負債始終鎖定在最底部
@@ -2529,6 +2708,18 @@
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
+        
+        // 初始化分頁顯示設置
+        renderPageVisibilitySettings();
+        renderPageIndicator();
+        
+        // 確保當前分頁是啟用的
+        if(!isPageEnabled(currentPage)) {
+            const enabledPages = getEnabledPages();
+            if(enabledPages.length > 0) {
+                switchToPage(enabledPages[0]);
+            }
+        }
     }
     
     // Calendar Functions
@@ -2626,6 +2817,7 @@
 </script>
 </body>
 </html>
+
 
 
 
