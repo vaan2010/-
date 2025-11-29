@@ -21,7 +21,7 @@
             --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
         }
         * { box-sizing: border-box; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; overscroll-behavior: none; overscroll-behavior-y: none; }
         body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
@@ -35,7 +35,7 @@
         
         /* Layout */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; padding-bottom: 0; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; width: 100%; padding-top: 150px; padding-bottom: 0; overscroll-behavior: none; overscroll-behavior-y: none; }
         .main-content::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-track { display: none !important; background: transparent !important; }
         .main-content::-webkit-scrollbar-thumb { display: none !important; background: transparent !important; }
@@ -55,16 +55,24 @@
         
         .content-grid { display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow-x: hidden; min-height: 0; }
         .chart-section { display: flex; flex-direction: column; flex-shrink: 0; width: 100%; max-width: 100%; min-width: 0; }
-        .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; }
+        .list-section { flex: 0 1 auto; overflow-y: visible; min-height: 0; position: relative; width: 100%; max-width: 100%; min-width: 0; overscroll-behavior: none; overscroll-behavior-y: none; }
         /* 手機版：確保 page-item 內容緊貼，避免多餘空白 */
         @media (max-width: 767px) {
             .page-item { 
                 display: flex; 
                 flex-direction: column; 
                 padding-bottom: 60px; /* 為底部 tab-bar 留空間，替代 mobile-spacer */
+                overscroll-behavior: none;
+                overscroll-behavior-y: none;
             }
             .page-item .mobile-spacer {
                 display: none; /* 隱藏 mobile-spacer，使用 padding-bottom 代替 */
+            }
+            /* 禁用 iOS 彈性滾動 */
+            .main-content {
+                overscroll-behavior: none;
+                overscroll-behavior-y: none;
+                -webkit-overflow-scrolling: touch;
             }
         }
         .list-section::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
@@ -157,7 +165,28 @@
         .menu-item:hover { background: #2c2c2e; }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
-        .menu-label { padding: 15px 25px 5px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; margin-top: 10px; }
+        .menu-label { 
+            padding: 15px 25px 5px; 
+            font-size: 17px; 
+            color: var(--text-secondary); 
+            text-transform: uppercase; 
+            margin-top: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            cursor: pointer; 
+            user-select: none;
+        }
+        .menu-label:hover { color: var(--text-primary); }
+        .menu-label .collapse-icon { 
+            font-size: 12px; 
+            transition: transform 0.3s; 
+            margin-left: 10px;
+        }
+        .menu-label.collapsed .collapse-icon { transform: rotate(-90deg); }
+        .menu-section { overflow: hidden; transition: max-height 0.3s ease-out; }
+        .menu-section.collapsed { max-height: 0; }
+        .menu-section:not(.collapsed) { max-height: 1000px; }
         .page-visibility-item { padding: 12px 25px; display: flex; align-items: center; font-size: 16px; color: #fff; }
         .page-visibility-item label { display: flex; align-items: center; cursor: pointer; width: 100%; flex: 1; }
         .page-visibility-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: #0a84ff; }
@@ -642,18 +671,38 @@
             <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
             <div class="sidebar-header"><h2>功能選單</h2></div>
             <div class="sidebar-menu">
-                <div class="menu-label">更新</div>
-                <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
-                <div class="menu-item" onclick="refreshStockInfo(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">重新整理</span></div>
-                <div class="menu-label">資料管理</div>
-                <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
-                <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
-                <div class="menu-label">API 設定</div>
-                <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (美股報價)</span></div>
-                <div class="menu-item" onclick="setApiKey('fugle'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Fugle Key (台股報價)</span></div>
-                <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
-                <div class="menu-label">分頁顯示</div>
-                <div id="pageVisibilitySettings"></div>
+                <div class="menu-label" onclick="toggleMenuSection('update')">
+                    <span>更新</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="menu-section" id="menuSection-update">
+                    <div class="menu-item" onclick="refreshAllData(); toggleSidebar();"><i class="fas fa-sync-alt"></i><span class="menu-text">立即更新</span></div>
+                    <div class="menu-item" onclick="refreshStockInfo(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">重新整理</span></div>
+                </div>
+                <div class="menu-label" onclick="toggleMenuSection('data')">
+                    <span>資料管理</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="menu-section" id="menuSection-data">
+                    <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
+                    <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
+                </div>
+                <div class="menu-label" onclick="toggleMenuSection('api')">
+                    <span>API 設定</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="menu-section" id="menuSection-api">
+                    <div class="menu-item" onclick="setApiKey('finnhub'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Finnhub Key (美股報價)</span></div>
+                    <div class="menu-item" onclick="setApiKey('fugle'); toggleSidebar();"><i class="fas fa-chart-line"></i><span class="menu-text">Fugle Key (台股報價)</span></div>
+                    <div class="menu-item" onclick="setApiKey('gemini'); toggleSidebar();"><i class="fas fa-robot"></i><span class="menu-text">Gemini Key (讀圖)</span></div>
+                </div>
+                <div class="menu-label" onclick="toggleMenuSection('pages')">
+                    <span>分頁顯示</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="menu-section" id="menuSection-pages">
+                    <div id="pageVisibilitySettings"></div>
+                </div>
             </div>
         </div>
 
@@ -880,6 +929,8 @@
     const PAGE_NAMES = ['總覽', '銀行/現金', '美股', '台股', '加密貨幣'];
     let touchStartX = 0;
     let touchEndX = 0;
+    let touchStartY = 0;
+    let touchEndY = 0;
 
     // 2. Define Data Loading Functions
     function safeParseFloat(val) { let v = parseFloat(val); return isNaN(v) ? 0 : v; }
@@ -923,6 +974,66 @@
     
     // 分頁順序設置（預設順序：總覽、銀行、美股、台股、加密）
     let pageOrder = JSON.parse(localStorage.getItem('pageOrder')) || [0, 1, 2, 3, 4];
+    
+    // 選單區塊摺疊狀態（預設全部摺疊）
+    let menuSectionsState = JSON.parse(localStorage.getItem('menuSectionsState'));
+    if(!menuSectionsState) {
+        // 如果沒有保存的狀態，預設全部摺疊
+        menuSectionsState = {
+            'update': true,
+            'data': true,
+            'api': true,
+            'pages': true
+        };
+    }
+    
+    // 切換選單區塊摺疊/展開
+    function toggleMenuSection(sectionId) {
+        const section = document.getElementById(`menuSection-${sectionId}`);
+        const label = event.currentTarget;
+        
+        if(!section) return;
+        
+        const isCollapsed = section.classList.contains('collapsed');
+        
+        if(isCollapsed) {
+            section.classList.remove('collapsed');
+            label.classList.remove('collapsed');
+            menuSectionsState[sectionId] = false;
+        } else {
+            section.classList.add('collapsed');
+            label.classList.add('collapsed');
+            menuSectionsState[sectionId] = true;
+        }
+        
+        // 保存狀態
+        localStorage.setItem('menuSectionsState', JSON.stringify(menuSectionsState));
+    }
+    
+    // 初始化選單區塊狀態
+    function initMenuSections() {
+        Object.keys(menuSectionsState).forEach(sectionId => {
+            const section = document.getElementById(`menuSection-${sectionId}`);
+            // 找到對應的 label（通過查找包含該 sectionId 的 onclick 屬性）
+            const labels = document.querySelectorAll('.menu-label');
+            let label = null;
+            labels.forEach(l => {
+                if(l.getAttribute('onclick') && l.getAttribute('onclick').includes(`'${sectionId}'`)) {
+                    label = l;
+                }
+            });
+            
+            if(section && label) {
+                if(menuSectionsState[sectionId]) {
+                    section.classList.add('collapsed');
+                    label.classList.add('collapsed');
+                } else {
+                    section.classList.remove('collapsed');
+                    label.classList.remove('collapsed');
+                }
+            }
+        });
+    }
     
     // 保存分頁顯示設置
     function savePageVisibility() {
@@ -2028,6 +2139,28 @@
         // 更新箭頭按鈕狀態（桌面版）
         updatePageNavArrows();
         
+        // 隱藏圖表點擊後顯示的資訊
+        hideCustomTooltip();
+        
+        // 清除圖表的點擊狀態（恢復所有點的狀態）
+        if(chartInstance && chartInstance.series.length > 0) {
+            chartInstance.series.forEach(series => {
+                if(series.points) {
+                    series.points.forEach(point => {
+                        if(point.sliced) {
+                            point.slice(false);
+                        }
+                        point.setState('normal');
+                        const pointEl = point.graphic?.element;
+                        if(pointEl) {
+                            pointEl.style.setProperty('opacity', '1', 'important');
+                        }
+                    });
+                }
+            });
+        }
+        activeInactivePoints.clear();
+        
         // 更新圖表和列表 - 切換分頁時退出 detail 模式
         chartLevel = pageIndex === 0 ? 'root' : 'page';
         
@@ -2090,10 +2223,12 @@
         
         swiper.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
         }, { passive: true });
         
         swiper.addEventListener('touchend', (e) => {
             touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
             handleSwipe();
         }, { passive: true });
         
@@ -2102,10 +2237,12 @@
         if(chartSection) {
             chartSection.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
             }, { passive: true });
             
             chartSection.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].clientX;
+                touchEndY = e.changedTouches[0].clientY;
                 handleSwipe();
             }, { passive: true });
         }
@@ -2113,11 +2250,22 @@
     
     function handleSwipe() {
         const swipeThreshold = 50;
-        const diff = touchStartX - touchEndX;
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
         const orderedPages = getOrderedPages();
         
-        if(Math.abs(diff) > swipeThreshold) {
-            if(diff > 0) {
+        // 計算水平和垂直滑動的絕對值
+        const absDiffX = Math.abs(diffX);
+        const absDiffY = Math.abs(diffY);
+        
+        // 如果垂直滑動距離大於水平滑動距離，則不觸發分頁切換（鎖住左右滑動）
+        if(absDiffY > absDiffX) {
+            return;
+        }
+        
+        // 只有當水平滑動距離足夠大時才觸發分頁切換
+        if(absDiffX > swipeThreshold) {
+            if(diffX > 0) {
                 // 向右滑動，切換到下一個分頁（按照順序）
                 const currentIndex = orderedPages.indexOf(currentPage);
                 if(currentIndex < orderedPages.length - 1) {
@@ -2800,6 +2948,11 @@
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
+        
+        // 防止 iOS 彈性滾動（overscroll）- 只使用 CSS，不阻止正常滾動
+        
+        // 初始化選單區塊狀態
+        initMenuSections();
         
         // 初始化分頁顯示設置
         renderPageVisibilitySettings();
