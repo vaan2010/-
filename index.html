@@ -3026,6 +3026,8 @@
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
         
+        // 初始化下拉刷新功能
+        initPullToRefresh();
         
         // 初始化選單區塊狀態
         initMenuSections();
@@ -3157,11 +3159,69 @@
         console.log('Selected date:', selectedDate.toLocaleDateString('zh-TW'));
     }
     
+    // 下拉刷新功能
+    function initPullToRefresh() {
+        const mainContent = document.querySelector('.main-content');
+        if(!mainContent) return;
+        
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        let isAtBottom = false;
+        let isPulling = false;
+        let pullDistance = 0;
+        
+        // 檢查是否滾動到底部
+        function checkIfAtBottom() {
+            const scrollTop = mainContent.scrollTop;
+            const scrollHeight = mainContent.scrollHeight;
+            const clientHeight = mainContent.clientHeight;
+            const threshold = 10; // 允許10px的誤差
+            
+            return scrollHeight - scrollTop - clientHeight <= threshold;
+        }
+        
+        // 觸摸開始
+        mainContent.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            isAtBottom = checkIfAtBottom();
+            isPulling = false;
+            pullDistance = 0;
+        }, { passive: true });
+        
+        // 觸摸移動
+        mainContent.addEventListener('touchmove', (e) => {
+            if(!isAtBottom) return;
+            
+            touchCurrentY = e.touches[0].clientY;
+            const diffY = touchCurrentY - touchStartY;
+            
+            // 如果已經在底部，且向上拉動（diffY < 0）
+            if(diffY < 0) {
+                isPulling = true;
+                pullDistance = Math.abs(diffY);
+                
+                // 如果拉動距離超過50px，觸發刷新
+                if(pullDistance > 50 && !mainContent.classList.contains('refreshing')) {
+                    mainContent.classList.add('refreshing');
+                    location.reload();
+                }
+            }
+        }, { passive: true });
+        
+        // 觸摸結束
+        mainContent.addEventListener('touchend', () => {
+            if(isPulling && pullDistance > 50) {
+                // 已經觸發刷新，不需要額外處理
+            }
+            isPulling = false;
+            pullDistance = 0;
+        }, { passive: true });
+    }
+    
     init();
 </script>
 </body>
 </html>
-
 
 
 
