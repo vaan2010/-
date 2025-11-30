@@ -7,9 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Monee</title>
     
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="apple-touch-icon" href="/favicon.png">
-    <link rel="shortcut icon" type="image/png" href="/favicon.png">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://meee.com.tw/o6AMCxZ">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://meee.com.tw/o6AMCxZ">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://meee.com.tw/o6AMCxZ">
+    <link rel="shortcut icon" type="image/png" href="https://meee.com.tw/o6AMCxZ">
+    <meta name="msapplication-TileImage" content="https://meee.com.tw/o6AMCxZ">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -991,17 +994,13 @@
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; color: #8e8e93; font-size: 14px; margin-bottom: 10px;">頭像</label>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #8e8e93; font-size: 12px; margin-bottom: 10px; text-align: center;">預設頭像</div>
-                        <div id="userEditDefaultAvatars" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; justify-items: center; max-width: 240px; margin-left: auto; margin-right: auto;"></div>
-                    </div>
                     <button onclick="openAvatarSelectorFromEdit()" style="width: 100%; padding: 15px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
-                        <i class="fas fa-image"></i> 上傳照片
+                        <i class="fas fa-image"></i> 選擇頭像
                     </button>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button onclick="saveUserEdit()" style="flex: 1; padding: 12px; background: #0a84ff; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">儲存</button>
-                    <button onclick="closeUserEditModal()" style="flex: 1; padding: 12px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
+                    <button onclick="closeUserEditModal(); editingUserId = null;" style="flex: 1; padding: 12px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
                 </div>
             </div>
         </div>
@@ -3174,68 +3173,15 @@
             nameInput.value = user.name;
         }
         
-        // 渲染預設頭像選項
-        renderUserEditAvatars();
-        
         document.getElementById('userEditModal').style.display = 'flex';
         closeUserSelector();
     }
 
-    function renderUserEditAvatars() {
-        const container = document.getElementById('userEditDefaultAvatars');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (!DEFAULT_AVATARS || DEFAULT_AVATARS.length === 0) return;
-        
-        DEFAULT_AVATARS.forEach((avatar, index) => {
-            const avatarBtn = document.createElement('button');
-            avatarBtn.style.cssText = 'width: 60px; height: 60px; border-radius: 50%; background: #2c2c2e; border: 2px solid #3a3a3c; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
-            avatarBtn.textContent = avatar;
-            
-            // 如果這是當前使用者的頭像，顯示選中狀態
-            const user = users.find(u => u.id === editingUserId);
-            if (user && user.avatar === avatar) {
-                avatarBtn.style.borderColor = '#0a84ff';
-                avatarBtn.style.borderWidth = '3px';
-            }
-            
-            avatarBtn.onmouseover = () => { 
-                if (user && user.avatar !== avatar) {
-                    avatarBtn.style.borderColor = '#0a84ff'; 
-                    avatarBtn.style.transform = 'scale(1.1)'; 
-                }
-            };
-            avatarBtn.onmouseout = () => { 
-                if (user && user.avatar !== avatar) {
-                    avatarBtn.style.borderColor = '#3a3a3c'; 
-                    avatarBtn.style.transform = 'scale(1)'; 
-                }
-            };
-            avatarBtn.onclick = () => {
-                if (!editingUserId) return;
-                const currentUser = users.find(u => u.id === editingUserId);
-                if (currentUser) {
-                    currentUser.avatar = avatar;
-                    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-                    
-                    // 重新渲染以顯示選中狀態
-                    renderUserEditAvatars();
-                    
-                    // 如果編輯的是當前使用者，更新頭像顯示
-                    if (editingUserId === currentUserId) {
-                        updateUserAvatar();
-                    }
-                }
-            };
-            container.appendChild(avatarBtn);
-        });
-    }
 
     function closeUserEditModal() {
         document.getElementById('userEditModal').style.display = 'none';
-        editingUserId = null;
+        // 注意：不要在這裡清空 editingUserId，因為可能還需要重新打開
+        // editingUserId 會在真正關閉時由調用者清空
     }
 
     function saveUserEdit() {
@@ -3262,6 +3208,7 @@
             updateUserAvatar();
         }
         
+        editingUserId = null; // 清空 editingUserId
         closeUserEditModal();
     }
 
@@ -3312,13 +3259,8 @@
         const modal = document.getElementById('avatarSelectorModal');
         if (modal) modal.style.display = 'none';
         
-        // 如果從編輯模態框打開的，重新打開編輯模態框
-        if (avatarSelectorFromEdit && editingUserId) {
-            const userId = editingUserId;
-            setTimeout(() => {
-                openUserEditModal(userId);
-            }, 100);
-        }
+        // 注意：不再在這裡處理重新打開編輯模態框的邏輯
+        // 這個邏輯已經移到 selectAvatar 和 confirmAvatarCrop 中
         
         avatarSelectorFromEdit = false;
         const preview = document.getElementById('uploadedAvatarPreview');
@@ -3363,13 +3305,28 @@
             user.avatar = avatar;
             localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
             
+            // 更新顯示
             if (editingUserId === currentUserId) {
                 updateUserAvatar();
             }
             
-            closeAvatarSelector();
+            // 更新使用者列表（如果使用者選擇器是打開的）
             if (document.getElementById('userSelectorModal').style.display === 'flex') {
                 renderUserList();
+            }
+            
+            // 如果從編輯模態框打開的，保存 editingUserId 以便重新打開
+            const wasFromEdit = avatarSelectorFromEdit;
+            const userId = editingUserId;
+            
+            closeAvatarSelector();
+            
+            // 如果從編輯模態框打開的，重新打開編輯模態框
+            if (wasFromEdit && userId) {
+                setTimeout(() => {
+                    editingUserId = userId; // 確保 editingUserId 沒有被清空
+                    openUserEditModal(userId);
+                }, 150);
             }
         }
     }
@@ -3754,13 +3711,28 @@
             user.avatar = croppedImageData;
             localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
             
+            // 更新顯示
             if (editingUserId === currentUserId) {
                 updateUserAvatar();
             }
             
-            closeAvatarSelector();
+            // 更新使用者列表（如果使用者選擇器是打開的）
             if (document.getElementById('userSelectorModal').style.display === 'flex') {
                 renderUserList();
+            }
+            
+            // 如果從編輯模態框打開的，保存 editingUserId 以便重新打開
+            const wasFromEdit = avatarSelectorFromEdit;
+            const userId = editingUserId;
+            
+            closeAvatarSelector();
+            
+            // 如果從編輯模態框打開的，重新打開編輯模態框
+            if (wasFromEdit && userId) {
+                setTimeout(() => {
+                    editingUserId = userId; // 確保 editingUserId 沒有被清空
+                    openUserEditModal(userId);
+                }, 150);
             }
         }
     }
