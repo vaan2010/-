@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>資產總覽</title>
+    <title>Monee</title>
     
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/192/wallet.png">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" href="/favicon.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -724,7 +725,7 @@
         <div class="main-content">
             <div class="navbar">
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <h1>資產總覽</h1>
+                <h1>Monee</h1>
                 <div class="btn-group">
                     <button class="btn-icon sidebar-toggle-btn-navbar" id="sidebarToggleBtnNavbar" onclick="toggleSidebarCollapse()" title="展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
@@ -976,6 +977,36 @@
         </div>
     </div>
 
+    <!-- User Edit Modal -->
+    <div id="userEditModal" class="modal" style="z-index: 2003;" onclick="event.target.id === 'userEditModal' && closeUserEditModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="border-radius: 20px 20px 0 0;">
+                <span class="modal-title">編輯使用者</span>
+                <button class="btn-icon" onclick="closeUserEditModal()" style="font-weight:bold;">完成</button>
+            </div>
+            <div style="padding: 20px; background: #000;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #8e8e93; font-size: 14px; margin-bottom: 10px;">使用者名稱</label>
+                    <input type="text" id="userEditNameInput" style="width: 100%; padding: 12px; background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; color: #fff; font-size: 16px; box-sizing: border-box;" placeholder="輸入使用者名稱">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #8e8e93; font-size: 14px; margin-bottom: 10px;">頭像</label>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #8e8e93; font-size: 12px; margin-bottom: 10px; text-align: center;">預設頭像</div>
+                        <div id="userEditDefaultAvatars" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; justify-items: center; max-width: 240px; margin-left: auto; margin-right: auto;"></div>
+                    </div>
+                    <button onclick="openAvatarSelectorFromEdit()" style="width: 100%; padding: 15px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-image"></i> 上傳照片
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="saveUserEdit()" style="flex: 1; padding: 12px; background: #0a84ff; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">儲存</button>
+                    <button onclick="closeUserEditModal()" style="flex: 1; padding: 12px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Avatar Selector Modal -->
     <div id="avatarSelectorModal" class="modal" style="z-index: 2002;" onclick="event.target.id === 'avatarSelectorModal' && closeAvatarSelector()">
         <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
@@ -995,7 +1026,7 @@
                         <i class="fas fa-upload"></i> 選擇照片
                     </button>
                     <div id="avatarCropContainer" style="margin-top: 20px; display: none;">
-                        <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">裁切照片（拖動調整位置，滾輪縮放）</div>
+                        <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">裁切照片（拖動調整位置，<span id="zoomHint">滾輪縮放</span>）</div>
                         <div id="avatarCropWrapper" style="position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; background: #1c1c1e; border-radius: 12px; overflow: hidden; cursor: move;">
                             <canvas id="avatarCropCanvas" style="display: block; width: 100%; max-width: 300px; height: 300px; pointer-events: none;"></canvas>
                             <div id="avatarCropOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
@@ -1212,6 +1243,16 @@
     let isDragging = false;
     let dragStartX = 0;
     let dragStartY = 0;
+    
+    // Touch events for mobile (avatar crop)
+    let cropTouchStartDistance = 0;
+    let cropTouchStartScale = 1;
+    let cropTouchStartX = 0;
+    let cropTouchStartY = 0;
+    let isPinching = false;
+    
+    // Track if avatar selector was opened from edit modal
+    let avatarSelectorFromEdit = false;
 
     // 如果沒有使用者，創建預設使用者
     if (users.length === 0) {
@@ -3014,16 +3055,12 @@
             }
             
             const info = document.createElement('div');
-            info.style.cssText = 'flex: 1;';
+            info.style.cssText = 'flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0;';
             const name = document.createElement('div');
-            name.style.cssText = 'color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 5px; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: background 0.2s;';
+            name.style.cssText = 'color: #fff; font-size: 16px; font-weight: 600; margin: 0 0 4px 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;';
             name.textContent = user.name;
-            name.title = '點擊編輯名稱';
-            name.onclick = (e) => { e.stopPropagation(); editUserName(user.id); };
-            name.onmouseenter = () => { name.style.background = 'rgba(255,255,255,0.1)'; };
-            name.onmouseleave = () => { name.style.background = 'transparent'; };
             const date = document.createElement('div');
-            date.style.cssText = 'color: #8e8e93; font-size: 12px;';
+            date.style.cssText = 'color: #8e8e93; font-size: 12px; line-height: 1.2; white-space: nowrap; margin: 0; text-align: left;';
             date.textContent = new Date(user.createdAt).toLocaleDateString('zh-TW');
             info.appendChild(name);
             info.appendChild(date);
@@ -3034,8 +3071,8 @@
             const editBtn = document.createElement('button');
             editBtn.style.cssText = 'background: none; border: none; color: #0a84ff; font-size: 18px; padding: 5px 10px; cursor: pointer;';
             editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.onclick = (e) => { e.stopPropagation(); editUserAvatar(user.id); };
-            editBtn.title = '編輯頭像';
+            editBtn.onclick = (e) => { e.stopPropagation(); openUserEditModal(user.id); };
+            editBtn.title = '編輯使用者';
             
             const deleteBtn = document.createElement('button');
             deleteBtn.style.cssText = 'background: none; border: none; color: #ff453a; font-size: 18px; padding: 5px 10px; cursor: pointer;';
@@ -3127,11 +3164,126 @@
         renderUserList();
     }
 
+    function openUserEditModal(userId) {
+        editingUserId = userId;
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+        
+        const nameInput = document.getElementById('userEditNameInput');
+        if (nameInput) {
+            nameInput.value = user.name;
+        }
+        
+        // 渲染預設頭像選項
+        renderUserEditAvatars();
+        
+        document.getElementById('userEditModal').style.display = 'flex';
+        closeUserSelector();
+    }
+
+    function renderUserEditAvatars() {
+        const container = document.getElementById('userEditDefaultAvatars');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (!DEFAULT_AVATARS || DEFAULT_AVATARS.length === 0) return;
+        
+        DEFAULT_AVATARS.forEach((avatar, index) => {
+            const avatarBtn = document.createElement('button');
+            avatarBtn.style.cssText = 'width: 60px; height: 60px; border-radius: 50%; background: #2c2c2e; border: 2px solid #3a3a3c; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
+            avatarBtn.textContent = avatar;
+            
+            // 如果這是當前使用者的頭像，顯示選中狀態
+            const user = users.find(u => u.id === editingUserId);
+            if (user && user.avatar === avatar) {
+                avatarBtn.style.borderColor = '#0a84ff';
+                avatarBtn.style.borderWidth = '3px';
+            }
+            
+            avatarBtn.onmouseover = () => { 
+                if (user && user.avatar !== avatar) {
+                    avatarBtn.style.borderColor = '#0a84ff'; 
+                    avatarBtn.style.transform = 'scale(1.1)'; 
+                }
+            };
+            avatarBtn.onmouseout = () => { 
+                if (user && user.avatar !== avatar) {
+                    avatarBtn.style.borderColor = '#3a3a3c'; 
+                    avatarBtn.style.transform = 'scale(1)'; 
+                }
+            };
+            avatarBtn.onclick = () => {
+                if (!editingUserId) return;
+                const currentUser = users.find(u => u.id === editingUserId);
+                if (currentUser) {
+                    currentUser.avatar = avatar;
+                    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+                    
+                    // 重新渲染以顯示選中狀態
+                    renderUserEditAvatars();
+                    
+                    // 如果編輯的是當前使用者，更新頭像顯示
+                    if (editingUserId === currentUserId) {
+                        updateUserAvatar();
+                    }
+                }
+            };
+            container.appendChild(avatarBtn);
+        });
+    }
+
+    function closeUserEditModal() {
+        document.getElementById('userEditModal').style.display = 'none';
+        editingUserId = null;
+    }
+
+    function saveUserEdit() {
+        if (!editingUserId) return;
+        
+        const user = users.find(u => u.id === editingUserId);
+        if (!user) return;
+        
+        const nameInput = document.getElementById('userEditNameInput');
+        if (nameInput) {
+            const newName = nameInput.value.trim();
+            if (!newName) {
+                alert('名稱不能為空');
+                return;
+            }
+            user.name = newName;
+        }
+        
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        
+        // 更新顯示
+        renderUserList();
+        if (editingUserId === currentUserId) {
+            updateUserAvatar();
+        }
+        
+        closeUserEditModal();
+    }
+
+    function openAvatarSelectorFromEdit() {
+        if (!editingUserId) return;
+        avatarSelectorFromEdit = true;
+        document.getElementById('avatarSelectorModal').style.display = 'flex';
+        closeUserEditModal();
+        // 確保模態框顯示後再渲染
+        setTimeout(() => {
+            renderAvatarSelector();
+        }, 50);
+    }
+
     function editUserAvatar(userId) {
         editingUserId = userId;
-        renderAvatarSelector();
         document.getElementById('avatarSelectorModal').style.display = 'flex';
         closeUserSelector();
+        // 確保模態框顯示後再渲染
+        setTimeout(() => {
+            renderAvatarSelector();
+        }, 50);
     }
 
     function editUserName(userId) {
@@ -3157,17 +3309,40 @@
     }
 
     function closeAvatarSelector() {
-        document.getElementById('avatarSelectorModal').style.display = 'none';
-        editingUserId = null;
-        document.getElementById('uploadedAvatarPreview').style.display = 'none';
-        document.getElementById('avatarCropContainer').style.display = 'none';
-        document.getElementById('avatarUploadInput').value = '';
+        const modal = document.getElementById('avatarSelectorModal');
+        if (modal) modal.style.display = 'none';
+        
+        // 如果從編輯模態框打開的，重新打開編輯模態框
+        if (avatarSelectorFromEdit && editingUserId) {
+            const userId = editingUserId;
+            setTimeout(() => {
+                openUserEditModal(userId);
+            }, 100);
+        }
+        
+        avatarSelectorFromEdit = false;
+        const preview = document.getElementById('uploadedAvatarPreview');
+        if (preview) preview.style.display = 'none';
+        const container = document.getElementById('avatarCropContainer');
+        if (container) container.style.display = 'none';
+        const input = document.getElementById('avatarUploadInput');
+        if (input) input.value = '';
         cropImage = null;
     }
 
     function renderAvatarSelector() {
         const container = document.getElementById('defaultAvatarsContainer');
+        if (!container) {
+            console.error('defaultAvatarsContainer not found');
+            return;
+        }
+        
         container.innerHTML = '';
+        
+        if (!DEFAULT_AVATARS || DEFAULT_AVATARS.length === 0) {
+            console.error('DEFAULT_AVATARS is not defined or empty');
+            return;
+        }
         
         DEFAULT_AVATARS.forEach((avatar, index) => {
             const avatarBtn = document.createElement('button');
@@ -3277,6 +3452,13 @@
                 
                 // 添加事件監聽
                 setupCropEvents();
+                
+                // 更新縮放提示文字（手機版顯示雙指縮放）
+                const zoomHint = document.getElementById('zoomHint');
+                if (zoomHint) {
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+                    zoomHint.textContent = isMobile ? '雙指縮放' : '滾輪縮放';
+                }
             }
             
             // 開始嘗試初始化
@@ -3325,6 +3507,42 @@
         circle.style.height = cropSize + 'px';
     }
 
+    // 縮放處理函數（共用）
+    function handleZoom(centerX, centerY, scaleChange) {
+        const canvas = document.getElementById('avatarCropCanvas');
+        if (!canvas) return;
+        
+        // centerX 和 centerY 已經是相對於畫布的座標
+        const mouseX = centerX;
+        const mouseY = centerY;
+        
+        const oldScale = cropScale;
+        const newScale = Math.max(0.5, Math.min(5, cropScale * scaleChange));
+        const scaleRatio = newScale / oldScale;
+        
+        // 調整圖片位置，使縮放中心點保持不變
+        const relativeX = mouseX - cropX;
+        const relativeY = mouseY - cropY;
+        
+        cropX = mouseX - relativeX * scaleRatio;
+        cropY = mouseY - relativeY * scaleRatio;
+        
+        cropScale = newScale;
+        
+        // 限制圖片位置
+        const imgWidth = cropImage.width * cropScale;
+        const imgHeight = cropImage.height * cropScale;
+        const minX = canvas.width - imgWidth;
+        const maxX = 0;
+        const minY = canvas.height - imgHeight;
+        const maxY = 0;
+        
+        cropX = Math.max(minX, Math.min(cropX, maxX));
+        cropY = Math.max(minY, Math.min(cropY, maxY));
+        
+        drawCropImage();
+    }
+
     function setupCropEvents() {
         const canvas = document.getElementById('avatarCropCanvas');
         const wrapper = document.getElementById('avatarCropWrapper');
@@ -3340,6 +3558,10 @@
         wrapper.onmousemove = null;
         wrapper.onmouseup = null;
         wrapper.onwheel = null;
+        wrapper.ontouchstart = null;
+        wrapper.ontouchmove = null;
+        wrapper.ontouchend = null;
+        wrapper.ontouchcancel = null;
         
         // 拖動事件（拖動圖片）
         wrapper.onmousedown = function(e) {
@@ -3380,45 +3602,109 @@
             isDragging = false;
         };
         
-        // 滾輪縮放圖片
+        // 滾輪縮放圖片（桌面版）
         wrapper.onwheel = function(e) {
             e.preventDefault();
-            
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-            
-            // 計算縮放比例
-            const scaleChange = e.deltaY > 0 ? 0.95 : 1.05;
-            const oldScale = cropScale;
-            const newScale = Math.max(0.5, Math.min(5, cropScale * scaleChange));
-            
-            // 計算縮放中心點（滑鼠位置相對於畫布）
-            const scaleRatio = newScale / oldScale;
-            
-            // 調整圖片位置，使縮放中心點保持不變
-            // 滑鼠位置相對於圖片的座標
-            const relativeX = mouseX - cropX;
-            const relativeY = mouseY - cropY;
-            
-            // 縮放後的新位置
-            cropX = mouseX - relativeX * scaleRatio;
-            cropY = mouseY - relativeY * scaleRatio;
-            
-            cropScale = newScale;
-            
-            // 限制圖片位置
-            const imgWidth = cropImage.width * cropScale;
-            const imgHeight = cropImage.height * cropScale;
-            const minX = canvas.width - imgWidth;
-            const maxX = 0;
-            const minY = canvas.height - imgHeight;
-            const maxY = 0;
-            
-            cropX = Math.max(minX, Math.min(cropX, maxX));
-            cropY = Math.max(minY, Math.min(cropY, maxY));
-            
-            drawCropImage();
+            handleZoom(mouseX, mouseY, e.deltaY > 0 ? 0.95 : 1.05);
+        };
+        
+        // 觸控事件（手機版）
+        wrapper.ontouchstart = function(e) {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                // 單指拖動
+                isDragging = true;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                dragStartX = touch.clientX - rect.left - cropX;
+                dragStartY = touch.clientY - rect.top - cropY;
+            } else if (e.touches.length === 2) {
+                // 雙指縮放
+                isPinching = true;
+                isDragging = false;
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                cropTouchStartDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                cropTouchStartScale = cropScale;
+                
+                // 計算雙指中心點
+                const rect = canvas.getBoundingClientRect();
+                cropTouchStartX = ((touch1.clientX + touch2.clientX) / 2) - rect.left;
+                cropTouchStartY = ((touch1.clientY + touch2.clientY) / 2) - rect.top;
+            }
+        };
+        
+        wrapper.ontouchmove = function(e) {
+            e.preventDefault();
+            if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 單指拖動
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const newX = touch.clientX - rect.left - dragStartX;
+                const newY = touch.clientY - rect.top - dragStartY;
+                
+                // 計算圖片尺寸
+                const imgWidth = cropImage.width * cropScale;
+                const imgHeight = cropImage.height * cropScale;
+                
+                // 限制圖片位置
+                const minX = canvas.width - imgWidth;
+                const maxX = 0;
+                const minY = canvas.height - imgHeight;
+                const maxY = 0;
+                
+                cropX = Math.max(minX, Math.min(newX, maxX));
+                cropY = Math.max(minY, Math.min(newY, maxY));
+                
+                drawCropImage();
+            } else if (e.touches.length === 2 && isPinching) {
+                // 雙指縮放
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                
+                if (cropTouchStartDistance > 0) {
+                    const scaleChange = currentDistance / cropTouchStartDistance;
+                    const newScale = Math.max(0.5, Math.min(5, cropTouchStartScale * scaleChange));
+                    
+                    // 計算當前雙指中心點（相對於畫布）
+                    const rect = canvas.getBoundingClientRect();
+                    const currentCenterX = ((touch1.clientX + touch2.clientX) / 2) - rect.left;
+                    const currentCenterY = ((touch1.clientY + touch2.clientY) / 2) - rect.top;
+                    
+                    // 使用當前雙指中心點作為縮放中心
+                    handleZoom(currentCenterX, currentCenterY, newScale / cropScale);
+                }
+            }
+        };
+        
+        wrapper.ontouchend = function(e) {
+            if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+            } else if (e.touches.length === 1) {
+                // 從雙指變單指，切換到拖動模式
+                isPinching = false;
+                isDragging = true;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                dragStartX = touch.clientX - rect.left - cropX;
+                dragStartY = touch.clientY - rect.top - cropY;
+            }
+        };
+        
+        wrapper.ontouchcancel = function() {
+            isDragging = false;
+            isPinching = false;
         };
     }
 
@@ -4843,7 +5129,7 @@
                 pageIndicator.innerHTML = '<button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button><button class="page-tab" data-page="1" onclick="switchToPage(1)">銀行</button><button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button><button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button><button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>';
                 switchToPage(currentPage);
             }
-            if(navbarTitle) navbarTitle.textContent = '資產總覽';
+            if(navbarTitle) navbarTitle.textContent = 'Monee';
         }
     }
     function changeCalendarMonth(delta) {
