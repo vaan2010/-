@@ -150,8 +150,12 @@
             .sidebar.collapsed ~ .main-content .sidebar-toggle-btn-navbar { display: block !important; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; z-index: 1001; }
             .navbar .btn-group { margin-left: 50px; }
         }
-        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; }
-        .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; }
+        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; flex: 1; }
+        .user-avatar-container { position: relative; cursor: pointer; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #0a84ff; object-fit: cover; transition: all 0.2s; display: flex; align-items: center; justify-content: center; background: #2c2c2e; font-size: 24px; }
+        .user-avatar-container:hover .user-avatar { transform: scale(1.1); border-color: #64d2ff; }
+        .user-avatar-container:active .user-avatar { transform: scale(0.95); }
         .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; transition: opacity 0.3s; }
         .menu-item { padding: 15px 25px; display: flex; align-items: center; font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s; }
         .menu-item:hover { background: #2c2c2e; }
@@ -674,7 +678,12 @@
         <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <div id="sidebar" class="sidebar">
             <button class="btn-icon sidebar-toggle-btn-desktop" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="收合/展開選單"><i class="fas fa-bars"></i></button>
-            <div class="sidebar-header"><h2>功能選單</h2></div>
+            <div class="sidebar-header">
+                <h2>功能選單</h2>
+                <div class="user-avatar-container" onclick="openUserSelector()" title="切換使用者">
+                    <div id="currentUserAvatar" class="user-avatar"></div>
+                </div>
+            </div>
             <div class="sidebar-menu">
                 <div class="menu-label" onclick="toggleMenuSection('update')">
                     <span>更新</span>
@@ -949,10 +958,62 @@
         </div>
     </div>
 
+    <!-- User Selector Modal -->
+    <div id="userSelectorModal" class="modal" style="z-index: 2001;" onclick="event.target.id === 'userSelectorModal' && closeUserSelector()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="border-radius: 20px 20px 0 0;">
+                <span class="modal-title">選擇使用者</span>
+                <button class="btn-icon" onclick="closeUserSelector()" style="font-weight:bold;">完成</button>
+            </div>
+            <div style="padding: 20px; background: #000;">
+                <div id="userListContainer" style="margin-bottom: 30px;"></div>
+                <div style="border-top: 1px solid #2c2c2e; padding-top: 20px; margin-top: 20px;">
+                    <button class="btn-primary" onclick="createNewUser()" style="width: 100%; padding: 15px; background: #0a84ff; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
+                        <i class="fas fa-plus"></i> 新增使用者
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Selector Modal -->
+    <div id="avatarSelectorModal" class="modal" style="z-index: 2002;" onclick="event.target.id === 'avatarSelectorModal' && closeAvatarSelector()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="border-radius: 20px 20px 0 0;">
+                <span class="modal-title">選擇頭像</span>
+                <button class="btn-icon" onclick="closeAvatarSelector()" style="font-weight:bold;">完成</button>
+            </div>
+            <div style="padding: 20px; background: #000;">
+                <div style="margin-bottom: 20px;">
+                    <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">預設頭像</div>
+                    <div id="defaultAvatarsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;"></div>
+                </div>
+                <div style="border-top: 1px solid #2c2c2e; padding-top: 20px; margin-top: 20px;">
+                    <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">上傳照片</div>
+                    <input type="file" id="avatarUploadInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                    <button class="btn-primary" onclick="document.getElementById('avatarUploadInput').click()" style="width: 100%; padding: 15px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-upload"></i> 選擇照片
+                    </button>
+                    <div id="uploadedAvatarPreview" style="margin-top: 15px; display: none;">
+                        <div style="color: #8e8e93; font-size: 14px; margin-bottom: 10px;">預覽</div>
+                        <img id="uploadedAvatarImg" src="" alt="預覽" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #0a84ff;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
     // 1. Define Constants & Globals
     const STORAGE_KEY_DATA = 'my_assets_stable_data';
     const STORAGE_KEY_SETTINGS = 'my_assets_stable_settings';
+    const STORAGE_KEY_USERS = 'my_assets_users';
+    const STORAGE_KEY_CURRENT_USER = 'my_assets_current_user';
+    
+    // 預設頭像（使用 emoji 或圖示）
+    const DEFAULT_AVATARS = [
+        '👤', '👨', '👩', '🧑', '👨‍💼', '👩‍💼'
+    ];
     
     const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#0a84ff', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
     const TYPE_NAMES = { 'bank': '銀行', 'stock': '美股', 'twstock': '台股', 'crypto': '加密貨幣', 'debt': '負債' };
@@ -1128,14 +1189,63 @@
     // Execute Migration Immediately
     tryMigrateOldData();
 
-    // Load State
-    let rawAccounts = JSON.parse(localStorage.getItem(STORAGE_KEY_DATA)) || [];
-    let accounts = rawAccounts.map((a, index) => ({ 
-        ...a, balance: safeParseFloat(a.balance), currentPrice: safeParseFloat(a.currentPrice), 
-        dayChange: safeParseFloat(a.dayChange || 0), dayChangePercent: safeParseFloat(a.dayChangePercent || 0), 
-        cost: safeParseFloat(a.cost || 0), order: (a.order!==undefined)?a.order:index, transactions: a.transactions || [] 
-    }));
-    let settings = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) || { apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 };
+    // Multi-User System
+    let users = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS)) || [];
+    let currentUserId = localStorage.getItem(STORAGE_KEY_CURRENT_USER) || null;
+    let editingUserId = null; // 用於頭像選擇器
+
+    // 如果沒有使用者，創建預設使用者
+    if (users.length === 0) {
+        const defaultUser = {
+            id: Date.now().toString(),
+            name: '使用者 1',
+            avatar: DEFAULT_AVATARS[0],
+            createdAt: new Date().toISOString()
+        };
+        users.push(defaultUser);
+        currentUserId = defaultUser.id;
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        localStorage.setItem(STORAGE_KEY_CURRENT_USER, currentUserId);
+    }
+
+    // 如果當前使用者不存在，使用第一個使用者
+    if (!currentUserId || !users.find(u => u.id === currentUserId)) {
+        currentUserId = users[0].id;
+        localStorage.setItem(STORAGE_KEY_CURRENT_USER, currentUserId);
+    }
+
+    // Load State (多使用者版本)
+    function loadUserData(userId) {
+        const userDataKey = `${STORAGE_KEY_DATA}_${userId}`;
+        const userSettingsKey = `${STORAGE_KEY_SETTINGS}_${userId}`;
+        
+        const rawAccounts = JSON.parse(localStorage.getItem(userDataKey)) || [];
+        const accounts = rawAccounts.map((a, index) => ({ 
+            ...a, balance: safeParseFloat(a.balance), currentPrice: safeParseFloat(a.currentPrice), 
+            dayChange: safeParseFloat(a.dayChange || 0), dayChangePercent: safeParseFloat(a.dayChangePercent || 0), 
+            cost: safeParseFloat(a.cost || 0), order: (a.order!==undefined)?a.order:index, transactions: a.transactions || [] 
+        }));
+        
+        const settings = JSON.parse(localStorage.getItem(userSettingsKey)) || { 
+            apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 
+        };
+        
+        return { accounts, settings };
+    }
+
+    // 遷移舊資料到第一個使用者（向後兼容）
+    if (!localStorage.getItem(`${STORAGE_KEY_DATA}_${currentUserId}`)) {
+        const oldData = localStorage.getItem(STORAGE_KEY_DATA);
+        const oldSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (oldData) {
+            localStorage.setItem(`${STORAGE_KEY_DATA}_${currentUserId}`, oldData);
+        }
+        if (oldSettings) {
+            localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${currentUserId}`, oldSettings);
+        }
+    }
+
+    let { accounts, settings } = loadUserData(currentUserId);
     
     // 分頁顯示設置（預設全部顯示）
     let pageVisibility = JSON.parse(localStorage.getItem('pageVisibility')) || {
@@ -2651,14 +2761,42 @@
         closeDetailView();
         renderAssets();
     }
-    function saveData() { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(accounts)); }
+    function saveData() { 
+        const userDataKey = `${STORAGE_KEY_DATA}_${currentUserId}`;
+        localStorage.setItem(userDataKey, JSON.stringify(accounts)); 
+    }
+    
+    function saveSettings() {
+        const userSettingsKey = `${STORAGE_KEY_SETTINGS}_${currentUserId}`;
+        localStorage.setItem(userSettingsKey, JSON.stringify(settings));
+    }
     function updateOrder(type,container){ let ids=Array.from(container.children).map(c=>parseInt(c.getAttribute('data-id'))); ids.forEach((id,idx)=>{ let a=accounts.find(x=>x.id===id); if(a)a.order=idx; }); saveData(); }
-    function setApiKey(t) { if(t==='finnhub'){const k=prompt("Finnhub Key:", settings.apiKey);if(k)settings.apiKey=k.trim();} else if(t==='fugle'){const k=prompt("Fugle Key:", settings.fugleKey);if(k)settings.fugleKey=k.trim();} else {const k=prompt("Gemini Key:", settings.geminiKey);if(k)settings.geminiKey=k.trim();} localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); refreshAllData(); }
-    function setFeeRate() { const k=prompt("手續費率 (%):", settings.feeRate); if(k)settings.feeRate=parseFloat(k); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); }
-    function updateFeeDisplay() { const s=document.getElementById('brokerSelect'); if(s.value==='custom'){ const r=prompt("自訂費率 (%):", settings.feeRate||0.1); if(r)settings.feeRate=parseFloat(r); localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); } }
+    function setApiKey(t) { if(t==='finnhub'){const k=prompt("Finnhub Key:", settings.apiKey);if(k)settings.apiKey=k.trim();} else if(t==='fugle'){const k=prompt("Fugle Key:", settings.fugleKey);if(k)settings.fugleKey=k.trim();} else {const k=prompt("Gemini Key:", settings.geminiKey);if(k)settings.geminiKey=k.trim();} saveSettings(); refreshAllData(); }
+    function setFeeRate() { const k=prompt("手續費率 (%):", settings.feeRate); if(k)settings.feeRate=parseFloat(k); saveSettings(); }
+    function updateFeeDisplay() { const s=document.getElementById('brokerSelect'); if(s.value==='custom'){ const r=prompt("自訂費率 (%):", settings.feeRate||0.1); if(r)settings.feeRate=parseFloat(r); saveSettings(); } }
     function exportData() { 
-        const data = {data:accounts, settings:settings};
-        const jsonStr = JSON.stringify(data, null, 2);
+        // 匯出所有使用者資料
+        const allUsersData = {};
+        users.forEach(user => {
+            const userDataKey = `${STORAGE_KEY_DATA}_${user.id}`;
+            const userSettingsKey = `${STORAGE_KEY_SETTINGS}_${user.id}`;
+            const userAccounts = JSON.parse(localStorage.getItem(userDataKey)) || [];
+            const userSettings = JSON.parse(localStorage.getItem(userSettingsKey)) || {};
+            allUsersData[user.id] = {
+                user: user,
+                data: userAccounts,
+                settings: userSettings
+            };
+        });
+        
+        const exportData = {
+            version: '2.0',
+            users: users,
+            usersData: allUsersData,
+            exportDate: new Date().toISOString()
+        };
+        
+        const jsonStr = JSON.stringify(exportData, null, 2);
         const blob = new Blob([jsonStr], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -2685,20 +2823,41 @@
                         progressBar.style.width = '60%';
                         progressText.innerText = '驗證資料中...';
                         const d = JSON.parse(text);
-                        if (d.data && d.settings) {
+                        
+                        // 支援新格式（多使用者）和舊格式（單使用者）
+                        if (d.version === '2.0' && d.users && d.usersData) {
+                            // 新格式：多使用者
                             progressBar.style.width = '80%';
                             progressText.innerText = '寫入資料中...';
                             setTimeout(() => {
                                 progressBar.style.width = '100%';
                                 progressText.innerText = '完成！';
-                                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
-                                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
+                                localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(d.users));
+                                
+                                // 匯入每個使用者的資料
+                                Object.keys(d.usersData).forEach(userId => {
+                                    const userData = d.usersData[userId];
+                                    localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
+                                    localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
+                                });
+                                
+                                setTimeout(() => location.reload(), 500);
+                            }, 200);
+                        } else if (d.data && d.settings) {
+                            // 舊格式：單使用者，匯入到當前使用者
+                            progressBar.style.width = '80%';
+                            progressText.innerText = '寫入資料中...';
+                            setTimeout(() => {
+                                progressBar.style.width = '100%';
+                                progressText.innerText = '完成！';
+                                localStorage.setItem(`${STORAGE_KEY_DATA}_${currentUserId}`, JSON.stringify(d.data));
+                                localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${currentUserId}`, JSON.stringify(d.settings));
                                 setTimeout(() => location.reload(), 500);
                             }, 200);
                         } else {
                             progressToast.style.display = 'none';
                             progressBar.style.width = '0%';
-                            alert("格式錯誤：缺少 data 或 settings");
+                            alert("格式錯誤：不支援的備份格式");
                         }
                     }, 100);
                 } catch(err) {
@@ -2729,14 +2888,35 @@
                     progressBar.style.width = '70%';
                     progressText.innerText = '驗證資料中...';
                     const d = JSON.parse(e.target.result);
-                    if (d.data && d.settings) {
+                    
+                    // 支援新格式（多使用者）和舊格式（單使用者）
+                    if (d.version === '2.0' && d.users && d.usersData) {
+                        // 新格式：多使用者
                         progressBar.style.width = '90%';
                         progressText.innerText = '寫入資料中...';
                         setTimeout(() => {
                             progressBar.style.width = '100%';
                             progressText.innerText = '完成！';
-                            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(d.data));
-                            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(d.settings));
+                            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(d.users));
+                            
+                            // 匯入每個使用者的資料
+                            Object.keys(d.usersData).forEach(userId => {
+                                const userData = d.usersData[userId];
+                                localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
+                                localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
+                            });
+                            
+                            setTimeout(() => location.reload(), 500);
+                        }, 200);
+                    } else if (d.data && d.settings) {
+                        // 舊格式：單使用者，匯入到當前使用者
+                        progressBar.style.width = '90%';
+                        progressText.innerText = '寫入資料中...';
+                        setTimeout(() => {
+                            progressBar.style.width = '100%';
+                            progressText.innerText = '完成！';
+                            localStorage.setItem(`${STORAGE_KEY_DATA}_${currentUserId}`, JSON.stringify(d.data));
+                            localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${currentUserId}`, JSON.stringify(d.settings));
                             setTimeout(() => location.reload(), 500);
                         }, 200);
                     } else {
@@ -2753,6 +2933,215 @@
         };
         reader.readAsText(file);
         event.target.value = '';
+    }
+
+    // User Management Functions
+    function updateUserAvatar() {
+        const currentUser = users.find(u => u.id === currentUserId);
+        const avatarContainer = document.querySelector('.user-avatar-container');
+        if (currentUser && avatarContainer) {
+            let avatarEl = document.getElementById('currentUserAvatar');
+            if (!avatarEl) {
+                avatarEl = document.createElement('div');
+                avatarEl.id = 'currentUserAvatar';
+                avatarEl.className = 'user-avatar';
+                avatarContainer.innerHTML = '';
+                avatarContainer.appendChild(avatarEl);
+            }
+            
+            // 清除舊內容
+            avatarEl.innerHTML = '';
+            
+            if (currentUser.avatar.startsWith('data:image')) {
+                const img = document.createElement('img');
+                img.src = currentUser.avatar;
+                img.style.cssText = 'width: 100%; height: 100%; border-radius: 50%; object-fit: cover;';
+                avatarEl.appendChild(img);
+            } else {
+                // 使用 emoji
+                avatarEl.textContent = currentUser.avatar;
+            }
+        }
+    }
+
+    function openUserSelector() {
+        renderUserList();
+        document.getElementById('userSelectorModal').style.display = 'flex';
+    }
+
+    function closeUserSelector() {
+        document.getElementById('userSelectorModal').style.display = 'none';
+    }
+
+    function renderUserList() {
+        const container = document.getElementById('userListContainer');
+        container.innerHTML = '';
+        
+        users.forEach(user => {
+            const isCurrent = user.id === currentUserId;
+            const userItem = document.createElement('div');
+            userItem.style.cssText = 'display: flex; align-items: center; padding: 15px; margin-bottom: 10px; background: #1c1c1e; border-radius: 12px; cursor: pointer; border: 2px solid ' + (isCurrent ? '#0a84ff' : 'transparent') + ';';
+            userItem.onclick = () => switchUser(user.id);
+            
+            const avatar = document.createElement('div');
+            avatar.style.cssText = 'width: 50px; height: 50px; border-radius: 50%; background: #2c2c2e; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; border: 2px solid ' + (isCurrent ? '#0a84ff' : '#3a3a3c') + ';';
+            if (user.avatar.startsWith('data:image')) {
+                const img = document.createElement('img');
+                img.src = user.avatar;
+                img.style.cssText = 'width: 100%; height: 100%; border-radius: 50%; object-fit: cover;';
+                avatar.appendChild(img);
+            } else {
+                avatar.textContent = user.avatar;
+            }
+            
+            const info = document.createElement('div');
+            info.style.cssText = 'flex: 1;';
+            const name = document.createElement('div');
+            name.style.cssText = 'color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 5px;';
+            name.textContent = user.name;
+            const date = document.createElement('div');
+            date.style.cssText = 'color: #8e8e93; font-size: 12px;';
+            date.textContent = new Date(user.createdAt).toLocaleDateString('zh-TW');
+            info.appendChild(name);
+            info.appendChild(date);
+            
+            const editBtn = document.createElement('button');
+            editBtn.style.cssText = 'background: none; border: none; color: #0a84ff; font-size: 18px; padding: 5px 10px; cursor: pointer;';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.onclick = (e) => { e.stopPropagation(); editUserAvatar(user.id); };
+            editBtn.title = '編輯頭像';
+            
+            userItem.appendChild(avatar);
+            userItem.appendChild(info);
+            userItem.appendChild(editBtn);
+            container.appendChild(userItem);
+        });
+    }
+
+    function createNewUser() {
+        const userName = prompt('輸入使用者名稱:', `使用者 ${users.length + 1}`);
+        if (!userName) return;
+        
+        const newUser = {
+            id: Date.now().toString(),
+            name: userName.trim() || `使用者 ${users.length + 1}`,
+            avatar: DEFAULT_AVATARS[users.length % DEFAULT_AVATARS.length],
+            createdAt: new Date().toISOString()
+        };
+        
+        users.push(newUser);
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        
+        // 切換到新使用者
+        switchUser(newUser.id);
+        closeUserSelector();
+    }
+
+    function switchUser(userId) {
+        // 儲存當前使用者資料
+        saveData();
+        saveSettings();
+        
+        // 切換使用者
+        currentUserId = userId;
+        localStorage.setItem(STORAGE_KEY_CURRENT_USER, currentUserId);
+        
+        // 載入新使用者資料
+        const userData = loadUserData(currentUserId);
+        accounts = userData.accounts;
+        settings = userData.settings;
+        
+        // 更新顯示
+        updateUserAvatar();
+        renderAssets();
+        updateChartData();
+        closeUserSelector();
+    }
+
+    function editUserAvatar(userId) {
+        editingUserId = userId;
+        renderAvatarSelector();
+        document.getElementById('avatarSelectorModal').style.display = 'flex';
+        closeUserSelector();
+    }
+
+    function closeAvatarSelector() {
+        document.getElementById('avatarSelectorModal').style.display = 'none';
+        editingUserId = null;
+        document.getElementById('uploadedAvatarPreview').style.display = 'none';
+        document.getElementById('avatarUploadInput').value = '';
+    }
+
+    function renderAvatarSelector() {
+        const container = document.getElementById('defaultAvatarsContainer');
+        container.innerHTML = '';
+        
+        DEFAULT_AVATARS.forEach((avatar, index) => {
+            const avatarBtn = document.createElement('button');
+            avatarBtn.style.cssText = 'width: 80px; height: 80px; border-radius: 50%; background: #2c2c2e; border: 2px solid #3a3a3c; font-size: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
+            avatarBtn.textContent = avatar;
+            avatarBtn.onmouseover = () => { avatarBtn.style.borderColor = '#0a84ff'; avatarBtn.style.transform = 'scale(1.1)'; };
+            avatarBtn.onmouseout = () => { avatarBtn.style.borderColor = '#3a3a3c'; avatarBtn.style.transform = 'scale(1)'; };
+            avatarBtn.onclick = () => selectAvatar(avatar);
+            container.appendChild(avatarBtn);
+        });
+    }
+
+    function selectAvatar(avatar) {
+        if (!editingUserId) return;
+        
+        const user = users.find(u => u.id === editingUserId);
+        if (user) {
+            user.avatar = avatar;
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+            
+            if (editingUserId === currentUserId) {
+                updateUserAvatar();
+            }
+            
+            closeAvatarSelector();
+            if (document.getElementById('userSelectorModal').style.display === 'flex') {
+                renderUserList();
+            }
+        }
+    }
+
+    function handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            alert('請選擇圖片檔案');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            document.getElementById('uploadedAvatarImg').src = imageData;
+            document.getElementById('uploadedAvatarPreview').style.display = 'block';
+            
+            // 確認使用上傳的頭像
+            if (confirm('使用這張照片作為頭像？')) {
+                if (!editingUserId) return;
+                
+                const user = users.find(u => u.id === editingUserId);
+                if (user) {
+                    user.avatar = imageData;
+                    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+                    
+                    if (editingUserId === currentUserId) {
+                        updateUserAvatar();
+                    }
+                    
+                    closeAvatarSelector();
+                    if (document.getElementById('userSelectorModal').style.display === 'flex') {
+                        renderUserList();
+                    }
+                }
+            }
+        };
+        reader.readAsDataURL(file);
     }
 
     // Detail View
@@ -2970,7 +3359,7 @@
 
     // Async Updates
     async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); if(icon) icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{if(icon) icon.classList.remove('fa-spin-fast');},500); }
-    async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} localStorage.setItem(STORAGE_KEY_SETTINGS,JSON.stringify(settings)); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
+    async function updateRates() { try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');const d=await r.json();if(d.rates?.TWD)settings.usdRate=d.rates.TWD;}catch(e){} if(settings.apiKey){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=COINBASE:USDT-USD&token=${settings.apiKey}`);const j=await r.json();if(j.c)settings.usdtRate=j.c;}catch(e){}} saveSettings(); document.getElementById('rateUsd').innerText=`USD ≈ ${settings.usdRate.toFixed(2)}`; document.getElementById('rateUsdt').innerText=`USDT ≈ ${settings.usdtRate.toFixed(3)} USD`; renderAssets(); }
     async function refreshStockInfo() {
         const stockAccounts = accounts.filter(acc => acc.type === 'stock' && acc.symbol);
         const twstockAccounts = accounts.filter(acc => acc.type === 'twstock' && acc.symbol);
@@ -4037,6 +4426,9 @@
         // 初始化選單區塊狀態
         initMenuSections();
         
+        // 初始化使用者頭像
+        updateUserAvatar();
+        
         // 初始化分頁顯示設置
         renderPageVisibilitySettings();
         
@@ -4168,5 +4560,4 @@
 </script>
 </body>
 </html>
-
 
