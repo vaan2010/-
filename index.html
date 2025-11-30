@@ -8,11 +8,55 @@
     <title>Monee</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="https://meee.com.tw/o6AMCxZ">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://meee.com.tw/o6AMCxZ">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://meee.com.tw/o6AMCxZ">
-    <link rel="shortcut icon" type="image/png" href="https://meee.com.tw/o6AMCxZ">
-    <meta name="msapplication-TileImage" content="https://meee.com.tw/o6AMCxZ">
+    <!-- 使用絕對路徑，確保在 GitHub Pages 上能正確載入 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon.png">
+    <link rel="shortcut icon" type="image/png" href="./favicon.png">
+    <meta name="msapplication-TileImage" content="./favicon.png">
+    
+    <!-- 備選方案：如果本地文件載入失敗，使用外部 URL -->
+    <script>
+        (function() {
+            // 等待 DOM 載入完成
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initFavicon);
+            } else {
+                initFavicon();
+            }
+            
+            function initFavicon() {
+                const externalUrl = 'https://meee.com.tw/o6AMCxZ';
+                const faviconPath = './favicon.png';
+                
+                // 檢查本地 favicon 是否存在
+                const testImg = new Image();
+                testImg.onerror = function() {
+                    // 本地文件不存在或載入失敗，使用外部 URL
+                    updateFaviconLinks(externalUrl);
+                };
+                testImg.onload = function() {
+                    // 本地文件存在，確保使用本地路徑
+                    updateFaviconLinks(faviconPath);
+                };
+                // 添加時間戳避免快取問題
+                testImg.src = faviconPath + '?t=' + Date.now();
+            }
+            
+            function updateFaviconLinks(url) {
+                const faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"], link[rel="shortcut icon"]');
+                faviconLinks.forEach(link => {
+                    if (link.href.includes('favicon.png') || link.href === url) {
+                        link.href = url;
+                    }
+                });
+                const tileMeta = document.querySelector('meta[name="msapplication-TileImage"]');
+                if (tileMeta) {
+                    tileMeta.content = url;
+                }
+            }
+        })();
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
