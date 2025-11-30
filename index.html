@@ -2131,7 +2131,13 @@
             }
         }
         currentPage = pageIndex;
-        
+
+        // 在渲染前先將滾動位置重置到頂端，避免先顯示中間內容再滾動
+        const scrollContainer = document.querySelector('.content-grid');
+        if(scrollContainer) {
+            scrollContainer.scrollTop = 0;
+        }
+
         // 重新排列 page-item 的 DOM 順序，使其與 pageOrder 一致
         const domIndex = reorderPageItems();
         
@@ -2213,14 +2219,14 @@
         
         // 更新圖表和列表 - 切換分頁時退出 detail 模式
         chartLevel = pageIndex === 0 ? 'root' : 'page';
-        
+
         // 如果之前在 detail 模式，清除圖表系列
         if(chartInstance && chartInstance.series.length > 0) {
             while(chartInstance.series.length > 0) {
                 chartInstance.series[0].remove(false);
             }
         }
-        
+
         updateChartData();
         renderAssets();
     }
@@ -2390,20 +2396,55 @@
             });
         }
         
+        // 計算總損益
+        let totalCostPnL = 0;
+        accounts.forEach(acc => {
+            if(acc.isAuto) {
+                if(currentPage === 0) {
+                    // 總覽分頁：只計算啟用分頁的資產
+                    if(acc.type !== 'debt') {
+                        if(acc.type === 'bank' && !pageVisibility['bank']) return;
+                        if(acc.type === 'stock' && !pageVisibility['stock']) return;
+                        if(acc.type === 'twstock' && !pageVisibility['twstock']) return;
+                        if(acc.type === 'crypto' && !pageVisibility['crypto']) return;
+                    }
+                    totalCostPnL += calculateCostPnL(acc);
+                } else {
+                    // 其他分頁：只計算該分頁類別的資產
+                    const currentType = PAGE_TYPES[currentPage];
+                    if(acc.type === currentType) {
+                        totalCostPnL += calculateCostPnL(acc);
+                    }
+                }
+            }
+        });
+
         // 更新總資產顯示
         document.getElementById('totalNetWorth').innerText = formatAmount(displayAmount);
         const b = document.getElementById('totalPnLBlock');
         const bd = document.getElementById('totalPnLBadge');
-        if(Math.abs(totalDailyPnL) > 1) {
+        if(Math.abs(totalDailyPnL) > 1 || Math.abs(totalCostPnL) > 1) {
             b.style.display = 'block';
             // 重置樣式，確保損益正常顯示
             bd.style.visibility = 'visible';
             bd.style.height = '';
             bd.style.margin = '';
             bd.style.padding = '';
-            const s = totalDailyPnL > 0 ? '+' : '';
-            const c = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
-            bd.innerHTML = `損益: <span class="${c}">${s}${formatAmount(totalDailyPnL)}</span>`;
+            let pnlHtml = '';
+            // 顯示當日損益
+            if(Math.abs(totalDailyPnL) > 1) {
+                const s = totalDailyPnL > 0 ? '+' : '';
+                const c = totalDailyPnL > 0 ? 'pnl-up' : 'pnl-down';
+                pnlHtml += `今日: <span class="${c}">${s}${formatAmount(totalDailyPnL)}</span>`;
+            }
+            // 顯示總損益
+            if(Math.abs(totalCostPnL) > 1) {
+                if(pnlHtml) pnlHtml += ' / ';
+                const s = totalCostPnL > 0 ? '+' : '';
+                const c = totalCostPnL > 0 ? 'pnl-up' : 'pnl-down';
+                pnlHtml += `總計: <span class="${c}">${s}${formatAmount(totalCostPnL)}</span>`;
+            }
+            bd.innerHTML = pnlHtml;
         } else {
             // 即使沒有損益也顯示空白區塊，保持與其他分頁對齊（完全不可見但佔位）
             b.style.display = 'block';
@@ -2741,11 +2782,12 @@
                         // 其他類型：保持原樣，在右側顯示盈虧
                         let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
                         let pnlLines = [];
+                        // 同時顯示當日損益和總損益
                         if(Math.abs(dailyPnL) > 0.01) {
-                            pnlLines.push(formatPnL(dailyPnL));
+                            pnlLines.push(`<span style="font-size: 10px; color: #8e8e93;">今日</span><br>${formatPnL(dailyPnL)}`);
                         }
                         if(hasLine3 && Math.abs(costPnL) > 0.01) {
-                            pnlLines.push(formatPnL(costPnL));
+                            pnlLines.push(`<span style="font-size: 10px; color: #8e8e93;">總計</span><br>${formatPnL(costPnL)}`);
                         }
                         if(pnlLines.length > 0) {
                             pnlHtml = pnlLines.map(value => `<div class="amount-pnl item-numbers">${value}</div>`).join('');
@@ -3161,7 +3203,6 @@
 </script>
 </body>
 </html>
-
 
 
 
