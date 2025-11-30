@@ -903,28 +903,124 @@
     const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#0a84ff', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
     const TYPE_NAMES = { 'bank': '銀行', 'stock': '美股', 'twstock': '台股', 'crypto': '加密貨幣', 'debt': '負債' };
     
-    // 固定的圖表項目顏色順序（所有分類都使用這個順序）
-    const CHART_ITEM_COLORS = [
-        '#64d2ff',  // 1. 藍色
-        '#bf5af2',  // 2. 紫色
-        '#ff9f0a',  // 3. 橘色
-        '#30d158',  // 4. 綠色
-        '#ff453a',  // 5. 紅色
-        '#0a84ff',  // 6. 深藍色
-        '#ffd60a',  // 7. 黃色
-        '#ff6b9d',  // 8. 粉色
-        '#5ac8fa',  // 9. 淺藍色
-        '#af52de',  // 10. 深紫色
-        '#ff9500',  // 11. 深橘色
-        '#32d74b',  // 12. 亮綠色
-        '#ff2d55',  // 13. 玫瑰紅
-        '#007aff',  // 14. 系統藍
-        '#5856d6',  // 15. 靛藍色
-        '#ff3b30',  // 16. 鮮紅色
-        '#34c759',  // 17. 翠綠色
-        '#ffcc00',  // 18. 金色
-        '#ff6b35',  // 19. 珊瑚橘
-        '#8e8e93',  // 20. 灰色
+    // 為每個分類定義專屬主題配色（每個主題內顏色差異明顯，避免相近色）
+    const CHART_ITEM_COLOR_PALETTES = {
+        'bank': [
+            // 銀行主題 - 穩重金融風（完全避免相近色，每個顏色差異極大）
+            '#0a84ff',  // 1. 深藍色
+            '#ffcc00',  // 2. 金色（強對比）
+            '#32d74b',  // 3. 亮綠色（強對比）
+            '#ff6347',  // 4. 番茄紅（強對比）
+            '#00bfff',  // 5. 深天藍（強對比）
+            '#ffd700',  // 6. 金黃色（強對比）
+            '#9370db',  // 7. 中紫色（強對比）
+            '#34c759',  // 8. 翠綠色（強對比）
+            '#5ac8fa',  // 9. 淺藍色（強對比）
+            '#ff9f0a',  // 10. 橘色（強對比）
+            '#4169e1',  // 11. 皇家藍（強對比）
+            '#ff4500',  // 12. 橙紅色（強對比）
+            '#64d2ff',  // 13. 亮藍色（強對比）
+            '#00ff00',  // 14. 亮綠色（強對比）
+            '#007aff',  // 15. 系統藍（強對比）
+            '#ffd60a',  // 16. 黃色（強對比）
+            '#4682b4',  // 17. 鋼藍色（強對比）
+            '#ff7f50',  // 18. 珊瑚紅（強對比）
+            '#1e90ff',  // 19. 道奇藍（強對比）
+            '#5856d6',  // 20. 靛藍色（強對比）
+        ],
+        'stock': [
+            // 美股主題 - 科技金融風（完全避免相近色，每個顏色差異極大）
+            '#bf5af2',  // 1. 紫色
+            '#32d74b',  // 2. 亮綠色（強對比）
+            '#5ac8fa',  // 3. 淺藍色（強對比）
+            '#ff6347',  // 4. 番茄紅（強對比）
+            '#0a84ff',  // 5. 深藍色（強對比）
+            '#ffcc00',  // 6. 金色（強對比）
+            '#00bfff',  // 7. 深天藍（強對比）
+            '#ff9f0a',  // 8. 橘色（強對比）
+            '#64d2ff',  // 9. 亮藍色（強對比）
+            '#ffd60a',  // 10. 黃色（強對比）
+            '#007aff',  // 11. 系統藍（強對比）
+            '#ff4500',  // 12. 橙紅色（強對比）
+            '#4a90e2',  // 13. 天空藍（強對比）
+            '#00ff00',  // 14. 亮綠色（強對比）
+            '#5856d6',  // 15. 靛藍色（強對比）
+            '#ff7f50',  // 16. 珊瑚紅（強對比）
+            '#1e90ff',  // 17. 道奇藍（強對比）
+            '#34c759',  // 18. 翠綠色（強對比）
+            '#4169e1',  // 19. 皇家藍（強對比）
+            '#ff6b35',  // 20. 珊瑚橘（強對比）
+        ],
+        'twstock': [
+            // 台股主題 - 東方市場風（完全避免相近色，每個顏色差異極大）
+            '#0a84ff',  // 1. 深藍色
+            '#32d74b',  // 2. 亮綠色（強對比）
+            '#ff6347',  // 3. 番茄紅（強對比）
+            '#00bfff',  // 4. 深天藍（強對比）
+            '#34c759',  // 5. 翠綠色（強對比）
+            '#ffcc00',  // 6. 金色（強對比）
+            '#0099cc',  // 7. 青藍色（強對比）
+            '#ff9f0a',  // 8. 橘色（強對比）
+            '#00cccc',  // 9. 青色（強對比）
+            '#bf5af2',  // 10. 紫色（強對比）
+            '#5ac8fa',  // 11. 淺藍色（強對比）
+            '#ff4500',  // 12. 橙紅色（強對比）
+            '#17a2b8',  // 13. 青綠色（強對比）
+            '#ffd60a',  // 14. 黃色（強對比）
+            '#0066cc',  // 15. 深藍（強對比）
+            '#9370db',  // 16. 中紫色（強對比）
+            '#64d2ff',  // 17. 亮藍色（強對比）
+            '#00ff00',  // 18. 亮綠色（強對比）
+            '#007aff',  // 19. 系統藍（強對比）
+            '#ff7f50',  // 20. 珊瑚紅（強對比）
+        ],
+        'crypto': [
+            // 加密貨幣主題 - 數位科技風（完全避免相近色，每個顏色差異極大）
+            '#ff9f0a',  // 1. 橘色
+            '#00ffff',  // 2. 青色（強對比）
+            '#ffcc00',  // 3. 金色（強對比）
+            '#00ff00',  // 4. 亮綠色（強對比）
+            '#ff6347',  // 5. 番茄紅（強對比）
+            '#00bfff',  // 6. 深天藍（強對比）
+            '#ffd60a',  // 7. 黃色（強對比）
+            '#bf5af2',  // 8. 紫色（強對比）
+            '#ff4500',  // 9. 橙紅色（強對比）
+            '#5ac8fa',  // 10. 淺藍色（強對比）
+            '#32d74b',  // 11. 亮綠色（強對比）
+            '#0a84ff',  // 12. 深藍色（強對比）
+            '#9370db',  // 13. 中紫色（強對比）
+            '#007aff',  // 14. 系統藍（強對比）
+            '#34c759',  // 15. 翠綠色（強對比）
+            '#64d2ff',  // 16. 亮藍色（強對比）
+            '#ff7f50',  // 17. 珊瑚紅（強對比）
+            '#4a90e2',  // 18. 天空藍（強對比）
+            '#4169e1',  // 19. 皇家藍（強對比）
+            '#5856d6',  // 20. 靛藍色（強對比）
+        ]
+    };
+    
+    // 統一的備用顏色（當分類未定義時使用）
+    const CHART_ITEM_COLORS_FALLBACK = [
+        '#64d2ff',  // 藍色
+        '#bf5af2',  // 紫色
+        '#ff9f0a',  // 橘色
+        '#30d158',  // 綠色
+        '#ff453a',  // 紅色
+        '#0a84ff',  // 深藍色
+        '#ffd60a',  // 黃色
+        '#ff6b9d',  // 粉色
+        '#5ac8fa',  // 淺藍色
+        '#af52de',  // 深紫色
+        '#ff9500',  // 深橘色
+        '#32d74b',  // 亮綠色
+        '#ff2d55',  // 玫瑰紅
+        '#007aff',  // 系統藍
+        '#5856d6',  // 靛藍色
+        '#ff3b30',  // 鮮紅色
+        '#34c759',  // 翠綠色
+        '#ffcc00',  // 金色
+        '#ff6b35',  // 珊瑚橘
+        '#8e8e93',  // 灰色
     ];
 
     let editingId = null;
@@ -1810,17 +1906,23 @@
         let chartTitle = '';
         
         if(chartLevel === 'root' || (chartLevel === 'page' && currentPage === 0)) {
-            // 總覽分頁：顯示四個類別的總覽
-            chartData = [{name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:TYPE_COLORS.bank},{name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:TYPE_COLORS.stock},{name:TYPE_NAMES['twstock'],y:Math.round(groups.twstock),drilldown:'twstock',color:TYPE_COLORS.twstock},{name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:TYPE_COLORS.crypto}].filter(d=>d.y>0);
+            // 總覽分頁：顯示四個類別的總覽，使用各分類主題的第一個顏色
+            chartData = [
+                {name:TYPE_NAMES['bank'],y:Math.round(groups.bank),drilldown:'bank',color:CHART_ITEM_COLOR_PALETTES['bank']?.[0] || TYPE_COLORS.bank},
+                {name:TYPE_NAMES['stock'],y:Math.round(groups.stock),drilldown:'stock',color:CHART_ITEM_COLOR_PALETTES['stock']?.[0] || TYPE_COLORS.stock},
+                {name:TYPE_NAMES['twstock'],y:Math.round(groups.twstock),drilldown:'twstock',color:CHART_ITEM_COLOR_PALETTES['twstock']?.[0] || TYPE_COLORS.twstock},
+                {name:TYPE_NAMES['crypto'],y:Math.round(groups.crypto),drilldown:'crypto',color:CHART_ITEM_COLOR_PALETTES['crypto']?.[0] || TYPE_COLORS.crypto}
+            ].filter(d=>d.y>0);
             chartTitle = '';
         } else if(chartLevel === 'page' && currentPage > 0) {
             // 分頁模式：顯示當前分頁類別內的資產分布
             const currentType = PAGE_TYPES[currentPage];
-            // 使用固定的顏色順序（循環使用）
+            // 使用該分類專屬的色系（循環使用）
+            const colorPalette = CHART_ITEM_COLOR_PALETTES[currentType] || CHART_ITEM_COLORS_FALLBACK;
             chartData = (currentDetails[currentType] || []).map((item, index) => {
                 return {
                     ...item,
-                    color: CHART_ITEM_COLORS[index % CHART_ITEM_COLORS.length]
+                    color: colorPalette[index % colorPalette.length]
                 };
             });
             chartTitle = PAGE_NAMES[currentPage];
@@ -1913,11 +2015,12 @@
             switchToPage(pageIndex);
         }
         
-        // 準備數據（使用固定的顏色順序）
+        // 準備數據（使用該分類專屬的色系）
+        const colorPalette = CHART_ITEM_COLOR_PALETTES[cat] || CHART_ITEM_COLORS_FALLBACK;
         const formattedData = data.map((item, index) => ({
             name: item.name,
             y: item.y,
-            color: item.color || CHART_ITEM_COLORS[index % CHART_ITEM_COLORS.length]
+            color: item.color || colorPalette[index % colorPalette.length]
         }));
         
         if(chartInstance.series[0]) {
