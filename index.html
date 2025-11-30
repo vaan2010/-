@@ -600,6 +600,19 @@
         .form-label { font-size: 16px; color: #fff; min-width: 80px; }
         .form-input { background: transparent; border: none; color: var(--text-secondary); text-align: right; font-size: 16px; outline: none; width: 100%; }
         select.form-input { appearance: none; direction: rtl; }
+        .calc-btn { background: #2c2c2e; border: none; color: #0a84ff; font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .calc-btn:hover { background: #3a3a3c; transform: scale(1.05); }
+        .calc-btn:active { transform: scale(0.95); }
+        
+        /* Calculator Styles */
+        .calc-key { background: #2c2c2e; border: none; color: #fff; font-size: 24px; font-weight: 400; cursor: pointer; padding: 20px; border-radius: 12px; transition: all 0.15s; user-select: none; touch-action: manipulation; }
+        .calc-key:active { background: #3a3a3c; transform: scale(0.95); }
+        .calc-key:hover { background: #3a3a3c; }
+        .calc-key-function { background: #3a3a3c; color: #0a84ff; font-size: 18px; }
+        .calc-key-operator { background: #0a84ff; color: #fff; font-size: 24px; font-weight: 500; }
+        .calc-key-operator:active { background: #0970d6; }
+        .calc-key-equals { background: #0a84ff; color: #fff; font-size: 24px; font-weight: 500; }
+        .calc-key-equals:active { background: #0970d6; }
         .delete-btn-area { margin-top: 30px; padding: 0 16px; padding-bottom: 50px; }
         .btn-delete { width: 100%; background: #1c1c1e; color: var(--color-debt); border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 500; }
         .hint-text { color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px; }
@@ -883,14 +896,55 @@
                     <div class="form-row" id="rowName"><span class="form-label">名稱</span><input type="text" id="inpName" class="form-input" placeholder="例如: NVDA"></div>
                     <div class="form-row" id="rowSymbol" style="display:none;"><span class="form-label">代碼</span><input type="text" id="inpSymbol" class="form-input" placeholder="例如: NVDA" oninput="syncNameFromSymbol(); updateAIButtonState();"></div>
                     <div class="form-row" id="rowCurrency"><span class="form-label">幣別</span><select id="inpCurrency" class="form-input"><option value="TWD">TWD (新台幣)</option><option value="USD">USD (美金)</option></select></div>
-                    <div class="form-row"><span class="form-label" id="lblBalance">股數</span><input type="number" id="inpBalance" class="form-input" placeholder="0"></div>
-                    <div class="form-row" id="rowCost" style="display:none;"><span class="form-label">平均成本</span><input type="number" id="inpCost" class="form-input" placeholder="0"></div>
+                    <div class="form-row"><span class="form-label" id="lblBalance">股數</span><div style="display: flex; align-items: center; gap: 8px; width: 100%;"><input type="number" id="inpBalance" class="form-input" placeholder="0" style="flex: 1;"><button class="calc-btn" onclick="openCalculator('inpBalance')" type="button" title="計算機"><i class="fas fa-calculator"></i></button></div></div>
+                    <div class="form-row" id="rowCost" style="display:none;"><span class="form-label">平均成本</span><div style="display: flex; align-items: center; gap: 8px; width: 100%;"><input type="number" id="inpCost" class="form-input" placeholder="0" style="flex: 1;"><button class="calc-btn" onclick="openCalculator('inpCost')" type="button" title="計算機"><i class="fas fa-calculator"></i></button></div></div>
                 </div>
                 <div id="symbolHint" class="hint-text" style="display:none;">* 輸入代碼，預設使用美金報價</div>
                 <div class="delete-btn-area"><button id="btnDelete" class="btn-delete" onclick="deleteAccount()">刪除</button></div>
             </div>
             <div id="contentDetail" class="tab-content">
                 <div class="tx-list" id="txListContainer"><div class="tx-no-data">尚未匯入明細資料</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="modal" style="z-index: 2000;" onclick="event.target.id === 'calculatorModal' && closeCalculator()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="border-radius: 20px 20px 0 0;">
+                <span class="modal-title">計算機</span>
+                <button class="btn-icon" onclick="closeCalculator()" style="font-weight:bold;">完成</button>
+            </div>
+            <div style="padding: 20px; background: #000;">
+                <div style="background: #1c1c1e; border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: flex-end;">
+                    <div id="calcDisplay" style="color: #fff; font-size: 36px; font-weight: 300; text-align: right; word-break: break-all; width: 100%; font-family: 'SF Mono', 'Monaco', monospace;">0</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    <button class="calc-key calc-key-function" onclick="calcInput('C')">C</button>
+                    <button class="calc-key calc-key-function" onclick="calcInput('CE')">CE</button>
+                    <button class="calc-key calc-key-function" onclick="calcInput('backspace')">⌫</button>
+                    <button class="calc-key calc-key-operator" onclick="calcInput('/')">÷</button>
+                    
+                    <button class="calc-key" onclick="calcInput('7')">7</button>
+                    <button class="calc-key" onclick="calcInput('8')">8</button>
+                    <button class="calc-key" onclick="calcInput('9')">9</button>
+                    <button class="calc-key calc-key-operator" onclick="calcInput('*')">×</button>
+                    
+                    <button class="calc-key" onclick="calcInput('4')">4</button>
+                    <button class="calc-key" onclick="calcInput('5')">5</button>
+                    <button class="calc-key" onclick="calcInput('6')">6</button>
+                    <button class="calc-key calc-key-operator" onclick="calcInput('-')">−</button>
+                    
+                    <button class="calc-key" onclick="calcInput('1')">1</button>
+                    <button class="calc-key" onclick="calcInput('2')">2</button>
+                    <button class="calc-key" onclick="calcInput('3')">3</button>
+                    <button class="calc-key calc-key-operator" onclick="calcInput('+')">+</button>
+                    
+                    <button class="calc-key" onclick="calcInput('±')">±</button>
+                    <button class="calc-key" onclick="calcInput('0')">0</button>
+                    <button class="calc-key" onclick="calcInput('.')">.</button>
+                    <button class="calc-key calc-key-equals" onclick="calcInput('=')">=</button>
+                </div>
             </div>
         </div>
     </div>
@@ -903,124 +957,124 @@
     const TYPE_COLORS = { 'bank': '#64d2ff', 'stock': '#bf5af2', 'twstock': '#0a84ff', 'crypto': '#ff9f0a', 'debt': '#ff453a' };
     const TYPE_NAMES = { 'bank': '銀行', 'stock': '美股', 'twstock': '台股', 'crypto': '加密貨幣', 'debt': '負債' };
     
-    // 為每個分類定義專屬主題配色（每個主題內顏色差異明顯，避免相近色）
+    // 為每個分類定義專屬主題配色（每個主題內顏色差異明顯，避免相近色，所有顏色都是淡色）
     const CHART_ITEM_COLOR_PALETTES = {
         'bank': [
-            // 銀行主題 - 穩重金融風（完全避免相近色，每個顏色差異極大）
-            '#0a84ff',  // 1. 深藍色
-            '#ffcc00',  // 2. 金色（強對比）
-            '#32d74b',  // 3. 亮綠色（強對比）
-            '#ff6347',  // 4. 番茄紅（強對比）
-            '#00bfff',  // 5. 深天藍（強對比）
-            '#ffd700',  // 6. 金黃色（強對比）
-            '#9370db',  // 7. 中紫色（強對比）
-            '#34c759',  // 8. 翠綠色（強對比）
-            '#5ac8fa',  // 9. 淺藍色（強對比）
-            '#ff9f0a',  // 10. 橘色（強對比）
-            '#4169e1',  // 11. 皇家藍（強對比）
-            '#ff4500',  // 12. 橙紅色（強對比）
-            '#64d2ff',  // 13. 亮藍色（強對比）
-            '#00ff00',  // 14. 亮綠色（強對比）
-            '#007aff',  // 15. 系統藍（強對比）
-            '#ffd60a',  // 16. 黃色（強對比）
-            '#4682b4',  // 17. 鋼藍色（強對比）
-            '#ff7f50',  // 18. 珊瑚紅（強對比）
-            '#1e90ff',  // 19. 道奇藍（強對比）
-            '#5856d6',  // 20. 靛藍色（強對比）
+            // 銀行主題 - 穩重金融風（完全避免相近色，每個顏色差異極大，淡色版）
+            '#6bb5ff',  // 1. 淡藍色
+            '#ffeb80',  // 2. 淡金色
+            '#7ee58f',  // 3. 淡綠色
+            '#ffa8a0',  // 4. 淡紅色
+            '#80e5ff',  // 5. 淡天藍
+            '#ffe880',  // 6. 淡金黃色
+            '#c9a8f0',  // 7. 淡紫色
+            '#7ee58f',  // 8. 淡翠綠色
+            '#a8e8ff',  // 9. 淡淺藍色
+            '#ffcc80',  // 10. 淡橘色
+            '#9bb3f0',  // 11. 淡皇家藍
+            '#ff9980',  // 12. 淡橙紅色
+            '#b3e8ff',  // 13. 淡亮藍色
+            '#80ff80',  // 14. 淡亮綠色
+            '#80b5ff',  // 15. 淡系統藍
+            '#ffeb80',  // 16. 淡黃色
+            '#9bb3d0',  // 17. 淡鋼藍色
+            '#ffb3a0',  // 18. 淡珊瑚紅
+            '#9fd0ff',  // 19. 淡道奇藍
+            '#a8a0e8',  // 20. 淡靛藍色
         ],
         'stock': [
-            // 美股主題 - 科技金融風（完全避免相近色，每個顏色差異極大）
-            '#bf5af2',  // 1. 紫色
-            '#32d74b',  // 2. 亮綠色（強對比）
-            '#5ac8fa',  // 3. 淺藍色（強對比）
-            '#ff6347',  // 4. 番茄紅（強對比）
-            '#0a84ff',  // 5. 深藍色（強對比）
-            '#ffcc00',  // 6. 金色（強對比）
-            '#00bfff',  // 7. 深天藍（強對比）
-            '#ff9f0a',  // 8. 橘色（強對比）
-            '#64d2ff',  // 9. 亮藍色（強對比）
-            '#ffd60a',  // 10. 黃色（強對比）
-            '#007aff',  // 11. 系統藍（強對比）
-            '#ff4500',  // 12. 橙紅色（強對比）
-            '#4a90e2',  // 13. 天空藍（強對比）
-            '#00ff00',  // 14. 亮綠色（強對比）
-            '#5856d6',  // 15. 靛藍色（強對比）
-            '#ff7f50',  // 16. 珊瑚紅（強對比）
-            '#1e90ff',  // 17. 道奇藍（強對比）
-            '#34c759',  // 18. 翠綠色（強對比）
-            '#4169e1',  // 19. 皇家藍（強對比）
-            '#ff6b35',  // 20. 珊瑚橘（強對比）
+            // 美股主題 - 科技金融風（完全避免相近色，每個顏色差異極大，淡色版）
+            '#d9a8f8',  // 1. 淡紫色
+            '#7ee58f',  // 2. 淡亮綠色
+            '#a8e8ff',  // 3. 淡淺藍色
+            '#ffa8a0',  // 4. 淡番茄紅
+            '#6bb5ff',  // 5. 淡深藍色
+            '#ffeb80',  // 6. 淡金色
+            '#80e5ff',  // 7. 淡深天藍
+            '#ffcc80',  // 8. 淡橘色
+            '#b3e8ff',  // 9. 淡亮藍色
+            '#ffeb80',  // 10. 淡黃色
+            '#80b5ff',  // 11. 淡系統藍
+            '#ff9980',  // 12. 淡橙紅色
+            '#9bb3f0',  // 13. 淡天空藍
+            '#80ff80',  // 14. 淡亮綠色
+            '#a8a0e8',  // 15. 淡靛藍色
+            '#ffb3a0',  // 16. 淡珊瑚紅
+            '#9fd0ff',  // 17. 淡道奇藍
+            '#7ee58f',  // 18. 淡翠綠色
+            '#9bb3f0',  // 19. 淡皇家藍
+            '#ffb380',  // 20. 淡珊瑚橘
         ],
         'twstock': [
-            // 台股主題 - 東方市場風（完全避免相近色，每個顏色差異極大）
-            '#0a84ff',  // 1. 深藍色
-            '#32d74b',  // 2. 亮綠色（強對比）
-            '#ff6347',  // 3. 番茄紅（強對比）
-            '#00bfff',  // 4. 深天藍（強對比）
-            '#34c759',  // 5. 翠綠色（強對比）
-            '#ffcc00',  // 6. 金色（強對比）
-            '#0099cc',  // 7. 青藍色（強對比）
-            '#ff9f0a',  // 8. 橘色（強對比）
-            '#00cccc',  // 9. 青色（強對比）
-            '#bf5af2',  // 10. 紫色（強對比）
-            '#5ac8fa',  // 11. 淺藍色（強對比）
-            '#ff4500',  // 12. 橙紅色（強對比）
-            '#17a2b8',  // 13. 青綠色（強對比）
-            '#ffd60a',  // 14. 黃色（強對比）
-            '#0066cc',  // 15. 深藍（強對比）
-            '#9370db',  // 16. 中紫色（強對比）
-            '#64d2ff',  // 17. 亮藍色（強對比）
-            '#00ff00',  // 18. 亮綠色（強對比）
-            '#007aff',  // 19. 系統藍（強對比）
-            '#ff7f50',  // 20. 珊瑚紅（強對比）
+            // 台股主題 - 東方市場風（完全避免相近色，每個顏色差異極大，淡色版）
+            '#6bb5ff',  // 1. 淡深藍色
+            '#7ee58f',  // 2. 淡亮綠色
+            '#ffa8a0',  // 3. 淡番茄紅
+            '#80e5ff',  // 4. 淡深天藍
+            '#7ee58f',  // 5. 淡翠綠色
+            '#ffeb80',  // 6. 淡金色
+            '#80ccff',  // 7. 淡青藍色
+            '#ffcc80',  // 8. 淡橘色
+            '#80e5e5',  // 9. 淡青色
+            '#d9a8f8',  // 10. 淡紫色
+            '#a8e8ff',  // 11. 淡淺藍色
+            '#ff9980',  // 12. 淡橙紅色
+            '#8fd4e0',  // 13. 淡青綠色
+            '#ffeb80',  // 14. 淡黃色
+            '#80b3ff',  // 15. 淡深藍
+            '#c9a8f0',  // 16. 淡中紫色
+            '#b3e8ff',  // 17. 淡亮藍色
+            '#80ff80',  // 18. 淡亮綠色
+            '#80b5ff',  // 19. 淡系統藍
+            '#ffb3a0',  // 20. 淡珊瑚紅
         ],
         'crypto': [
-            // 加密貨幣主題 - 數位科技風（完全避免相近色，每個顏色差異極大）
-            '#ff9f0a',  // 1. 橘色
-            '#00ffff',  // 2. 青色（強對比）
-            '#ffcc00',  // 3. 金色（強對比）
-            '#00ff00',  // 4. 亮綠色（強對比）
-            '#ff6347',  // 5. 番茄紅（強對比）
-            '#00bfff',  // 6. 深天藍（強對比）
-            '#ffd60a',  // 7. 黃色（強對比）
-            '#bf5af2',  // 8. 紫色（強對比）
-            '#ff4500',  // 9. 橙紅色（強對比）
-            '#5ac8fa',  // 10. 淺藍色（強對比）
-            '#32d74b',  // 11. 亮綠色（強對比）
-            '#0a84ff',  // 12. 深藍色（強對比）
-            '#9370db',  // 13. 中紫色（強對比）
-            '#007aff',  // 14. 系統藍（強對比）
-            '#34c759',  // 15. 翠綠色（強對比）
-            '#64d2ff',  // 16. 亮藍色（強對比）
-            '#ff7f50',  // 17. 珊瑚紅（強對比）
-            '#4a90e2',  // 18. 天空藍（強對比）
-            '#4169e1',  // 19. 皇家藍（強對比）
-            '#5856d6',  // 20. 靛藍色（強對比）
+            // 加密貨幣主題 - 數位科技風（完全避免相近色，每個顏色差異極大，淡色版）
+            '#ffcc80',  // 1. 淡橘色
+            '#80ffff',  // 2. 淡青色
+            '#ffeb80',  // 3. 淡金色
+            '#80ff80',  // 4. 淡亮綠色
+            '#ffa8a0',  // 5. 淡番茄紅
+            '#80e5ff',  // 6. 淡深天藍
+            '#ffeb80',  // 7. 淡黃色
+            '#d9a8f8',  // 8. 淡紫色
+            '#ff9980',  // 9. 淡橙紅色
+            '#a8e8ff',  // 10. 淡淺藍色
+            '#7ee58f',  // 11. 淡亮綠色
+            '#6bb5ff',  // 12. 淡深藍色
+            '#c9a8f0',  // 13. 淡中紫色
+            '#80b5ff',  // 14. 淡系統藍
+            '#7ee58f',  // 15. 淡翠綠色
+            '#b3e8ff',  // 16. 淡亮藍色
+            '#ffb3a0',  // 17. 淡珊瑚紅
+            '#9bb3f0',  // 18. 淡天空藍
+            '#9bb3f0',  // 19. 淡皇家藍
+            '#a8a0e8',  // 20. 淡靛藍色
         ]
     };
     
-    // 統一的備用顏色（當分類未定義時使用）
+    // 統一的備用顏色（當分類未定義時使用，淡色版）
     const CHART_ITEM_COLORS_FALLBACK = [
-        '#64d2ff',  // 藍色
-        '#bf5af2',  // 紫色
-        '#ff9f0a',  // 橘色
-        '#30d158',  // 綠色
-        '#ff453a',  // 紅色
-        '#0a84ff',  // 深藍色
-        '#ffd60a',  // 黃色
-        '#ff6b9d',  // 粉色
-        '#5ac8fa',  // 淺藍色
-        '#af52de',  // 深紫色
-        '#ff9500',  // 深橘色
-        '#32d74b',  // 亮綠色
-        '#ff2d55',  // 玫瑰紅
-        '#007aff',  // 系統藍
-        '#5856d6',  // 靛藍色
-        '#ff3b30',  // 鮮紅色
-        '#34c759',  // 翠綠色
-        '#ffcc00',  // 金色
-        '#ff6b35',  // 珊瑚橘
-        '#8e8e93',  // 灰色
+        '#b3e8ff',  // 淡藍色
+        '#d9a8f8',  // 淡紫色
+        '#ffcc80',  // 淡橘色
+        '#7ee58f',  // 淡綠色
+        '#ffa8a0',  // 淡紅色
+        '#6bb5ff',  // 淡深藍色
+        '#ffeb80',  // 淡黃色
+        '#ffb3d0',  // 淡粉色
+        '#a8e8ff',  // 淡淺藍色
+        '#c9a8f0',  // 淡深紫色
+        '#ffcc80',  // 淡深橘色
+        '#7ee58f',  // 淡亮綠色
+        '#ffa8c0',  // 淡玫瑰紅
+        '#80b5ff',  // 淡系統藍
+        '#a8a0e8',  // 淡靛藍色
+        '#ff9980',  // 淡鮮紅色
+        '#7ee58f',  // 淡翠綠色
+        '#ffeb80',  // 淡金色
+        '#ffb380',  // 淡珊瑚橘
+        '#c0c0c0',  // 淡灰色
     ];
 
     let editingId = null;
@@ -2237,6 +2291,217 @@
     }
     function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
     function closeModal() { document.getElementById('accountModal').style.display='none'; }
+    
+    // --- Calculator Functions ---
+    let currentCalcTarget = null; // 當前要填入的輸入欄位ID
+    let calcState = {
+        display: '0',
+        previousValue: null,
+        operator: null,
+        waitingForOperand: false
+    };
+    
+    function openCalculator(targetInputId) {
+        currentCalcTarget = targetInputId;
+        const input = document.getElementById(targetInputId);
+        const currentValue = input.value || '0';
+        
+        // 初始化計算機狀態
+        calcState.display = currentValue === '' ? '0' : currentValue;
+        calcState.previousValue = null;
+        calcState.operator = null;
+        calcState.waitingForOperand = false;
+        
+        updateCalcDisplay();
+        document.getElementById('calculatorModal').style.display = 'flex';
+    }
+    
+    function closeCalculator() {
+        // 將計算結果填入目標輸入欄位
+        if (currentCalcTarget) {
+            const input = document.getElementById(currentCalcTarget);
+            if (input) {
+                let finalValue = calcState.display;
+                
+                // 處理錯誤或無效值
+                if (finalValue === '錯誤' || finalValue === 'Infinity' || finalValue === 'NaN' || isNaN(parseFloat(finalValue))) {
+                    finalValue = input.value || '0'; // 保持原值
+                } else {
+                    // 格式化數值
+                    const numValue = parseFloat(finalValue);
+                    if (!isNaN(numValue)) {
+                        // 如果是整數，不顯示小數點
+                        finalValue = numValue % 1 === 0 ? String(numValue) : String(numValue);
+                    }
+                }
+                
+                input.value = finalValue;
+                // 觸發輸入事件，確保其他邏輯能正確運行
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+        currentCalcTarget = null;
+        document.getElementById('calculatorModal').style.display = 'none';
+    }
+    
+    function updateCalcDisplay() {
+        const display = document.getElementById('calcDisplay');
+        if (display) {
+            // 格式化顯示
+            let formatted = calcState.display;
+            
+            // 處理負號和數字
+            if (formatted === '-') {
+                formatted = '-0';
+            }
+            
+            // 處理 Infinity 或 NaN
+            if (formatted === 'Infinity' || formatted === 'NaN' || isNaN(parseFloat(formatted))) {
+                formatted = '錯誤';
+                calcState.display = '0';
+                calcState.previousValue = null;
+                calcState.operator = null;
+                calcState.waitingForOperand = true;
+            }
+            
+            // 限制顯示長度，避免過長
+            if (formatted.length > 15 && formatted !== '錯誤') {
+                const num = parseFloat(formatted);
+                if (!isNaN(num)) {
+                    formatted = num.toExponential(8);
+                }
+            }
+            
+            display.textContent = formatted;
+        }
+    }
+    
+    function calcInput(value) {
+        switch(value) {
+            case 'C': // Clear All
+                calcState.display = '0';
+                calcState.previousValue = null;
+                calcState.operator = null;
+                calcState.waitingForOperand = false;
+                break;
+                
+            case 'CE': // Clear Entry
+                calcState.display = '0';
+                break;
+                
+            case 'backspace':
+                if (calcState.display.length > 1) {
+                    calcState.display = calcState.display.slice(0, -1);
+                } else {
+                    calcState.display = '0';
+                }
+                break;
+                
+            case '±': // Toggle Sign
+                if (calcState.display !== '0') {
+                    calcState.display = calcState.display.startsWith('-') 
+                        ? calcState.display.slice(1) 
+                        : '-' + calcState.display;
+                }
+                break;
+                
+            case '.':
+                if (calcState.waitingForOperand) {
+                    calcState.display = '0.';
+                    calcState.waitingForOperand = false;
+                } else if (!calcState.display.includes('.')) {
+                    calcState.display += '.';
+                }
+                break;
+                
+            case '=':
+                if (calcState.operator && calcState.previousValue !== null) {
+                    const result = performCalculation();
+                    calcState.display = formatCalcResult(result);
+                    calcState.previousValue = null;
+                    calcState.operator = null;
+                    calcState.waitingForOperand = true;
+                }
+                break;
+                
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+                handleOperator(value);
+                break;
+                
+            default: // Numbers 0-9
+                if (calcState.waitingForOperand) {
+                    calcState.display = value;
+                    calcState.waitingForOperand = false;
+                } else {
+                    calcState.display = calcState.display === '0' ? value : calcState.display + value;
+                }
+                break;
+        }
+        
+        updateCalcDisplay();
+    }
+    
+    function handleOperator(nextOperator) {
+        const inputValue = parseFloat(calcState.display);
+        
+        if (calcState.previousValue === null) {
+            calcState.previousValue = inputValue;
+        } else if (calcState.operator) {
+            const result = performCalculation();
+            calcState.display = formatCalcResult(result);
+            calcState.previousValue = result;
+        }
+        
+        calcState.waitingForOperand = true;
+        calcState.operator = nextOperator;
+    }
+    
+    function performCalculation() {
+        const prev = parseFloat(calcState.previousValue);
+        const current = parseFloat(calcState.display);
+        
+        if (isNaN(prev) || isNaN(current)) return current;
+        
+        let result;
+        switch(calcState.operator) {
+            case '+':
+                result = prev + current;
+                break;
+            case '-':
+                result = prev - current;
+                break;
+            case '*':
+                result = prev * current;
+                break;
+            case '/':
+                if (current === 0) {
+                    return Infinity; // 返回 Infinity，讓顯示層處理
+                }
+                result = prev / current;
+                break;
+            default:
+                return current;
+        }
+        
+        // 格式化結果，避免過多小數位
+        if (result % 1 === 0) {
+            return result;
+        } else {
+            // 保留最多10位小數，但移除尾部的0
+            return parseFloat(result.toFixed(10));
+        }
+    }
+    
+    function formatCalcResult(value) {
+        if (value % 1 === 0) {
+            return String(value);
+        }
+        // 移除尾部多餘的0
+        return String(parseFloat(value.toFixed(10)));
+    }
     function updateBrokerOptions() {
         const t = document.getElementById('inpType').value;
         const brokerSelect = document.getElementById('brokerSelect');
