@@ -905,6 +905,7 @@
 
     let editingId = null;
     let chartInstance = null;
+    let chartAnimationEngine = null; // 圖表動畫引擎
     let clickTimer = null; 
     let currentDetails = {};
     let chartLevel = 'root';
@@ -1240,6 +1241,426 @@
 
     // 3. Define ALL Functions (Chart, UI, Logic)
 
+    // --- Helper Functions ---
+    // 將十六進制顏色轉換為 HSL 色調值
+    function hexToHue(hex) {
+        // 移除 # 符號
+        hex = hex.replace('#', '');
+        
+        // 轉換為 RGB
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const delta = max - min;
+        
+        let hue = 0;
+        if (delta !== 0) {
+            if (max === r) {
+                hue = ((g - b) / delta) % 6;
+            } else if (max === g) {
+                hue = (b - r) / delta + 2;
+            } else {
+                hue = (r - g) / delta + 4;
+            }
+        }
+        hue = Math.round(hue * 60);
+        return hue < 0 ? hue + 360 : hue;
+    }
+
+    // --- Chart Animation Engine ---
+    class ChartAnimationEngine {
+        constructor(chart) {
+            this.chart = chart;
+            this.isAnimating = false;
+            this.animationQueue = [];
+        }
+
+        // 主要的動畫方法 - 支持所有場景
+        animate(options) {
+            const {
+                newData,
+                animationType = 'switch', // 'switch', 'refresh', 'simulate'
+                duration = 800,
+                easing = 'easeOutQuart',
+                onStart,
+                onProgress,
+                onComplete
+            } = options;
+
+            // 如果正在動畫中，加入隊列
+            if (this.isAnimating) {
+                this.animationQueue.push(options);
+                return;
+            }
+
+            this.isAnimating = true;
+
+            if (onStart) onStart();
+
+            switch (animationType) {
+                case 'switch':
+                    this.animateSwitch(newData, duration, easing, onProgress, () => {
+                        this.isAnimating = false;
+                        if (onComplete) onComplete();
+                        this.processQueue();
+                    });
+                    break;
+
+                case 'refresh':
+                    this.animateRefresh(newData, duration, easing, onProgress, () => {
+                        this.isAnimating = false;
+                        if (onComplete) onComplete();
+                        this.processQueue();
+                    });
+                    break;
+
+                case 'simulate':
+                    this.animateSimulate(newData, duration, easing, onProgress, () => {
+                        this.isAnimating = false;
+                        if (onComplete) onComplete();
+                        this.processQueue();
+                    });
+                    break;
+
+                default:
+                    this.animateSwitch(newData, duration, easing, onProgress, () => {
+                        this.isAnimating = false;
+                        if (onComplete) onComplete();
+                        this.processQueue();
+                    });
+            }
+        }
+
+        // 分類切換動畫 - 手動步進式動畫（支持不同數量項目）
+        animateSwitch(newData, duration, easing, onProgress, onComplete) {
+            if (!this.chart || !this.chart.series) {
+                if (onComplete) onComplete();
+                return;
+            }
+            
+            // 如果沒有系列，先創建一個空系列以便動畫可以工作
+            if (!this.chart.series[0] || this.chart.series[0].data.length === 0) {
+                // 使用空數據初始化系列
+                this.chart.addSeries({
+                    name: '資產',
+                    data: newData.map(item => ({ name: item.name, y: 0, color: item.color || '#667eea' })),
+                    type: 'pie',
+                    innerSize: '55%',
+                    size: '90%',
+                    center: ['50%', '50%'],
+                    borderWidth: 0,
+                    slicedOffset: 8,
+                    animation: { duration: 0 },
+                    dataLabels: { enabled: true },
+                    states: { hover: { enabled: false } }
+                }, false);
+            }
+            
+            if (!this.chart.series[0]) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            // 獲取起始數據（按名稱建立映射）
+            const startDataMap = new Map();
+            this.chart.series[0].data.forEach(point => {
+                startDataMap.set(point.name, {
+                    name: point.name,
+                    y: point.y,
+                    color: point.color || point.options?.color
+                });
+            });
+
+            // 建立目標數據映射
+            const targetDataMap = new Map();
+            newData.forEach(item => {
+                targetDataMap.set(item.name, {
+                    name: item.name,
+                    y: item.y,
+                    color: item.color
+                });
+            });
+
+            // 合併所有唯一的項目名稱（起始 + 目標）
+            const allNames = new Set([...startDataMap.keys(), ...targetDataMap.keys()]);
+            
+            // 建立動畫映射：每個項目都有起始值和目標值
+            const animationMap = new Map();
+            allNames.forEach(name => {
+                const startPoint = startDataMap.get(name) || { name, y: 0, color: targetDataMap.get(name)?.color || '#667eea' };
+                const targetPoint = targetDataMap.get(name) || { name, y: 0, color: startPoint.color };
+                animationMap.set(name, {
+                    start: startPoint.y,
+                    target: targetPoint.y,
+                    color: targetPoint.color || startPoint.color
+                });
+            });
+
+            const startTime = performance.now();
+            let animationFrameId;
+            let lastUpdateTime = startTime;
+            let frameCount = 0;
+
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = this.easeFunctions[easing] ? this.easeFunctions[easing](progress) : progress;
+
+                // 限制更新頻率，避免過於頻繁的重繪（約60fps）
+                if (currentTime - lastUpdateTime >= 16) {
+                    // 計算每個項目的中間值，按照目標數據的順序排列
+                    const intermediateData = [];
+                    
+                    // 先添加目標數據中存在的項目（按目標順序）
+                    newData.forEach(targetItem => {
+                        const anim = animationMap.get(targetItem.name);
+                        if (anim) {
+                            const currentY = anim.start + (anim.target - anim.start) * easedProgress;
+                            
+                            // 只包含值大於0的項目（避免顯示0值項目）
+                            if (currentY > 0.1 || progress >= 1) {
+                                intermediateData.push({
+                                    name: targetItem.name,
+                                    y: Math.max(0, currentY),
+                                    color: anim.color
+                                });
+                            }
+                        }
+                    });
+                    
+                    // 再添加只在起始數據中存在的項目（將要消失的項目）
+                    allNames.forEach(name => {
+                        if (!targetDataMap.has(name) && startDataMap.has(name)) {
+                            const anim = animationMap.get(name);
+                            const currentY = anim.start + (anim.target - anim.start) * easedProgress;
+                            
+                            // 只包含值大於0的項目
+                            if (currentY > 0.1) {
+                                intermediateData.push({
+                                    name: name,
+                                    y: Math.max(0, currentY),
+                                    color: anim.color
+                                });
+                            }
+                        }
+                    });
+
+                    // 更新圖表數據，保持起始角度不變
+                    try {
+                        this.chart.series[0].setData(intermediateData, false);
+                        this.chart.redraw(false);
+                    } catch (e) {
+                        console.error('動畫更新錯誤:', e);
+                    }
+
+                    lastUpdateTime = currentTime;
+                }
+
+                if (onProgress) onProgress(easedProgress);
+
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    // 最終更新到精確值（只包含目標數據中存在的項目）
+                    try {
+                        this.chart.series[0].setData(newData, false);
+                        this.chart.redraw(false);
+                    } catch (e) {
+                        console.error('最終更新錯誤:', e);
+                    }
+                    if (onProgress) onProgress(1.0);
+                    onComplete();
+                }
+            };
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // 數據重新整理動畫 - 帶載入效果
+        animateRefresh(newData, duration, easing, onProgress, onComplete) {
+            // 第一階段：顯示載入狀態 (淡出舊數據)
+            this.fadeOutSeries(300, () => {
+                if (onProgress) onProgress(0.3);
+
+                // 第二階段：數據更新 (隱藏狀態)
+                setTimeout(() => {
+                    if (!this.chart || !this.chart.series || !this.chart.series[0]) {
+                        if (onComplete) onComplete();
+                        return;
+                    }
+
+                    this.chart.series[0].setData(newData, false);
+                    this.chart.redraw(false);
+
+                    if (onProgress) onProgress(0.7);
+
+                    // 第三階段：淡入新數據
+                    setTimeout(() => {
+                        this.chart.series[0].setData(newData, true);
+                        if (onProgress) onProgress(1.0);
+                        setTimeout(onComplete, duration + 100);
+                    }, 200);
+                }, 200);
+            });
+        }
+
+        // 數據變化模擬動畫 - 步進式更新（支持不同數量的項目）
+        animateSimulate(targetData, totalDuration, easing, onProgress, onComplete) {
+            if (!this.chart || !this.chart.series || !this.chart.series[0]) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            // 獲取起始數據（按名稱建立映射）
+            const startDataMap = new Map();
+            this.chart.series[0].data.forEach(point => {
+                startDataMap.set(point.name, {
+                    name: point.name,
+                    y: point.y,
+                    color: point.color || point.options?.color
+                });
+            });
+
+            // 建立目標數據映射
+            const targetDataMap = new Map();
+            targetData.forEach(item => {
+                targetDataMap.set(item.name, {
+                    name: item.name,
+                    y: item.y,
+                    color: item.color
+                });
+            });
+
+            // 合併所有唯一的項目名稱（起始 + 目標）
+            const allNames = new Set([...startDataMap.keys(), ...targetDataMap.keys()]);
+            
+            // 建立動畫映射：每個項目都有起始值和目標值
+            const animationMap = new Map();
+            allNames.forEach(name => {
+                const startPoint = startDataMap.get(name) || { name, y: 0, color: targetDataMap.get(name)?.color || '#667eea' };
+                const targetPoint = targetDataMap.get(name) || { name, y: 0, color: startPoint.color };
+                animationMap.set(name, {
+                    start: startPoint.y,
+                    target: targetPoint.y,
+                    color: targetPoint.color || startPoint.color
+                });
+            });
+
+            const steps = 15;
+            const stepDuration = totalDuration / steps;
+            let currentStep = 0;
+
+            const animateStep = () => {
+                currentStep++;
+                const progress = currentStep / steps;
+                const easedProgress = this.easeFunctions[easing](progress);
+
+                // 計算每個項目的中間值
+                const intermediateData = [];
+                allNames.forEach(name => {
+                    const anim = animationMap.get(name);
+                    const currentY = anim.start + (anim.target - anim.start) * easedProgress;
+                    
+                    // 只包含值大於0的項目（避免顯示0值項目）
+                    if (currentY > 0.1 || currentStep === steps) {
+                        intermediateData.push({
+                            name: name,
+                            y: Math.max(0, currentY),
+                            color: anim.color
+                        });
+                    }
+                });
+
+                // 更新圖表（無動畫，避免閃爍）
+                try {
+                    this.chart.series[0].setData(intermediateData, false);
+                    this.chart.redraw(false);
+                } catch (e) {
+                    console.error('動畫更新錯誤:', e);
+                }
+
+                if (onProgress) onProgress(easedProgress);
+
+                if (currentStep < steps) {
+                    setTimeout(animateStep, stepDuration);
+                } else {
+                    // 最終更新到精確值（只包含目標數據中存在的項目）
+                    try {
+                        this.chart.series[0].setData(targetData, false);
+                        this.chart.redraw(false);
+                    } catch (e) {
+                        console.error('最終更新錯誤:', e);
+                    }
+                    onComplete();
+                }
+            };
+
+            animateStep();
+        }
+
+        // 淡出系列
+        fadeOutSeries(duration, callback) {
+            const series = this.chart.series[0];
+            if (!series) {
+                if (callback) callback();
+                return;
+            }
+
+            // 動畫淡出
+            series.points.forEach(point => {
+                if (point.graphic) {
+                    point.graphic.animate({
+                        opacity: 0
+                    }, {
+                        duration: duration,
+                        easing: 'easeOut'
+                    });
+                }
+            });
+
+            // 同時淡出標籤
+            if (series.dataLabelsGroup) {
+                series.dataLabelsGroup.animate({
+                    opacity: 0
+                }, {
+                    duration: duration,
+                    easing: 'easeOut'
+                });
+            }
+
+            setTimeout(() => {
+                if (callback) callback();
+            }, duration);
+        }
+
+        // Easing 函數
+        easeFunctions = {
+            linear: t => t,
+            easeIn: t => t * t,
+            easeOut: t => t * (2 - t),
+            easeInOut: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+            easeOutQuart: t => 1 - Math.pow(1 - t, 4),
+            easeInQuart: t => t * t * t * t,
+            bounce: t => {
+                if (t < 1/2.75) return 7.5625 * t * t;
+                if (t < 2/2.75) return 7.5625 * (t -= 1.5/2.75) * t + 0.75;
+                if (t < 2.5/2.75) return 7.5625 * (t -= 2.25/2.75) * t + 0.9375;
+                return 7.5625 * (t -= 2.625/2.75) * t + 0.984375;
+            }
+        };
+
+        // 處理動畫隊列
+        processQueue() {
+            if (this.animationQueue.length > 0) {
+                const nextAnimation = this.animationQueue.shift();
+                this.animate(nextAnimation);
+            }
+        }
+    }
+
     // --- Chart ---
     function onPointClick(e) { 
         e.stopPropagation(); 
@@ -1312,14 +1733,27 @@
         } else if(chartLevel === 'page' && currentPage > 0) {
             // 分頁模式：顯示當前分頁類別內的資產分布
             const currentType = PAGE_TYPES[currentPage];
-            chartData = currentDetails[currentType] || [];
+            // 為每個項目生成不同的顏色（基於基礎顏色生成漸變）
+            const baseColor = TYPE_COLORS[currentType] || '#667eea';
+            chartData = (currentDetails[currentType] || []).map((item, index) => {
+                // 使用 HSL 顏色空間生成不同的顏色
+                const baseHue = hexToHue(baseColor);
+                const hue = (baseHue + index * 40) % 360; // 每個項目間隔 40 度
+                const saturation = 70 + (index % 3) * 5; // 變化飽和度
+                const lightness = 55 + (index % 4) * 3; // 變化亮度
+                return {
+                    ...item,
+                    color: `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                };
+            });
             chartTitle = PAGE_NAMES[currentPage];
         } else if(chartLevel === 'detail') {
             // 詳細模式：已經在enterDetailLevel中處理，不在此更新
             return;
         }
         
-        const animationConfig = animate ? {duration:800,easing:'easeOutQuart'} : {duration:0};
+        // 禁用 Highcharts 內建動畫，使用自定義動畫引擎
+        const animationConfig = {duration:0};
         
         if(!chartInstance){ 
             chartInstance=Highcharts.chart('assetChart',{
@@ -1330,16 +1764,38 @@
                 series:[{name:'資產',data:chartData}]
             }); 
             disableChartHover();
+            // 初始化動畫引擎
+            if (!chartAnimationEngine && chartInstance) {
+                chartAnimationEngine = new ChartAnimationEngine(chartInstance);
+            }
         } else { 
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
                 chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}, animate); 
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:0},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}, false); 
                     disableChartHover();
+                    // 初始化動畫引擎
+                    if (!chartAnimationEngine) {
+                        chartAnimationEngine = new ChartAnimationEngine(chartInstance);
+                    }
                 } else { 
-                    chartInstance.series[0].setData(chartData, animate);
-                    // 更新圖表大小
-                    chartInstance.series[0].update({size:'90%'}, false);
+                    // 使用動畫引擎更新圖表
+                    if (chartAnimationEngine && animate) {
+                        chartAnimationEngine.animate({
+                            newData: chartData,
+                            animationType: 'switch',
+                            duration: 400,
+                            easing: 'easeOutQuart',
+                            onComplete: () => {
+                                // 更新圖表大小
+                                chartInstance.series[0].update({size:'90%'}, false);
+                            }
+                        });
+                    } else {
+                        // 沒有動畫或動畫引擎未初始化，直接更新
+                        chartInstance.series[0].setData(chartData, false);
+                        chartInstance.series[0].update({size:'90%'}, false);
+                    }
                 } 
             } else if(chartLevel === 'detail') {
                 // 詳細模式不在此更新，由enterDetailLevel處理
@@ -1357,10 +1813,39 @@
             switchToPage(pageIndex);
         }
         
-        if(chartInstance.series[0])chartInstance.series[0].remove(false); 
-        chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:data, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:800,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
-        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
-        disableChartHover();
+        // 準備數據（確保包含顏色）
+        const formattedData = data.map(item => ({
+            name: item.name,
+            y: item.y,
+            color: item.color
+        }));
+        
+        if(chartInstance.series[0]) {
+            // 使用動畫引擎進行切換
+            if (chartAnimationEngine) {
+                chartAnimationEngine.animate({
+                    newData: formattedData,
+                    animationType: 'switch',
+                    duration: 400,
+                    easing: 'easeOutQuart',
+                    onComplete: () => {
+                        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
+                        disableChartHover();
+                    }
+                });
+            } else {
+                // 如果動畫引擎未初始化，直接更新
+                chartInstance.series[0].remove(false); 
+                chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:400,easing:'easeOutQuart'}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
+                chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+                disableChartHover();
+            }
+        } else {
+            // 如果沒有系列，直接添加
+            chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:0}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, false);
+            chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+            disableChartHover();
+        }
     }
     
     let hoverCheckInterval = null;
@@ -1435,6 +1920,11 @@
         // 確保圖表在初始化時正確渲染，特別是手機模式
         setTimeout(() => {
             if(chartInstance) {
+                // 初始化動畫引擎
+                if (!chartAnimationEngine && chartInstance) {
+                    chartAnimationEngine = new ChartAnimationEngine(chartInstance);
+                }
+                
                 const chartWrapper = document.getElementById('chartWrapper');
                 if(chartWrapper) {
                     const wrapperWidth = chartWrapper.clientWidth;
@@ -2215,15 +2705,14 @@
         
         // 更新圖表和列表 - 切換分頁時退出 detail 模式
         chartLevel = pageIndex === 0 ? 'root' : 'page';
-
-        // 如果之前在 detail 模式，清除圖表系列
-        if(chartInstance && chartInstance.series.length > 0) {
-            while(chartInstance.series.length > 0) {
-                chartInstance.series[0].remove(false);
-            }
+        
+        // 確保動畫引擎已初始化
+        if (chartInstance && !chartAnimationEngine) {
+            chartAnimationEngine = new ChartAnimationEngine(chartInstance);
         }
-
-        updateChartData();
+        
+        // 使用動畫更新圖表（動畫引擎會處理沒有起始數據的情況）
+        updateChartData(true);
         renderAssets();
     }
     
@@ -3199,6 +3688,5 @@
 </script>
 </body>
 </html>
-
 
 
