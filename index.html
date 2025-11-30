@@ -967,27 +967,23 @@
     // 分頁順序設置（預設順序：總覽、銀行、美股、台股、加密）
     let pageOrder = JSON.parse(localStorage.getItem('pageOrder')) || [0, 1, 2, 3, 4];
     
-    // 選單區塊摺疊狀態（預設全部摺疊）
-    let menuSectionsState = JSON.parse(localStorage.getItem('menuSectionsState'));
-    if(!menuSectionsState) {
-        // 如果沒有保存的狀態，預設全部摺疊
-        menuSectionsState = {
-            'update': true,
-            'data': true,
-            'api': true,
-            'pages': true
-        };
-    }
+    // 選單區塊摺疊狀態（預設全部摺疊，不記錄上次狀態）
+    let menuSectionsState = {
+        'update': true,
+        'data': true,
+        'api': true,
+        'pages': true
+    };
     
     // 切換選單區塊摺疊/展開
     function toggleMenuSection(sectionId) {
         const section = document.getElementById(`menuSection-${sectionId}`);
         const label = event.currentTarget;
-        
+
         if(!section) return;
-        
+
         const isCollapsed = section.classList.contains('collapsed');
-        
+
         if(isCollapsed) {
             section.classList.remove('collapsed');
             label.classList.remove('collapsed');
@@ -997,13 +993,17 @@
             label.classList.add('collapsed');
             menuSectionsState[sectionId] = true;
         }
-        
-        // 保存狀態
-        localStorage.setItem('menuSectionsState', JSON.stringify(menuSectionsState));
+
+        // 不保存狀態到 localStorage，每次重新打開都會重置為摺疊
     }
     
-    // 初始化選單區塊狀態
+    // 初始化選單區塊狀態（強制全部摺疊）
     function initMenuSections() {
+        // 每次初始化都強制重置為摺疊狀態
+        Object.keys(menuSectionsState).forEach(sectionId => {
+            menuSectionsState[sectionId] = true;
+        });
+
         Object.keys(menuSectionsState).forEach(sectionId => {
             const section = document.getElementById(`menuSection-${sectionId}`);
             // 找到對應的 label（通過查找包含該 sectionId 的 onclick 屬性）
@@ -1014,15 +1014,11 @@
                     label = l;
                 }
             });
-            
+
             if(section && label) {
-                if(menuSectionsState[sectionId]) {
-                    section.classList.add('collapsed');
-                    label.classList.add('collapsed');
-                } else {
-                    section.classList.remove('collapsed');
-                    label.classList.remove('collapsed');
-                }
+                // 強制全部摺疊
+                section.classList.add('collapsed');
+                label.classList.add('collapsed');
             }
         });
     }
@@ -1487,7 +1483,7 @@
     }
 
     // --- UI ---
-    function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('collapsed');}}else{s.classList.add('active');o.classList.add('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('collapsed');}} }
+    function toggleSidebar() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.classList.remove('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('collapsed');} initMenuSections();}else{s.classList.add('active');o.classList.add('active');if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('collapsed');}} }
     function toggleSidebarCollapse() { const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); const isCollapsed=s.classList.contains('collapsed'); if(isCollapsed){s.classList.remove('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.add('active'); o.classList.add('active');} localStorage.setItem('sidebarCollapsed','false');}else{s.classList.add('collapsed'); if(window.matchMedia('(min-width: 768px)').matches){s.classList.remove('active'); o.classList.remove('active');} localStorage.setItem('sidebarCollapsed','true');} }
     function initSidebarState() { if(window.matchMedia('(min-width: 768px)').matches){ const collapsed=localStorage.getItem('sidebarCollapsed')==='true'; const s=document.getElementById('sidebar'); const o=document.getElementById('sidebarOverlay'); if(collapsed){s.classList.add('collapsed'); s.classList.remove('active'); o.classList.remove('active');}else{s.classList.remove('collapsed'); s.classList.add('active'); o.classList.add('active');} } }
     function toggleEditMode() { isEditMode=!isEditMode; document.getElementById('sortBtn').classList.toggle('active', isEditMode); document.getElementById('addBtn').style.display=isEditMode?'none':'block'; renderAssets(); }
