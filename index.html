@@ -2609,9 +2609,12 @@
         editingId=null; 
         editingFromDetail = false; // 重置標記
         window.tempTransactions=[]; 
+        renderTransactions([]); // 清空庫存明細顯示
         document.getElementById('modalTitle').innerText='新增'; 
         document.getElementById('inpName').value=''; 
         document.getElementById('inpSymbol').value=''; 
+        document.getElementById('inpBalance').value=''; // 清空股數
+        document.getElementById('inpCost').value=''; // 清空平均成本
         switchTab('basic'); 
         // 根據當前分頁自動選擇對應的類型
         if(currentPage > 0 && currentPage < PAGE_TYPES.length) {
@@ -6157,8 +6160,20 @@
             assetListTab?.classList.add('active');
             calendarTabBtn?.classList.remove('active');
             if(pageIndicator) {
+                // 保存當前頁面索引，避免閃爍
+                const savedPage = currentPage;
                 pageIndicator.innerHTML = '<button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button><button class="page-tab" data-page="1" onclick="switchToPage(1)">銀行</button><button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button><button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button><button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>';
-                switchToPage(currentPage);
+                // 直接設置正確的 active 狀態，避免閃爍
+                const tabs = pageIndicator.querySelectorAll('.page-tab');
+                tabs.forEach((tab, index) => {
+                    if(index === savedPage) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+                // 然後調用 switchToPage 來更新內容（但不會改變 active 狀態，因為已經設置好了）
+                switchToPage(savedPage);
             }
             if(navbarTitle) navbarTitle.textContent = 'Monee';
         }
