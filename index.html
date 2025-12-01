@@ -895,7 +895,7 @@
                     <button class="btn-icon sidebar-toggle-btn-navbar" id="sidebarToggleBtnNavbar" onclick="toggleSidebarCollapse()" title="展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
                     <button class="btn-icon" id="addBtn" onclick="openModal()"><i class="fas fa-plus"></i></button>
-                    <button class="btn-icon" id="calendarSettingsBtn" onclick="openCalendarSettingsModal()" style="display: none;"><i class="fas fa-cog"></i></button>
+                    <button class="btn-icon" id="calendarSettingsBtn" onclick="openCalendarJournalModal()" style="display: none;"><i class="fas fa-book"></i></button>
                 </div>
             </div>
 
@@ -998,6 +998,33 @@
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                 </div>
+                <div id="calendarTransferDetails" style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display: none;">
+                    <div class="list-section page-swiper" id="journalSwiper" style="position: relative; width: 100%; overflow: hidden; touch-action: pan-y;">
+                        <div class="page-container" id="journalPageContainer" style="display: flex; transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); width: 300%;">
+                            <!-- 支出分頁 -->
+                            <div class="page-item" data-journal-page="expense" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">支出</div>
+                                <div id="journalExpenseList" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- 支出記錄將在這裡動態生成 -->
+                                </div>
+                            </div>
+                            <!-- 收入分頁 -->
+                            <div class="page-item" data-journal-page="income" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">收入</div>
+                                <div id="journalIncomeList" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- 收入記錄將在這裡動態生成 -->
+                                </div>
+                            </div>
+                            <!-- 轉帳分頁 -->
+                            <div class="page-item" data-journal-page="transfer" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">轉帳</div>
+                                <div id="journalTransferList" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- 轉帳記錄將在這裡動態生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="tab-bar">
@@ -1087,12 +1114,57 @@
         </div>
     </div>
 
-    <!-- Calendar Settings Menu Modal -->
+    <!-- Calendar Journal Modal (新增支出/收入) -->
+    <div id="calendarJournalModal" class="modal" style="z-index: 2003;" onclick="event.target.id === 'calendarJournalModal' && closeCalendarJournalModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: auto; max-height: 80vh; margin: auto; border-radius: 20px 20px 0 0; background: var(--card-bg); position: fixed; bottom: 0; left: 0; right: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onclick="event.stopPropagation()">
+            <div style="padding: 20px;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;">記帳</div>
+                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;" onclick="openNewExpense()">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-arrow-down" style="color: var(--color-down); font-size: 20px;"></i>
+                            <span style="color: var(--text-primary); font-size: 16px;">新增支出</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </div>
+                </div>
+                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;" onclick="openNewIncome()">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-arrow-up" style="color: var(--color-up); font-size: 20px;"></i>
+                            <span style="color: var(--text-primary); font-size: 16px;">新增收入</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </div>
+                </div>
+                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;" onclick="openNewTransfer()">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-exchange-alt" style="color: var(--text-primary); font-size: 20px;"></i>
+                            <span style="color: var(--text-primary); font-size: 16px;">轉帳</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </div>
+                </div>
+                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color);" onclick="openFixedTransferListFromJournal()">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-calendar-check" style="color: var(--text-primary); font-size: 20px;"></i>
+                            <span style="color: var(--text-primary); font-size: 16px;">固定轉帳</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Settings Menu Modal (保留用於固定轉帳) -->
     <div id="calendarSettingsModal" class="modal" style="z-index: 2003;" onclick="event.target.id === 'calendarSettingsModal' && closeCalendarSettingsModal()">
         <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: auto; max-height: 80vh; margin: auto; border-radius: 20px 20px 0 0; background: var(--card-bg); position: fixed; bottom: 0; left: 0; right: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onclick="event.stopPropagation()">
             <div style="padding: 20px;">
                 <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;">設定</div>
-                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;" onclick="openFixedTransferFromSettings()">
+                <div style="cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;" onclick="openFixedTransferList()">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-exchange-alt" style="color: var(--text-primary); font-size: 20px;"></i>
@@ -1101,7 +1173,19 @@
                         <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
                     </div>
                 </div>
-                <div id="fixedTransferListContainer" style="max-height: 50vh; overflow-y: auto;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Transfer List Modal -->
+    <div id="fixedTransferListModal" class="modal" style="z-index: 2004;" onclick="event.target.id === 'fixedTransferListModal' && closeFixedTransferListModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: auto; max-height: 80vh; margin: auto; border-radius: 20px 20px 0 0; background: var(--card-bg); position: fixed; bottom: 0; left: 0; right: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onclick="event.stopPropagation()">
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">固定轉帳</div>
+                    <button onclick="addNewFixedTransfer()" style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-up); color: white; border: none; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">+</button>
+                </div>
+                <div id="fixedTransferListContainer" style="max-height: 60vh; overflow-y: auto;">
                     <!-- 固定轉帳列表將在這裡動態生成 -->
                 </div>
             </div>
@@ -1202,12 +1286,183 @@
     </div>
 
     <!-- Account Selector Modal -->
-    <div id="accountSelectorModal" class="modal" style="z-index: 2005;" onclick="event.target.id === 'accountSelectorModal' && closeAccountSelector()">
+    <div id="accountSelectorModal" class="modal" style="z-index: 2010;" onclick="event.target.id === 'accountSelectorModal' && closeAccountSelector()">
         <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: auto; max-height: 80vh; margin: auto; border-radius: 20px 20px 0 0; background: var(--card-bg); position: fixed; bottom: 0; left: 0; right: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onclick="event.stopPropagation()">
             <div style="padding: 20px;">
                 <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;" id="accountSelectorTitle">選擇帳戶</div>
                 <div id="accountSelectorList" style="max-height: 60vh; overflow-y: auto;">
                     <!-- 帳戶列表將在這裡動態生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Modal (收入) -->
+    <div id="incomeModal" class="modal" style="z-index: 2007;" onclick="event.target.id === 'incomeModal' && closeIncomeModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: 100%; margin: 0; border-radius: 0; background: var(--bg-color); overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="position: sticky; top: 0; z-index: 10;">
+                <button class="btn-icon" onclick="closeIncomeModal()">取消</button>
+                <span class="modal-title">新增收入</span>
+                <button class="btn-icon" style="font-weight:bold;" onclick="saveIncome()">儲存</button>
+            </div>
+            <div style="padding: 20px;">
+                <div id="incomeDate" style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;"></div>
+                <div class="form-group">
+                    <div class="form-row" style="cursor: pointer;" onclick="openIncomeDateSelector()">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-calendar" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">日期</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="incomeDateDisplay" style="color: var(--text-primary);"></span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-coins" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">金額</span>
+                        </div>
+                        <input type="number" id="incomeAmount" class="form-input" placeholder="金額輸入" style="text-align: right;">
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openCategorySelector('income')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-dollar-sign" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">類別</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="incomeCategory" style="color: var(--text-secondary);">選擇類別</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openJournalAccountSelector('income')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-university" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">帳戶</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="incomeAccount" style="color: var(--text-secondary);">選擇帳戶</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Modal (支出) -->
+    <div id="expenseModal" class="modal" style="z-index: 2007;" onclick="event.target.id === 'expenseModal' && closeExpenseModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: 100%; margin: 0; border-radius: 0; background: var(--bg-color); overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="position: sticky; top: 0; z-index: 10;">
+                <button class="btn-icon" onclick="closeExpenseModal()">取消</button>
+                <span class="modal-title">新增支出</span>
+                <button class="btn-icon" style="font-weight:bold;" onclick="saveExpense()">儲存</button>
+            </div>
+            <div style="padding: 20px;">
+                <div id="expenseDate" style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;"></div>
+                <div class="form-group">
+                    <div class="form-row" style="cursor: pointer;" onclick="openExpenseDateSelector()">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-calendar" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">日期</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="expenseDateDisplay" style="color: var(--text-primary);"></span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-coins" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">金額</span>
+                        </div>
+                        <input type="number" id="expenseAmount" class="form-input" placeholder="金額輸入" style="text-align: right;">
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openCategorySelector('expense')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-utensils" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">類別</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="expenseCategory" style="color: var(--text-secondary);">選擇類別</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openJournalAccountSelector('expense')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-university" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">帳戶</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="expenseAccount" style="color: var(--text-secondary);">選擇帳戶</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal (轉帳) -->
+    <div id="transferModal" class="modal" style="z-index: 2007;" onclick="event.target.id === 'transferModal' && closeTransferModal()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: 100%; margin: 0; border-radius: 0; background: var(--bg-color); overflow-y: auto;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="position: sticky; top: 0; z-index: 10;">
+                <button class="btn-icon" onclick="closeTransferModal()">取消</button>
+                <span class="modal-title">轉帳</span>
+                <button class="btn-icon" style="font-weight:bold;" onclick="saveTransfer()">儲存</button>
+            </div>
+            <div style="padding: 20px;">
+                <div id="transferDate" style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;"></div>
+                <div class="form-group">
+                    <div class="form-row" style="cursor: pointer;" onclick="openTransferDateSelector()">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-calendar" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">日期</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="transferDateDisplay" style="color: var(--text-primary);"></span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openJournalAccountSelector('transferFrom')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-university" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">從帳戶</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="transferFromAccount" style="color: var(--text-secondary);">選擇轉出帳戶</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openJournalAccountSelector('transferTo')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-university" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">到帳戶</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <span id="transferToAccount" style="color: var(--text-secondary);">選擇轉入帳戶</span>
+                            <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-coins" style="color: var(--text-secondary); font-size: 20px;"></i>
+                            <span class="form-label">金額</span>
+                        </div>
+                        <input type="number" id="transferAmount" class="form-input" placeholder="金額" style="text-align: right;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Selector Modal -->
+    <div id="categorySelectorModal" class="modal" style="z-index: 2010;" onclick="event.target.id === 'categorySelectorModal' && closeCategorySelector()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 100%; height: auto; max-height: 80vh; margin: auto; border-radius: 20px 20px 0 0; background: var(--card-bg); position: fixed; bottom: 0; left: 0; right: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onclick="event.stopPropagation()">
+            <div style="padding: 20px;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; text-align: center;" id="categorySelectorTitle">選擇類別</div>
+                <div id="categorySelectorList" style="max-height: 60vh; overflow-y: auto;">
+                    <!-- 類別列表將在這裡動態生成 -->
                 </div>
             </div>
         </div>
@@ -1373,6 +1628,7 @@
     const STORAGE_KEY_USERS = 'my_assets_users';
     const STORAGE_KEY_CURRENT_USER = 'my_assets_current_user';
     const STORAGE_KEY_FIXED_TRANSFERS = 'my_assets_fixed_transfers';
+    const STORAGE_KEY_JOURNAL = 'my_assets_journal'; // 收入、支出、轉帳記錄
     
     // 預設頭像（使用 emoji 或圖示）
     const DEFAULT_AVATARS = [
@@ -6099,12 +6355,16 @@
         initSidebarState();
         initNumbersState();
         initSwiper();
+        initJournalSwipe(); // 初始化記帳詳情的滑動手勢
         applyTheme();
         updateThemeButton();
         updateCurrencyButton();
         chartLevel = 'root';
         currentPage = 0;
         renderAssets();
+        
+        // 檢查並執行固定轉帳（自動日期匯款）
+        checkAndExecuteFixedTransfers();
         // 初始化箭頭按鈕狀態
         updatePageNavArrows();
         setTimeout(() => { 
@@ -6324,6 +6584,17 @@
                 todayDateEl.style.display = 'none';
             }
             renderCalendar();
+            
+            // 檢查今天是否有固定轉帳，如果有則自動顯示
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTransfers = getFixedTransfersForDate(today);
+            if(todayTransfers.length > 0 && !selectedDate) {
+                // 如果今天有固定轉帳且沒有選中其他日期，自動選中今天並顯示詳情
+                selectedDate = new Date(today);
+                renderCalendar();
+                showFixedTransferDetailsForDate(today);
+            }
         } else {
             calendarPage.style.display = 'none';
             if(contentGrid) contentGrid.style.display = '';
@@ -6363,6 +6634,22 @@
         if(todayDateEl) {
             todayDateEl.style.display = 'none';
         }
+        
+        // 如果之前有選中的日期，重新顯示詳情
+        if(selectedDate) {
+            showFixedTransferDetailsForDate(selectedDate);
+        } else {
+            // 如果沒有選中日期，檢查今天是否有固定轉帳
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTransfers = getFixedTransfersForDate(today);
+            if(todayTransfers.length > 0) {
+                // 如果今天有固定轉帳，自動選中今天並顯示詳情
+                selectedDate = new Date(today);
+                renderCalendar();
+                showFixedTransferDetailsForDate(today);
+            }
+        }
     }
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
@@ -6401,6 +6688,7 @@
             const dateObj = new Date(date);
             dateObj.setHours(0, 0, 0, 0);
             
+            let hasTransfer = false;
             transfers.forEach(transfer => {
                 const startDate = new Date(transfer.startDate);
                 startDate.setHours(0, 0, 0, 0);
@@ -6429,11 +6717,22 @@
                     }
                     
                     if(matches) {
+                        hasTransfer = true;
                         dayBtn.classList.add('has-fixed-transfer');
                         dayBtn.style.borderBottom = `3px solid ${transfer.tagColor}`;
                     }
                 }
             });
+            
+            // 檢查是否有記帳記錄在這個日期
+            const journalRecords = getJournalRecordsForDate(dateStr);
+            if(journalRecords.length > 0 && !hasTransfer) {
+                // 如果有記帳記錄但沒有固定轉帳，顯示一個通用標記
+                dayBtn.classList.add('has-fixed-transfer');
+                dayBtn.style.borderBottom = '3px solid #0a84ff';
+            } else if(journalRecords.length > 0 && hasTransfer) {
+                // 如果兩者都有，保持固定轉帳的顏色標記
+            }
             
             dayBtn.onclick = () => selectDate(date);
             grid.appendChild(dayBtn);
@@ -6443,9 +6742,984 @@
         selectedDate = new Date(date);
         renderCalendar();
         console.log('Selected date:', selectedDate.toLocaleDateString('zh-TW'));
+        
+        // 顯示該日期的固定轉帳詳情
+        showFixedTransferDetailsForDate(date);
     }
     
-    // Calendar Settings Functions
+    // 當前記帳詳情的分頁索引（0: 支出, 1: 收入, 2: 轉帳）
+    let currentJournalPageIndex = 0;
+    
+    // 顯示指定日期的所有記錄（固定轉帳、收入、支出、轉帳）
+    function showFixedTransferDetailsForDate(date) {
+        const detailsContainer = document.getElementById('calendarTransferDetails');
+        if(!detailsContainer) return;
+        
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // 獲取該日期的所有固定轉帳
+        const transfers = getFixedTransfersForDate(date);
+        
+        // 獲取該日期的所有記帳記錄
+        const journalRecords = getJournalRecordsForDate(dateStr);
+        
+        // 分類記錄
+        const expenseRecords = journalRecords.filter(r => r.type === 'expense');
+        const incomeRecords = journalRecords.filter(r => r.type === 'income');
+        const transferRecords = journalRecords.filter(r => r.type === 'transfer');
+        
+        if(transfers.length === 0 && journalRecords.length === 0) {
+            // 沒有記錄，隱藏詳情區域
+            detailsContainer.style.display = 'none';
+            return;
+        }
+        
+        // 顯示詳情區域
+        detailsContainer.style.display = 'block';
+        
+        // 渲染支出分頁
+        renderJournalPage('expense', expenseRecords, transfers);
+        
+        // 渲染收入分頁
+        renderJournalPage('income', incomeRecords, transfers);
+        
+        // 渲染轉帳分頁
+        renderJournalPage('transfer', transferRecords, transfers);
+        
+        // 重置到第一個有內容的分頁
+        if(expenseRecords.length > 0 || transfers.length > 0) {
+            currentJournalPageIndex = 0;
+        } else if(incomeRecords.length > 0 || transfers.length > 0) {
+            currentJournalPageIndex = 1;
+        } else if(transferRecords.length > 0 || transfers.length > 0) {
+            currentJournalPageIndex = 2;
+        }
+        
+        // 切換到對應分頁
+        switchJournalPage(currentJournalPageIndex);
+        
+        // 確保滑動手勢已初始化
+        setTimeout(() => {
+            initJournalSwipe();
+        }, 100);
+    }
+    
+    // 渲染記帳分頁
+    function renderJournalPage(type, records, fixedTransfers) {
+        const listId = type === 'expense' ? 'journalExpenseList' : (type === 'income' ? 'journalIncomeList' : 'journalTransferList');
+        const list = document.getElementById(listId);
+        if(!list) return;
+        
+        list.innerHTML = '';
+        
+        // 先顯示該類型的記帳記錄
+        records.forEach(record => {
+            const detailItem = document.createElement('div');
+            let borderColor = '#0a84ff';
+            let icon = '';
+            let title = '';
+            
+            if(record.type === 'income') {
+                borderColor = 'var(--color-up)';
+                icon = '<i class="fas fa-arrow-up" style="color: var(--color-up); margin-right: 8px;"></i>';
+                title = record.category || '收入';
+                const account = accounts.find(acc => acc.id === record.accountId);
+                const accountName = account ? account.name : '未知帳戶';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--color-up);">+$${record.amount.toLocaleString()}</div>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">帳戶：${accountName}</div>
+                `;
+            } else if(record.type === 'expense') {
+                borderColor = 'var(--color-down)';
+                icon = '<i class="fas fa-arrow-down" style="color: var(--color-down); margin-right: 8px;"></i>';
+                title = record.category || '支出';
+                const account = accounts.find(acc => acc.id === record.accountId);
+                const accountName = account ? account.name : '未知帳戶';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--color-down);">-$${record.amount.toLocaleString()}</div>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">帳戶：${accountName}</div>
+                `;
+            } else if(record.type === 'transfer') {
+                borderColor = '#0a84ff';
+                icon = '<i class="fas fa-exchange-alt" style="color: #0a84ff; margin-right: 8px;"></i>';
+                title = '轉帳';
+                const fromAccount = accounts.find(acc => acc.id === record.fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === record.toAccountId);
+                const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
+                const toAccountName = toAccount ? toAccount.name : '未知帳戶';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">$${record.amount.toLocaleString()}</div>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">${fromAccountName} ---> ${toAccountName}</div>
+                `;
+            }
+            
+            list.appendChild(detailItem);
+        });
+        
+        // 在每個分頁下方顯示固定轉帳（如果有的話）
+        if(fixedTransfers.length > 0) {
+            // 如果有記錄，添加分隔線
+            if(records.length > 0) {
+                const separator = document.createElement('div');
+                separator.style.cssText = 'margin: 12px 0; border-top: 1px solid var(--border-color);';
+                list.appendChild(separator);
+            }
+            
+            // 添加固定轉帳標題
+            const fixedTransferTitle = document.createElement('div');
+            fixedTransferTitle.style.cssText = 'font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; margin-top: 8px;';
+            fixedTransferTitle.textContent = '固定轉帳';
+            list.appendChild(fixedTransferTitle);
+            
+            // 顯示固定轉帳
+            fixedTransfers.forEach(transfer => {
+                const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+                
+                const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
+                const toAccountName = toAccount ? toAccount.name : '未知帳戶';
+                
+                const detailItem = document.createElement('div');
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + ';';
+                detailItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${transfer.title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">$${transfer.amount.toLocaleString()}</div>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">${fromAccountName} ---> ${toAccountName}</div>
+                `;
+                list.appendChild(detailItem);
+            });
+        }
+        
+        // 如果沒有任何內容，顯示提示
+        if(records.length === 0 && fixedTransfers.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.style.cssText = 'text-align: center; color: var(--text-secondary); padding: 20px; font-size: 14px;';
+            emptyMsg.textContent = '尚無記錄';
+            list.appendChild(emptyMsg);
+        }
+    }
+    
+    // 切換記帳分頁
+    function switchJournalPage(index) {
+        currentJournalPageIndex = index;
+        const container = document.getElementById('journalPageContainer');
+        if(container) {
+            container.style.transform = `translateX(-${index * 33.333}%)`;
+        }
+    }
+    
+    // 記帳詳情滑動相關變數
+    let journalTouchStartX = 0;
+    let journalTouchEndX = 0;
+    let journalIsSwiping = false;
+    let journalCurrentTransform = 0;
+    
+    // 初始化記帳詳情的滑動手勢
+    function initJournalSwipe() {
+        const swiper = document.getElementById('journalSwiper');
+        if(!swiper) return;
+        
+        // 移除舊的事件監聽器
+        swiper.removeEventListener('touchstart', handleJournalTouchStart);
+        swiper.removeEventListener('touchmove', handleJournalTouchMove);
+        swiper.removeEventListener('touchend', handleJournalTouchEnd);
+        
+        // 添加新的事件監聽器
+        swiper.addEventListener('touchstart', handleJournalTouchStart, { passive: true });
+        swiper.addEventListener('touchmove', handleJournalTouchMove, { passive: true });
+        swiper.addEventListener('touchend', handleJournalTouchEnd, { passive: true });
+    }
+    
+    function handleJournalTouchStart(e) {
+        journalTouchStartX = e.touches[0].clientX;
+        journalIsSwiping = false;
+        const container = document.getElementById('journalPageContainer');
+        if(container) {
+            const transform = container.style.transform;
+            if(transform) {
+                const match = transform.match(/translateX\(-?(\d+\.?\d*)%\)/);
+                if(match) {
+                    journalCurrentTransform = parseFloat(match[1]);
+                } else {
+                    journalCurrentTransform = -currentJournalPageIndex * 33.333;
+                }
+            } else {
+                journalCurrentTransform = -currentJournalPageIndex * 33.333;
+            }
+        }
+    }
+    
+    function handleJournalTouchMove(e) {
+        if(!journalTouchStartX) return;
+        const currentX = e.touches[0].clientX;
+        const diffX = journalTouchStartX - currentX;
+        const absDiffX = Math.abs(diffX);
+        
+        if(absDiffX > 10) {
+            journalIsSwiping = true;
+            const container = document.getElementById('journalPageContainer');
+            if(container) {
+                container.classList.add('swiping');
+                
+                const swiper = document.getElementById('journalSwiper');
+                const swipePercent = -(diffX / swiper.offsetWidth) * 100;
+                let newTransform = journalCurrentTransform + swipePercent;
+                
+                // 限制範圍（0% 到 -66.666%）
+                const minTransform = -66.666;
+                const maxTransform = 0;
+                
+                // 檢查是否在邊界
+                const isAtLeftBoundary = currentJournalPageIndex <= 0 && diffX < 0;
+                const isAtRightBoundary = currentJournalPageIndex >= 2 && diffX > 0;
+                
+                if(isAtLeftBoundary || isAtRightBoundary) {
+                    // 添加阻力效果
+                    if(newTransform > maxTransform) {
+                        newTransform = maxTransform + (newTransform - maxTransform) * 0.3;
+                    } else if(newTransform < minTransform) {
+                        newTransform = minTransform + (newTransform - minTransform) * 0.3;
+                    }
+                } else {
+                    // 限制在有效範圍內
+                    newTransform = Math.max(minTransform, Math.min(maxTransform, newTransform));
+                }
+                
+                container.style.transform = `translateX(${newTransform}%)`;
+            }
+        }
+    }
+    
+    function handleJournalTouchEnd(e) {
+        journalTouchEndX = e.changedTouches[0].clientX;
+        const container = document.getElementById('journalPageContainer');
+        if(container && journalIsSwiping) {
+            container.classList.remove('swiping');
+        }
+        
+        if(journalIsSwiping) {
+            handleJournalSwipe();
+        }
+        
+        journalTouchStartX = 0;
+        journalTouchEndX = 0;
+        journalIsSwiping = false;
+    }
+    
+    function handleJournalSwipe() {
+        const swipeThreshold = 50;
+        const diffX = journalTouchStartX - journalTouchEndX;
+        
+        if(Math.abs(diffX) > swipeThreshold) {
+            if(diffX > 0) {
+                // 向左滑動，顯示下一個分頁
+                if(currentJournalPageIndex < 2) {
+                    switchJournalPage(currentJournalPageIndex + 1);
+                } else {
+                    // 回彈
+                    switchJournalPage(currentJournalPageIndex);
+                }
+            } else {
+                // 向右滑動，顯示上一個分頁
+                if(currentJournalPageIndex > 0) {
+                    switchJournalPage(currentJournalPageIndex - 1);
+                } else {
+                    // 回彈
+                    switchJournalPage(currentJournalPageIndex);
+                }
+            }
+        } else {
+            // 滑動距離不夠，回彈
+            switchJournalPage(currentJournalPageIndex);
+        }
+    }
+    
+    // 載入記帳記錄
+    function loadJournalRecords() {
+        try {
+            const data = localStorage.getItem(`${STORAGE_KEY_JOURNAL}_${currentUserId}`);
+            return data ? JSON.parse(data) : [];
+        } catch(e) {
+            return [];
+        }
+    }
+    
+    // 保存記帳記錄
+    function saveJournalRecords(records) {
+        try {
+            localStorage.setItem(`${STORAGE_KEY_JOURNAL}_${currentUserId}`, JSON.stringify(records));
+        } catch(e) {
+            console.error('Failed to save journal records:', e);
+        }
+    }
+    
+    // 獲取指定日期的記帳記錄
+    function getJournalRecordsForDate(dateStr) {
+        const records = loadJournalRecords();
+        return records.filter(record => record.date === dateStr);
+    }
+    
+    // 獲取指定日期的所有固定轉帳（使用與日曆渲染相同的邏輯）
+    function getFixedTransfersForDate(date) {
+        const transfers = loadFixedTransfers();
+        const dateObj = new Date(date);
+        dateObj.setHours(0, 0, 0, 0);
+        const matchingTransfers = [];
+        
+        transfers.forEach(transfer => {
+            const startDate = new Date(transfer.startDate);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = transfer.endDate ? new Date(transfer.endDate) : null;
+            if(endDate) endDate.setHours(0, 0, 0, 0);
+            
+            // 檢查日期是否在範圍內
+            if(dateObj >= startDate && (!endDate || dateObj <= endDate)) {
+                // 檢查是否符合重複規則（與 renderCalendar 中的邏輯相同）
+                let matches = false;
+                const daysDiff = Math.floor((dateObj - startDate) / (1000 * 60 * 60 * 24));
+                
+                switch(transfer.repeat) {
+                    case 'daily':
+                        matches = true;
+                        break;
+                    case 'weekly':
+                        matches = (daysDiff % 7 === 0);
+                        break;
+                    case 'monthly':
+                        matches = (dateObj.getDate() === startDate.getDate());
+                        break;
+                    case 'yearly':
+                        matches = (dateObj.getMonth() === startDate.getMonth() && dateObj.getDate() === startDate.getDate());
+                        break;
+                }
+                
+                // 如果匹配，加入結果（假日調整的邏輯在日曆渲染時已經處理，這裡直接使用匹配結果）
+                if(matches) {
+                    matchingTransfers.push(transfer);
+                }
+            }
+        });
+        
+        return matchingTransfers;
+    }
+    
+    // Calendar Journal Functions (新增支出/收入)
+    function openCalendarJournalModal() {
+        const modal = document.getElementById('calendarJournalModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateY(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    function closeCalendarJournalModal() {
+        const modal = document.getElementById('calendarJournalModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateY(100%)';
+            }, 300);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    // 收入和支出類別定義
+    const incomeCategories = ['工資', '獎金', '投資收益', '其他收入'];
+    const expenseCategories = ['飲食', '交通', '購物', '娛樂', '醫療', '教育', '房租', '水電', '其他支出'];
+    
+    // 當前記帳相關的變數
+    let currentJournalType = null; // 'income', 'expense', 'transfer'
+    let currentJournalDate = new Date();
+    let currentJournalCategory = null;
+    let currentJournalAccountId = null;
+    let currentTransferFromAccountId = null;
+    let currentTransferToAccountId = null;
+    
+    // 新增支出
+    function openNewExpense() {
+        closeCalendarJournalModal();
+        currentJournalType = 'expense';
+        currentJournalDate = new Date();
+        currentJournalCategory = null;
+        currentJournalAccountId = null;
+        
+        const modal = document.getElementById('expenseModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        // 初始化日期顯示
+        updateExpenseDateDisplay();
+        
+        // 重置表單
+        document.getElementById('expenseAmount').value = '';
+        document.getElementById('expenseCategory').textContent = '選擇類別';
+        document.getElementById('expenseCategory').style.color = 'var(--text-secondary)';
+        document.getElementById('expenseAccount').textContent = '選擇帳戶';
+        document.getElementById('expenseAccount').style.color = 'var(--text-secondary)';
+        
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            modalWrapper.classList.remove('swiping');
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'transparent';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateX(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    function closeExpenseModal() {
+        const modal = document.getElementById('expenseModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateX(100%)';
+            }, 400);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function updateExpenseDateDisplay() {
+        const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        const dateStr = `${currentJournalDate.getFullYear()}年${currentJournalDate.getMonth() + 1}月${currentJournalDate.getDate()}日 ${weekdays[currentJournalDate.getDay()]}`;
+        document.getElementById('expenseDate').textContent = dateStr;
+        document.getElementById('expenseDateDisplay').textContent = dateStr;
+        document.getElementById('expenseDateDisplay').style.color = 'var(--text-primary)';
+    }
+    
+    function openExpenseDateSelector() {
+        currentDatePickerType = 'expense';
+        openDateSelector('expense');
+    }
+    
+    // 新增收入
+    function openNewIncome() {
+        closeCalendarJournalModal();
+        currentJournalType = 'income';
+        currentJournalDate = new Date();
+        currentJournalCategory = null;
+        currentJournalAccountId = null;
+        
+        const modal = document.getElementById('incomeModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        // 初始化日期顯示
+        updateIncomeDateDisplay();
+        
+        // 重置表單
+        document.getElementById('incomeAmount').value = '';
+        document.getElementById('incomeCategory').textContent = '選擇類別';
+        document.getElementById('incomeCategory').style.color = 'var(--text-secondary)';
+        document.getElementById('incomeAccount').textContent = '選擇帳戶';
+        document.getElementById('incomeAccount').style.color = 'var(--text-secondary)';
+        
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            modalWrapper.classList.remove('swiping');
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'transparent';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateX(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    function closeIncomeModal() {
+        const modal = document.getElementById('incomeModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateX(100%)';
+            }, 400);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function updateIncomeDateDisplay() {
+        const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        const dateStr = `${currentJournalDate.getFullYear()}年${currentJournalDate.getMonth() + 1}月${currentJournalDate.getDate()}日 ${weekdays[currentJournalDate.getDay()]}`;
+        document.getElementById('incomeDate').textContent = dateStr;
+        document.getElementById('incomeDateDisplay').textContent = dateStr;
+        document.getElementById('incomeDateDisplay').style.color = 'var(--text-primary)';
+    }
+    
+    function openIncomeDateSelector() {
+        currentDatePickerType = 'income';
+        openDateSelector('income');
+    }
+    
+    // 新增轉帳
+    function openNewTransfer() {
+        closeCalendarJournalModal();
+        currentJournalType = 'transfer';
+        currentJournalDate = new Date();
+        currentTransferFromAccountId = null;
+        currentTransferToAccountId = null;
+        
+        const modal = document.getElementById('transferModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        // 初始化日期顯示
+        updateTransferDateDisplay();
+        
+        // 重置表單
+        document.getElementById('transferAmount').value = '';
+        document.getElementById('transferFromAccount').textContent = '選擇轉出帳戶';
+        document.getElementById('transferFromAccount').style.color = 'var(--text-secondary)';
+        document.getElementById('transferToAccount').textContent = '選擇轉入帳戶';
+        document.getElementById('transferToAccount').style.color = 'var(--text-secondary)';
+        
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            modalWrapper.classList.remove('swiping');
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'transparent';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateX(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    function closeTransferModal() {
+        const modal = document.getElementById('transferModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateX(100%)';
+            }, 400);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function updateTransferDateDisplay() {
+        const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        const dateStr = `${currentJournalDate.getFullYear()}年${currentJournalDate.getMonth() + 1}月${currentJournalDate.getDate()}日 ${weekdays[currentJournalDate.getDay()]}`;
+        document.getElementById('transferDate').textContent = dateStr;
+        document.getElementById('transferDateDisplay').textContent = dateStr;
+        document.getElementById('transferDateDisplay').style.color = 'var(--text-primary)';
+    }
+    
+    function openTransferDateSelector() {
+        currentDatePickerType = 'transfer';
+        openDateSelector('transfer');
+    }
+    
+    // 從日記本模態框打開固定轉帳列表
+    function openFixedTransferListFromJournal() {
+        closeCalendarJournalModal();
+        setTimeout(() => {
+            openFixedTransferList();
+        }, 300);
+    }
+    
+    // 類別選擇器
+    function openCategorySelector(type) {
+        const modal = document.getElementById('categorySelectorModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        const title = document.getElementById('categorySelectorTitle');
+        const list = document.getElementById('categorySelectorList');
+        
+        if(title) {
+            title.textContent = '選擇類別';
+        }
+        
+        const categories = type === 'income' ? incomeCategories : expenseCategories;
+        
+        if(list) {
+            list.innerHTML = '';
+            categories.forEach(category => {
+                const categoryItem = document.createElement('div');
+                categoryItem.style.cssText = 'cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;';
+                categoryItem.onclick = () => selectCategory(category, type);
+                categoryItem.innerHTML = `
+                    <div style="color: var(--text-primary); font-size: 16px;">${category}</div>
+                `;
+                list.appendChild(categoryItem);
+            });
+        }
+        
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateY(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    function closeCategorySelector() {
+        const modal = document.getElementById('categorySelectorModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateY(100%)';
+            }, 300);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function selectCategory(category, type) {
+        currentJournalCategory = category;
+        if(type === 'income') {
+            document.getElementById('incomeCategory').textContent = category;
+            document.getElementById('incomeCategory').style.color = 'var(--text-primary)';
+        } else if(type === 'expense') {
+            document.getElementById('expenseCategory').textContent = category;
+            document.getElementById('expenseCategory').style.color = 'var(--text-primary)';
+        }
+        closeCategorySelector();
+    }
+    
+    // 記帳用的帳戶選擇器
+    function openJournalAccountSelector(type) {
+        // 先關閉可能打開的其他選擇器
+        closeCategorySelector();
+        
+        currentAccountSelectorType = type;
+        const modal = document.getElementById('accountSelectorModal');
+        if(!modal) return;
+        
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        const title = document.getElementById('accountSelectorTitle');
+        const list = document.getElementById('accountSelectorList');
+        
+        // 設置標題
+        if(title) {
+            if(type === 'income' || type === 'expense') {
+                title.textContent = '選擇帳戶';
+            } else if(type === 'transferFrom') {
+                title.textContent = '選擇轉出帳戶';
+            } else if(type === 'transferTo') {
+                title.textContent = '選擇轉入帳戶';
+            }
+        }
+        
+        // 過濾出銀行和負債類型的帳戶
+        const availableAccounts = accounts.filter(acc => acc.type === 'bank' || acc.type === 'debt');
+        
+        // 生成帳戶列表
+        if(list) {
+            list.innerHTML = '';
+            if(availableAccounts.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">暫無可用帳戶</div>';
+            } else {
+                availableAccounts.forEach(acc => {
+                    const accountItem = document.createElement('div');
+                    accountItem.style.cssText = 'cursor: pointer; padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px;';
+                    accountItem.onclick = () => selectJournalAccount(acc, type);
+                    
+                    const iconClass = acc.type === 'bank' ? 'fa-university' : 'fa-credit-card';
+                    const typeName = acc.type === 'bank' ? '銀行' : '負債';
+                    
+                    accountItem.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas ${iconClass}" style="color: var(--text-primary); font-size: 20px;"></i>
+                            <div style="flex: 1;">
+                                <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${acc.name}</div>
+                                <div style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">${typeName}</div>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(accountItem);
+                });
+            }
+        }
+        
+        // 確保模態框初始狀態正確
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        
+        // 立即顯示模態框
+        requestAnimationFrame(() => {
+            if(modalWrapper) {
+                modalWrapper.style.transform = 'translateY(0)';
+            }
+        });
+    }
+    
+    function selectJournalAccount(account, type) {
+        if(type === 'income') {
+            currentJournalAccountId = account.id;
+            document.getElementById('incomeAccount').textContent = account.name;
+            document.getElementById('incomeAccount').style.color = 'var(--text-primary)';
+        } else if(type === 'expense') {
+            currentJournalAccountId = account.id;
+            document.getElementById('expenseAccount').textContent = account.name;
+            document.getElementById('expenseAccount').style.color = 'var(--text-primary)';
+        } else if(type === 'transferFrom') {
+            currentTransferFromAccountId = account.id;
+            document.getElementById('transferFromAccount').textContent = account.name;
+            document.getElementById('transferFromAccount').style.color = 'var(--text-primary)';
+        } else if(type === 'transferTo') {
+            currentTransferToAccountId = account.id;
+            document.getElementById('transferToAccount').textContent = account.name;
+            document.getElementById('transferToAccount').style.color = 'var(--text-primary)';
+        }
+        closeAccountSelector();
+    }
+    
+    // 保存收入
+    function saveIncome() {
+        const amount = parseFloat(document.getElementById('incomeAmount').value);
+        
+        if(!amount || amount <= 0) {
+            alert('請輸入有效的金額');
+            return;
+        }
+        
+        if(!currentJournalCategory) {
+            alert('請選擇類別');
+            return;
+        }
+        
+        if(!currentJournalAccountId) {
+            alert('請選擇帳戶');
+            return;
+        }
+        
+        const account = accounts.find(acc => acc.id === currentJournalAccountId);
+        if(!account) {
+            alert('找不到帳戶');
+            return;
+        }
+        
+        // 更新帳戶餘額
+        account.balance += amount;
+        
+        // 保存記帳記錄
+        const dateStr = currentJournalDate.toISOString().split('T')[0];
+        const records = loadJournalRecords();
+        const newRecord = {
+            id: Date.now().toString(),
+            type: 'income',
+            date: dateStr,
+            amount: amount,
+            category: currentJournalCategory,
+            accountId: currentJournalAccountId,
+            createdAt: new Date().toISOString()
+        };
+        records.push(newRecord);
+        saveJournalRecords(records);
+        
+        // 保存資料
+        saveData();
+        
+        // 重新渲染
+        renderAssets();
+        updateChartData();
+        
+        // 如果選中的日期是這個日期，更新詳情顯示
+        if(selectedDate) {
+            const selectedDateStr = selectedDate.toISOString().split('T')[0];
+            if(selectedDateStr === dateStr) {
+                showFixedTransferDetailsForDate(selectedDate);
+            }
+        }
+        
+        closeIncomeModal();
+    }
+    
+    // 保存支出
+    function saveExpense() {
+        const amount = parseFloat(document.getElementById('expenseAmount').value);
+        
+        if(!amount || amount <= 0) {
+            alert('請輸入有效的金額');
+            return;
+        }
+        
+        if(!currentJournalCategory) {
+            alert('請選擇類別');
+            return;
+        }
+        
+        if(!currentJournalAccountId) {
+            alert('請選擇帳戶');
+            return;
+        }
+        
+        const account = accounts.find(acc => acc.id === currentJournalAccountId);
+        if(!account) {
+            alert('找不到帳戶');
+            return;
+        }
+        
+        // 檢查餘額是否足夠
+        if(account.balance < amount) {
+            alert('帳戶餘額不足');
+            return;
+        }
+        
+        // 更新帳戶餘額
+        account.balance -= amount;
+        
+        // 保存記帳記錄
+        const dateStr = currentJournalDate.toISOString().split('T')[0];
+        const records = loadJournalRecords();
+        const newRecord = {
+            id: Date.now().toString(),
+            type: 'expense',
+            date: dateStr,
+            amount: amount,
+            category: currentJournalCategory,
+            accountId: currentJournalAccountId,
+            createdAt: new Date().toISOString()
+        };
+        records.push(newRecord);
+        saveJournalRecords(records);
+        
+        // 保存資料
+        saveData();
+        
+        // 重新渲染
+        renderAssets();
+        updateChartData();
+        
+        // 如果選中的日期是這個日期，更新詳情顯示
+        if(selectedDate) {
+            const selectedDateStr = selectedDate.toISOString().split('T')[0];
+            if(selectedDateStr === dateStr) {
+                showFixedTransferDetailsForDate(selectedDate);
+            }
+        }
+        
+        closeExpenseModal();
+    }
+    
+    // 保存轉帳
+    function saveTransfer() {
+        const amount = parseFloat(document.getElementById('transferAmount').value);
+        
+        if(!amount || amount <= 0) {
+            alert('請輸入有效的金額');
+            return;
+        }
+        
+        if(!currentTransferFromAccountId) {
+            alert('請選擇轉出帳戶');
+            return;
+        }
+        
+        if(!currentTransferToAccountId) {
+            alert('請選擇轉入帳戶');
+            return;
+        }
+        
+        if(currentTransferFromAccountId === currentTransferToAccountId) {
+            alert('轉出帳戶和轉入帳戶不能相同');
+            return;
+        }
+        
+        const fromAccount = accounts.find(acc => acc.id === currentTransferFromAccountId);
+        const toAccount = accounts.find(acc => acc.id === currentTransferToAccountId);
+        
+        if(!fromAccount || !toAccount) {
+            alert('找不到帳戶');
+            return;
+        }
+        
+        // 檢查餘額是否足夠
+        if(fromAccount.balance < amount) {
+            alert('轉出帳戶餘額不足');
+            return;
+        }
+        
+        // 更新帳戶餘額
+        fromAccount.balance -= amount;
+        toAccount.balance += amount;
+        
+        // 保存記帳記錄
+        const dateStr = currentJournalDate.toISOString().split('T')[0];
+        const records = loadJournalRecords();
+        const newRecord = {
+            id: Date.now().toString(),
+            type: 'transfer',
+            date: dateStr,
+            amount: amount,
+            fromAccountId: currentTransferFromAccountId,
+            toAccountId: currentTransferToAccountId,
+            createdAt: new Date().toISOString()
+        };
+        records.push(newRecord);
+        saveJournalRecords(records);
+        
+        // 保存資料
+        saveData();
+        
+        // 重新渲染
+        renderAssets();
+        updateChartData();
+        
+        // 如果選中的日期是這個日期，更新詳情顯示
+        if(selectedDate) {
+            const selectedDateStr = selectedDate.toISOString().split('T')[0];
+            if(selectedDateStr === dateStr) {
+                showFixedTransferDetailsForDate(selectedDate);
+            }
+        }
+        
+        closeTransferModal();
+    }
+    
+    // Calendar Settings Functions (保留用於固定轉帳)
     function openCalendarSettingsModal() {
         const modal = document.getElementById('calendarSettingsModal');
         const modalWrapper = modal.querySelector('.modal-content-wrapper');
@@ -6483,14 +7757,14 @@
             const item = document.createElement('div');
             item.style.cssText = 'padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;';
             item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="editFixedTransfer('${transfer.id}')">
                     <div style="width: 20px; height: 20px; border-radius: 50%; background: ${transfer.tagColor};"></div>
                     <div>
                         <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
                         <div style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">$${transfer.amount.toLocaleString()}</div>
                     </div>
                 </div>
-                <button onclick="deleteFixedTransfer('${transfer.id}')" style="padding: 8px 12px; background: var(--color-down); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;">刪除</button>
+                <button onclick="event.stopPropagation(); deleteFixedTransfer('${transfer.id}')" style="padding: 8px 12px; background: var(--color-down); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;">刪除</button>
             `;
             container.appendChild(item);
         });
@@ -6506,6 +7780,12 @@
         // 重新渲染列表和日曆
         renderFixedTransferList();
         renderCalendar();
+        
+        // 如果列表模態框是打開的，確保列表已更新
+        const listModal = document.getElementById('fixedTransferListModal');
+        if(listModal && listModal.style.display === 'block') {
+            renderFixedTransferList();
+        }
     }
     
     function closeCalendarSettingsModal() {
@@ -6522,17 +7802,65 @@
         }
     }
     
-    function openFixedTransferFromSettings() {
+    function openFixedTransferList() {
         closeCalendarSettingsModal();
+        setTimeout(() => {
+            const modal = document.getElementById('fixedTransferListModal');
+            const modalWrapper = modal.querySelector('.modal-content-wrapper');
+            
+            // 渲染固定轉帳列表
+            renderFixedTransferList();
+            
+            if(modalWrapper) {
+                modalWrapper.style.transform = 'translateY(100%)';
+            }
+            modal.style.display = 'block';
+            modal.style.background = 'rgba(0,0,0,0.5)';
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if(modalWrapper) {
+                        modalWrapper.style.transform = 'translateY(0)';
+                    }
+                }, 10);
+            });
+        }, 300);
+    }
+    
+    function closeFixedTransferListModal() {
+        const modal = document.getElementById('fixedTransferListModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalWrapper.style.transform = 'translateY(100%)';
+            }, 300);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+    
+    // 新增固定轉帳（從列表頁面的+按鈕）
+    function addNewFixedTransfer() {
+        const listModal = document.getElementById('fixedTransferListModal');
+        if(listModal && listModal.style.display === 'block') {
+            listModal.setAttribute('data-was-open', 'true');
+        }
+        closeFixedTransferListModal();
         setTimeout(() => {
             openFixedTransferModal();
         }, 300);
     }
     
+    // 當前編輯的固定轉帳ID（null表示新增模式）
+    let editingFixedTransferId = null;
+    
     // Fixed Transfer Functions
-    function openFixedTransferModal() {
+    function openFixedTransferModal(transferId = null) {
         const modal = document.getElementById('fixedTransferModal');
         const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        editingFixedTransferId = transferId;
         
         // 初始化數據
         fixedTransferData = {
@@ -6544,36 +7872,111 @@
             tagColor: null
         };
         
-        // 設置默認開始日期為今天
-        const today = new Date();
-        fixedTransferData.startDate = today;
-        const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-        const startDateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
-        const startDateElement = document.getElementById('fixedTransferStartDate');
-        if(startDateElement) {
-            startDateElement.textContent = startDateStr;
-            startDateElement.style.color = 'var(--text-primary)';
+        // 如果是編輯模式，載入現有數據
+        if(transferId) {
+            const transfers = loadFixedTransfers();
+            const transfer = transfers.find(t => t.id === transferId);
+            if(transfer) {
+                // 載入現有數據
+                document.getElementById('fixedTransferTitle').value = transfer.title;
+                document.getElementById('fixedTransferAmount').value = transfer.amount;
+                
+                // 載入帳戶信息
+                const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+                if(fromAccount) {
+                    document.getElementById('fixedTransferFromAccount').textContent = fromAccount.name;
+                    document.getElementById('fixedTransferFromAccount').style.color = 'var(--text-primary)';
+                    window.fixedTransferFromAccountId = transfer.fromAccountId;
+                }
+                if(toAccount) {
+                    document.getElementById('fixedTransferToAccount').textContent = toAccount.name;
+                    document.getElementById('fixedTransferToAccount').style.color = 'var(--text-primary)';
+                    window.fixedTransferToAccountId = transfer.toAccountId;
+                }
+                
+                // 載入重複設定
+                fixedTransferData.repeat = transfer.repeat;
+                const repeatNames = {
+                    'daily': '每日',
+                    'weekly': '每星期',
+                    'monthly': '每月',
+                    'yearly': '每年'
+                };
+                document.getElementById('fixedTransferRepeat').textContent = repeatNames[transfer.repeat] || '每月';
+                
+                // 載入按期數設定
+                fixedTransferData.byPeriod = transfer.byPeriod || false;
+                document.getElementById('fixedTransferByPeriod').checked = fixedTransferData.byPeriod;
+                
+                // 載入日期
+                fixedTransferData.startDate = new Date(transfer.startDate);
+                fixedTransferData.endDate = transfer.endDate ? new Date(transfer.endDate) : null;
+                
+                const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                const startDateStr = `${fixedTransferData.startDate.getFullYear()}年${fixedTransferData.startDate.getMonth() + 1}月${fixedTransferData.startDate.getDate()}日 ${weekdays[fixedTransferData.startDate.getDay()]}`;
+                document.getElementById('fixedTransferStartDate').textContent = startDateStr;
+                document.getElementById('fixedTransferStartDate').style.color = 'var(--text-primary)';
+                
+                if(fixedTransferData.endDate) {
+                    const endDateStr = `${fixedTransferData.endDate.getFullYear()}年${fixedTransferData.endDate.getMonth() + 1}月${fixedTransferData.endDate.getDate()}日 ${weekdays[fixedTransferData.endDate.getDay()]}`;
+                    document.getElementById('fixedTransferEndDate').textContent = endDateStr;
+                } else {
+                    document.getElementById('fixedTransferEndDate').textContent = '永不結束';
+                }
+                document.getElementById('fixedTransferEndDate').style.color = 'var(--text-primary)';
+                
+                // 載入假日調整
+                fixedTransferData.holidayAdjust = transfer.holidayAdjust || 'none';
+                const adjustNames = {
+                    'none': '不調整',
+                    'advance': '提前',
+                    'delay': '延後'
+                };
+                document.getElementById('fixedTransferHolidayAdjust').textContent = adjustNames[fixedTransferData.holidayAdjust] || '不調整';
+                
+                // 載入標籤顏色
+                fixedTransferData.tagColor = transfer.tagColor;
+                if(transfer.tagColor) {
+                    document.getElementById('fixedTransferTagColor').textContent = '已選擇';
+                    document.getElementById('fixedTransferTagColor').style.color = transfer.tagColor;
+                    document.getElementById('fixedTransferTagIcon').style.color = transfer.tagColor;
+                }
+                
+                updatePeriodCount();
+            }
+        } else {
+            // 新增模式：設置默認開始日期為今天
+            const today = new Date();
+            fixedTransferData.startDate = today;
+            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const startDateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
+            const startDateElement = document.getElementById('fixedTransferStartDate');
+            if(startDateElement) {
+                startDateElement.textContent = startDateStr;
+                startDateElement.style.color = 'var(--text-primary)';
+            }
+            
+            // 重置其他欄位
+            document.getElementById('fixedTransferTitle').value = '';
+            document.getElementById('fixedTransferAmount').value = '';
+            document.getElementById('fixedTransferFromAccount').textContent = '從帳戶';
+            document.getElementById('fixedTransferFromAccount').style.color = 'var(--text-secondary)';
+            document.getElementById('fixedTransferToAccount').textContent = '到帳戶';
+            document.getElementById('fixedTransferToAccount').style.color = 'var(--text-secondary)';
+            document.getElementById('fixedTransferRepeat').textContent = '每月';
+            document.getElementById('fixedTransferByPeriod').checked = false;
+            document.getElementById('fixedTransferEndDate').textContent = '永不結束';
+            document.getElementById('fixedTransferEndDate').style.color = 'var(--text-primary)';
+            document.getElementById('fixedTransferHolidayAdjust').textContent = '不調整';
+            document.getElementById('fixedTransferPeriodCount').textContent = '';
+            document.getElementById('fixedTransferTagColor').textContent = '選擇顏色';
+            document.getElementById('fixedTransferTagColor').style.color = 'var(--text-secondary)';
+            document.getElementById('fixedTransferTagIcon').style.color = 'var(--text-secondary)';
+            fixedTransferData.tagColor = null;
+            window.fixedTransferFromAccountId = null;
+            window.fixedTransferToAccountId = null;
         }
-        
-        // 重置其他欄位
-        document.getElementById('fixedTransferTitle').value = '';
-        document.getElementById('fixedTransferAmount').value = '';
-        document.getElementById('fixedTransferFromAccount').textContent = '從帳戶';
-        document.getElementById('fixedTransferFromAccount').style.color = 'var(--text-secondary)';
-        document.getElementById('fixedTransferToAccount').textContent = '到帳戶';
-        document.getElementById('fixedTransferToAccount').style.color = 'var(--text-secondary)';
-        document.getElementById('fixedTransferRepeat').textContent = '每月';
-        document.getElementById('fixedTransferByPeriod').checked = false;
-        document.getElementById('fixedTransferEndDate').textContent = '永不結束';
-        document.getElementById('fixedTransferEndDate').style.color = 'var(--text-primary)';
-        document.getElementById('fixedTransferHolidayAdjust').textContent = '不調整';
-        document.getElementById('fixedTransferPeriodCount').textContent = '';
-        document.getElementById('fixedTransferTagColor').textContent = '選擇顏色';
-        document.getElementById('fixedTransferTagColor').style.color = 'var(--text-secondary)';
-        document.getElementById('fixedTransferTagIcon').style.color = 'var(--text-secondary)';
-        fixedTransferData.tagColor = null;
-        window.fixedTransferFromAccountId = null;
-        window.fixedTransferToAccountId = null;
         
         updateNextDates();
         
@@ -6592,6 +7995,18 @@
         });
     }
     
+    // 編輯固定轉帳
+    function editFixedTransfer(id) {
+        const listModal = document.getElementById('fixedTransferListModal');
+        if(listModal && listModal.style.display === 'block') {
+            listModal.setAttribute('data-was-open', 'true');
+        }
+        closeFixedTransferListModal();
+        setTimeout(() => {
+            openFixedTransferModal(id);
+        }, 300);
+    }
+    
     function closeFixedTransferModal() {
         const modal = document.getElementById('fixedTransferModal');
         const modalWrapper = modal.querySelector('.modal-content-wrapper');
@@ -6600,9 +8015,25 @@
             setTimeout(() => {
                 modal.style.display = 'none';
                 modalWrapper.style.transform = 'translateX(100%)';
+                editingFixedTransferId = null; // 重置編輯狀態
+                
+                // 如果列表模態框之前是打開的，重新打開它
+                const listModal = document.getElementById('fixedTransferListModal');
+                if(listModal && listModal.getAttribute('data-was-open') === 'true') {
+                    listModal.removeAttribute('data-was-open');
+                    openFixedTransferList();
+                }
             }, 400);
         } else {
             modal.style.display = 'none';
+            editingFixedTransferId = null; // 重置編輯狀態
+            
+            // 如果列表模態框之前是打開的，重新打開它
+            const listModal = document.getElementById('fixedTransferListModal');
+            if(listModal && listModal.getAttribute('data-was-open') === 'true') {
+                listModal.removeAttribute('data-was-open');
+                openFixedTransferList();
+            }
         }
     }
     
@@ -6643,31 +8074,120 @@
             return;
         }
         
-        // 創建固定轉帳對象
-        const fixedTransfer = {
-            id: Date.now().toString(),
-            title: title,
-            amount: amount,
-            fromAccountId: fromAccountId,
-            toAccountId: toAccountId,
-            repeat: fixedTransferData.repeat,
-            byPeriod: fixedTransferData.byPeriod,
-            startDate: fixedTransferData.startDate.toISOString(),
-            endDate: fixedTransferData.endDate ? fixedTransferData.endDate.toISOString() : null,
-            holidayAdjust: fixedTransferData.holidayAdjust,
-            tagColor: fixedTransferData.tagColor,
-            createdAt: new Date().toISOString()
-        };
-        
-        // 載入現有列表並添加新項目
+        // 載入現有列表
         const transfers = loadFixedTransfers();
-        transfers.push(fixedTransfer);
+        
+        // 創建或更新固定轉帳對象
+        let fixedTransfer;
+        if(editingFixedTransferId) {
+            // 編輯模式：找到現有項目並更新
+            const existingIndex = transfers.findIndex(t => t.id === editingFixedTransferId);
+            if(existingIndex >= 0) {
+                const existing = transfers[existingIndex];
+                fixedTransfer = {
+                    ...existing, // 保留原有屬性（如執行記錄）
+                    title: title,
+                    amount: amount,
+                    fromAccountId: fromAccountId,
+                    toAccountId: toAccountId,
+                    repeat: fixedTransferData.repeat,
+                    byPeriod: fixedTransferData.byPeriod,
+                    startDate: fixedTransferData.startDate.toISOString(),
+                    endDate: fixedTransferData.endDate ? fixedTransferData.endDate.toISOString() : null,
+                    holidayAdjust: fixedTransferData.holidayAdjust,
+                    tagColor: fixedTransferData.tagColor
+                };
+                transfers[existingIndex] = fixedTransfer;
+            } else {
+                alert('找不到要編輯的固定轉帳');
+                return;
+            }
+        } else {
+            // 新增模式：檢查是否已存在相同標題的固定轉帳
+            const existing = transfers.find(t => t.title === title);
+            if(existing) {
+                // 如果已存在，切換到編輯模式
+                if(confirm(`已存在標題為「${title}」的固定轉帳，是否要編輯它？`)) {
+                    editingFixedTransferId = existing.id;
+                    closeFixedTransferModal();
+                    setTimeout(() => {
+                        openFixedTransferModal(existing.id);
+                    }, 300);
+                    return;
+                } else {
+                    return;
+                }
+            }
+            
+            // 創建新的固定轉帳
+            fixedTransfer = {
+                id: Date.now().toString(),
+                title: title,
+                amount: amount,
+                fromAccountId: fromAccountId,
+                toAccountId: toAccountId,
+                repeat: fixedTransferData.repeat,
+                byPeriod: fixedTransferData.byPeriod,
+                startDate: fixedTransferData.startDate.toISOString(),
+                endDate: fixedTransferData.endDate ? fixedTransferData.endDate.toISOString() : null,
+                holidayAdjust: fixedTransferData.holidayAdjust,
+                tagColor: fixedTransferData.tagColor,
+                createdAt: new Date().toISOString(),
+                lastExecutedDate: null,
+                executedDates: []
+            };
+            transfers.push(fixedTransfer);
+        }
+        
         saveFixedTransfers(transfers);
         
-        // 重新渲染日曆
+        // 重新渲染列表和日曆
+        renderFixedTransferList();
         renderCalendar();
         
+        editingFixedTransferId = null;
         closeFixedTransferModal();
+        
+        // 如果列表模態框是打開的，重新渲染列表
+        const listModal = document.getElementById('fixedTransferListModal');
+        if(listModal && listModal.style.display === 'block') {
+            renderFixedTransferList();
+        }
+    }
+    
+    // 從測試項目轉換為固定轉帳（如果已存在就編輯，不存在就新增）
+    function convertToFixedTransfer(title, amount, fromAccountId, toAccountId) {
+        const transfers = loadFixedTransfers();
+        const existing = transfers.find(t => t.title === title);
+        
+        if(existing) {
+            // 如果已存在，打開編輯模式
+            editFixedTransfer(existing.id);
+        } else {
+            // 如果不存在，打開新增模式並預填資料
+            openFixedTransferModal();
+            
+            // 預填資料
+            setTimeout(() => {
+                document.getElementById('fixedTransferTitle').value = title;
+                document.getElementById('fixedTransferAmount').value = amount;
+                
+                const fromAccount = accounts.find(acc => acc.id === fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === toAccountId);
+                
+                if(fromAccount) {
+                    document.getElementById('fixedTransferFromAccount').textContent = fromAccount.name;
+                    document.getElementById('fixedTransferFromAccount').style.color = 'var(--text-primary)';
+                    window.fixedTransferFromAccountId = fromAccountId;
+                }
+                
+                if(toAccount) {
+                    document.getElementById('fixedTransferToAccount').textContent = toAccount.name;
+                    document.getElementById('fixedTransferToAccount').style.color = 'var(--text-primary)';
+                    window.fixedTransferToAccountId = toAccountId;
+                }
+            }, 100);
+        }
     }
     
     let currentAccountSelectorType = null; // 'from' 或 'to'
@@ -6782,7 +8302,17 @@
     function loadFixedTransfers() {
         try {
             const data = localStorage.getItem(STORAGE_KEY_FIXED_TRANSFERS);
-            return data ? JSON.parse(data) : [];
+            const transfers = data ? JSON.parse(data) : [];
+            // 向後兼容：為舊的固定轉帳添加執行記錄欄位
+            transfers.forEach(transfer => {
+                if(!transfer.executedDates) {
+                    transfer.executedDates = [];
+                }
+                if(!transfer.lastExecutedDate) {
+                    transfer.lastExecutedDate = null;
+                }
+            });
+            return transfers;
         } catch(e) {
             return [];
         }
@@ -6854,7 +8384,13 @@
         const title = document.getElementById('datePickerTitle');
         
         if(title) {
-            title.textContent = type === 'start' ? '選擇開始日期' : '選擇結束日期';
+            if(type === 'start') {
+                title.textContent = '選擇開始日期';
+            } else if(type === 'end') {
+                title.textContent = '選擇結束日期';
+            } else if(type === 'income' || type === 'expense' || type === 'transfer') {
+                title.textContent = '選擇日期';
+            }
         }
         
         // 初始化日期（如果已有選擇則使用，否則使用今天）
@@ -6863,6 +8399,8 @@
             initialDate = new Date(fixedTransferData.startDate);
         } else if(type === 'end' && fixedTransferData.endDate) {
             initialDate = new Date(fixedTransferData.endDate);
+        } else if((type === 'income' || type === 'expense' || type === 'transfer') && currentJournalDate) {
+            initialDate = new Date(currentJournalDate);
         } else {
             initialDate = new Date();
         }
@@ -7098,18 +8636,29 @@
                 startDateElement.textContent = dateStr;
                 startDateElement.style.color = 'var(--text-primary)';
             }
-        } else {
+        } else if(currentDatePickerType === 'end') {
             fixedTransferData.endDate = date;
             const endDateElement = document.getElementById('fixedTransferEndDate');
             if(endDateElement) {
                 endDateElement.textContent = dateStr;
                 endDateElement.style.color = 'var(--text-primary)';
             }
+        } else if(currentDatePickerType === 'income') {
+            currentJournalDate = date;
+            updateIncomeDateDisplay();
+        } else if(currentDatePickerType === 'expense') {
+            currentJournalDate = date;
+            updateExpenseDateDisplay();
+        } else if(currentDatePickerType === 'transfer') {
+            currentJournalDate = date;
+            updateTransferDateDisplay();
         }
         
         closeDatePicker();
-        updatePeriodCount();
-        updateNextDates();
+        if(currentDatePickerType === 'start' || currentDatePickerType === 'end') {
+            updatePeriodCount();
+            updateNextDates();
+        }
     }
     
     function openHolidayAdjustSelector() {
@@ -7200,6 +8749,135 @@
             tagIconElement.style.color = color;
         }
         closeTagColorSelector();
+    }
+    
+    // 檢查並執行固定轉帳
+    function checkAndExecuteFixedTransfers() {
+        const transfers = loadFixedTransfers();
+        if(transfers.length === 0) return;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        
+        let hasChanges = false;
+        
+        transfers.forEach(transfer => {
+            // 確保有執行記錄欄位（向後兼容）
+            if(!transfer.executedDates) {
+                transfer.executedDates = [];
+            }
+            if(!transfer.lastExecutedDate) {
+                transfer.lastExecutedDate = null;
+            }
+            
+            // 檢查今天是否已經執行過
+            if(transfer.executedDates.includes(todayStr)) {
+                return; // 今天已經執行過，跳過
+            }
+            
+            // 檢查日期範圍
+            const startDate = new Date(transfer.startDate);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = transfer.endDate ? new Date(transfer.endDate) : null;
+            if(endDate) endDate.setHours(0, 0, 0, 0);
+            
+            if(today < startDate) return; // 還沒到開始日期
+            if(endDate && today > endDate) return; // 已經過了結束日期
+            
+            // 檢查是否符合重複規則
+            let shouldExecute = false;
+            const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            
+            switch(transfer.repeat) {
+                case 'daily':
+                    shouldExecute = true;
+                    break;
+                case 'weekly':
+                    shouldExecute = (daysDiff % 7 === 0);
+                    break;
+                case 'monthly':
+                    shouldExecute = (today.getDate() === startDate.getDate());
+                    break;
+                case 'yearly':
+                    shouldExecute = (today.getMonth() === startDate.getMonth() && today.getDate() === startDate.getDate());
+                    break;
+            }
+            
+            // 處理假日調整
+            if(shouldExecute && transfer.holidayAdjust !== 'none') {
+                const dayOfWeek = today.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                if(isWeekend) {
+                    if(transfer.holidayAdjust === 'advance') {
+                        // 提前到上一個工作日
+                        const prevWorkday = new Date(today);
+                        while(prevWorkday.getDay() === 0 || prevWorkday.getDay() === 6) {
+                            prevWorkday.setDate(prevWorkday.getDate() - 1);
+                        }
+                        const prevWorkdayStr = prevWorkday.toISOString().split('T')[0];
+                        if(!transfer.executedDates.includes(prevWorkdayStr)) {
+                            // 如果上一個工作日還沒執行，則今天執行
+                            shouldExecute = true;
+                        } else {
+                            shouldExecute = false;
+                        }
+                    } else if(transfer.holidayAdjust === 'delay') {
+                        // 延後到下一個工作日
+                        shouldExecute = false; // 今天不執行，等工作日再執行
+                    }
+                }
+            }
+            
+            if(shouldExecute) {
+                // 執行轉帳
+                const executed = executeFixedTransfer(transfer, today);
+                if(executed) {
+                    hasChanges = true;
+                }
+            }
+        });
+        
+        if(hasChanges) {
+            saveFixedTransfers(transfers);
+            renderAssets();
+            updateChartData();
+        }
+    }
+    
+    // 執行固定轉帳
+    function executeFixedTransfer(transfer, executeDate) {
+        const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+        const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+        
+        if(!fromAccount || !toAccount) {
+            console.warn('固定轉帳執行失敗：找不到帳戶', transfer);
+            return false;
+        }
+        
+        // 檢查餘額是否足夠
+        if(fromAccount.balance < transfer.amount) {
+            console.warn(`固定轉帳執行失敗：${fromAccount.name} 餘額不足`, transfer);
+            return false;
+        }
+        
+        // 更新帳戶餘額
+        fromAccount.balance -= transfer.amount;
+        toAccount.balance += transfer.amount;
+        
+        // 記錄執行日期
+        const dateStr = executeDate.toISOString().split('T')[0];
+        if(!transfer.executedDates.includes(dateStr)) {
+            transfer.executedDates.push(dateStr);
+        }
+        transfer.lastExecutedDate = dateStr;
+        
+        // 保存資料
+        saveData();
+        
+        console.log(`固定轉帳已執行：${transfer.title}，金額：${transfer.amount}，從 ${fromAccount.name} 轉到 ${toAccount.name}`);
+        return true;
     }
     
     function updatePeriodCount() {
