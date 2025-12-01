@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅遊小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Comfortaa:wght@300;400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme: 'minimal';
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        /* 日系無印極簡風 */
+        .theme-minimal {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c2c2c;
+            --text-secondary: #666666;
+            --accent: #8b7355;
+            --border: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --font: 'Noto Sans TC', sans-serif;
+        }
+        
+        /* Cyberpunk 科幻霓虹風 */
+        .theme-cyberpunk {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --text-primary: #00ff88;
+            --text-secondary: #00d4ff;
+            --accent: #ff0080;
+            --border: #00ff88;
+            --shadow: 0 0 20px rgba(0,255,136,0.3);
+            --font: 'Orbitron', sans-serif;
+        }
+        
+        /* 粉嫩可愛卡通風 */
+        .theme-cute {
+            --bg-primary: #fff5f8;
+            --bg-secondary: #ffffff;
+            --text-primary: #ff6b9d;
+            --text-secondary: #ffa8c5;
+            --accent: #ffb3d9;
+            --border: #ffd6e8;
+            --shadow: 0 4px 12px rgba(255,107,157,0.2);
+            --font: 'Comfortaa', cursive;
+        }
+        
+        /* 高質感黑金奢華風 */
+        .theme-luxury {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #d4af37;
+            --text-secondary: #f4e4bc;
+            --accent: #ffd700;
+            --border: #d4af37;
+            --shadow: 0 4px 16px rgba(212,175,55,0.3);
+            --font: 'Playfair Display', serif;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font);
+        }
+        
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .text-accent {
+            color: var(--accent);
+        }
+        
+        .border-accent {
+            border-color: var(--accent);
+        }
+        
+        .theme-cyberpunk .card {
+            border: 2px solid var(--border);
+            box-shadow: 0 0 15px rgba(0,255,136,0.2);
+        }
+        
+        .theme-cyberpunk .btn-primary {
+            box-shadow: 0 0 10px var(--accent);
+        }
+        
+        .theme-cute .card {
+            border-radius: 20px;
+        }
+        
+        .theme-luxury .card {
+            border: 2px solid var(--border);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: -2rem;
+            width: 2px;
+            background: var(--accent);
+        }
+        
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg-secondary);
+        }
+        
+        .nav-item.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .photo-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .checklist-item {
+            transition: all 0.3s ease;
+        }
+        
+        .checklist-item.checked {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <!-- 風格選擇器 -->
+    <div class="fixed top-4 right-4 z-50">
+        <select id="themeSelector" class="px-3 py-2 rounded-lg border border-accent bg-secondary text-primary text-sm">
+            <option value="minimal">日系無印</option>
+            <option value="cyberpunk">Cyberpunk</option>
+            <option value="cute">粉嫩可愛</option>
+            <option value="luxury">黑金奢華</option>
+        </select>
+    </div>
+
+    <!-- 行程卡片選擇頁面 -->
+    <div id="tripSelectionPage" class="min-h-screen p-4">
+        <div class="max-w-md mx-auto pt-16">
+            <h1 class="text-3xl font-bold text-center mb-8 text-accent">我的旅遊行程</h1>
+            <div id="tripCards" class="space-y-4 mb-6">
+                <!-- 行程卡片將動態生成 -->
+            </div>
+            <button onclick="showNewTripForm()" class="w-full py-4 rounded-lg btn-primary text-lg font-bold">
+                <i class="fas fa-plus mr-2"></i>新增行程
+            </button>
+        </div>
+    </div>
+
+    <!-- 新增行程表單 -->
+    <div id="newTripForm" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="card rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-4 text-accent">新增行程</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2">行程名稱</label>
+                    <input type="text" id="tripName" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent" placeholder="例如：日本關西之旅">
+                </div>
+                <div>
+                    <label class="block mb-2">去程航班</label>
+                    <input type="text" id="flightOut" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent" placeholder="例如：CI100 08:00-12:00">
+                </div>
+                <div>
+                    <label class="block mb-2">回程航班</label>
+                    <input type="text" id="flightBack" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent" placeholder="例如：CI101 18:00-20:00">
+                </div>
+                <div>
+                    <label class="block mb-2">住宿資訊</label>
+                    <input type="text" id="hotelName" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent mb-2" placeholder="飯店名稱">
+                    <input type="text" id="hotelAddress" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent" placeholder="飯店地址">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="hideNewTripForm()" class="flex-1 py-2 rounded-lg border border-accent">取消</button>
+                    <button onclick="createNewTrip()" class="flex-1 py-2 rounded-lg btn-primary">建立</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主應用程式 -->
+    <div id="mainApp" class="hidden">
+        <!-- 頂部資訊欄 -->
+        <div class="card rounded-b-lg p-4 mb-4">
+            <div class="text-center">
+                <h1 id="currentTripName" class="text-2xl font-bold mb-2 text-accent"></h1>
+                <div class="text-sm space-y-1">
+                    <div><i class="fas fa-plane-departure mr-2"></i><span id="flightOutInfo"></span></div>
+                    <div><i class="fas fa-plane-arrival mr-2"></i><span id="flightBackInfo"></span></div>
+                    <div><i class="fas fa-hotel mr-2"></i><span id="hotelInfo"></span></div>
+                </div>
+                <button onclick="backToTripSelection()" class="mt-3 text-sm text-accent underline">返回行程列表</button>
+            </div>
+        </div>
+
+        <!-- 導航列 -->
+        <div class="flex justify-around items-center border-t border-b border-accent py-2 mb-4 bg-secondary sticky top-0 z-40">
+            <button onclick="showTab('plan')" class="nav-item active px-4 py-2 flex flex-col items-center">
+                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+                <span class="text-xs">行程</span>
+            </button>
+            <button onclick="showTab('guide')" class="nav-item px-4 py-2 flex flex-col items-center">
+                <i class="fas fa-book text-xl mb-1"></i>
+                <span class="text-xs">導覽</span>
+            </button>
+            <button onclick="showTab('wallet')" class="nav-item px-4 py-2 flex flex-col items-center">
+                <i class="fas fa-wallet text-xl mb-1"></i>
+                <span class="text-xs">記帳</span>
+            </button>
+            <button onclick="showTab('lists')" class="nav-item px-4 py-2 flex flex-col items-center">
+                <i class="fas fa-list-check text-xl mb-1"></i>
+                <span class="text-xs">清單</span>
+            </button>
+            <button onclick="showTab('info')" class="nav-item px-4 py-2 flex flex-col items-center">
+                <i class="fas fa-info-circle text-xl mb-1"></i>
+                <span class="text-xs">資訊</span>
+            </button>
+        </div>
+
+        <!-- PLAN 行程表 -->
+        <div id="tab-plan" class="tab-content p-4">
+            <div class="mb-4">
+                <button onclick="showAddDayForm()" class="w-full py-2 rounded-lg btn-primary">
+                    <i class="fas fa-plus mr-2"></i>新增行程日
+                </button>
+            </div>
+            <div id="planContent" class="space-y-6">
+                <!-- 行程內容將動態生成 -->
+            </div>
+        </div>
+
+        <!-- GUIDE 深度導覽 -->
+        <div id="tab-guide" class="tab-content hidden p-4">
+            <div id="guideContent" class="space-y-6">
+                <!-- 導覽內容將動態生成 -->
+            </div>
+        </div>
+
+        <!-- WALLET 記帳與匯率 -->
+        <div id="tab-wallet" class="tab-content hidden p-4">
+            <div class="card rounded-lg p-4 mb-4">
+                <h2 class="text-xl font-bold mb-4 text-accent">匯率換算</h2>
+                <div class="mb-3">
+                    <label class="block mb-2">日幣匯率 (1 JPY = ? TWD)</label>
+                    <input type="number" id="exchangeRate" step="0.0001" value="0.22" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent">
+                </div>
+                <div class="mb-3">
+                    <label class="block mb-2">計算式 (例如: 500+200*3)</label>
+                    <input type="text" id="calcInput" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent font-mono" placeholder="輸入算式...">
+                </div>
+                <button onclick="calculateExchange()" class="w-full py-2 rounded-lg btn-primary mb-2">
+                    <i class="fas fa-equals mr-2"></i>計算
+                </button>
+                <div id="calcResult" class="text-center text-lg font-bold text-accent"></div>
+            </div>
+
+            <div class="card rounded-lg p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-accent">記帳記錄</h2>
+                    <button onclick="showAddExpenseForm()" class="px-4 py-2 rounded-lg btn-primary text-sm">
+                        <i class="fas fa-plus mr-1"></i>新增
+                    </button>
+                </div>
+                <div id="expenseList" class="space-y-3">
+                    <!-- 記帳記錄將動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- LISTS 清單 -->
+        <div id="tab-lists" class="tab-content hidden p-4">
+            <div class="card rounded-lg p-4 mb-4">
+                <h2 class="text-xl font-bold mb-4 text-accent">行前準備</h2>
+                <div id="checklistContent" class="space-y-2">
+                    <!-- 清單項目將動態生成 -->
+                </div>
+                <button onclick="addChecklistItem()" class="mt-4 w-full py-2 rounded-lg border border-accent">
+                    <i class="fas fa-plus mr-2"></i>新增項目
+                </button>
+            </div>
+
+            <div class="card rounded-lg p-4">
+                <h2 class="text-xl font-bold mb-4 text-accent">個人備忘錄</h2>
+                <textarea id="memoContent" rows="10" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent mb-3" placeholder="輸入備忘錄..."></textarea>
+                <button onclick="saveMemo()" class="w-full py-2 rounded-lg btn-primary">
+                    <i class="fas fa-save mr-2"></i>儲存
+                </button>
+                <div id="memoDisplay" class="mt-4 space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- INFO 資訊 -->
+        <div id="tab-info" class="tab-content hidden p-4">
+            <div class="space-y-4">
+                <div class="card rounded-lg p-4">
+                    <h2 class="text-xl font-bold mb-4 text-accent">天氣預報</h2>
+                    <a href="https://www.jma.go.jp/jma/index.html" target="_blank" class="block py-3 px-4 rounded-lg border border-accent text-center hover:bg-accent hover:text-bg-primary transition">
+                        <i class="fas fa-cloud-sun mr-2"></i>日本氣象廳
+                    </a>
+                </div>
+
+                <div class="card rounded-lg p-4">
+                    <h2 class="text-xl font-bold mb-4 text-accent">緊急聯絡</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center py-2 border-b border-accent">
+                            <span><i class="fas fa-phone mr-2"></i>警察</span>
+                            <a href="tel:110" class="text-accent font-bold">110</a>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-accent">
+                            <span><i class="fas fa-ambulance mr-2"></i>救護車</span>
+                            <a href="tel:119" class="text-accent font-bold">119</a>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-accent">
+                            <span><i class="fas fa-building mr-2"></i>台灣辦事處</span>
+                            <a href="tel:03-3280-7811" class="text-accent font-bold">03-3280-7811</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card rounded-lg p-4">
+                    <h2 class="text-xl font-bold mb-4 text-accent">注意事項</h2>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle mr-2 text-accent mt-1"></i>
+                            <div>
+                                <strong>違禁品：</strong>肉類製品、新鮮蔬果、超過100ml液體等不得攜帶入境
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle mr-2 text-accent mt-1"></i>
+                            <div>
+                                <strong>禮儀：</strong>電車內保持安靜、不講電話，餐廳內不吸菸
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle mr-2 text-accent mt-1"></i>
+                            <div>
+                                <strong>消費稅：</strong>購物滿5000日圓可辦理退稅
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增行程日表單 -->
+    <div id="addDayForm" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="card rounded-lg p-4 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-accent">新增行程日</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block mb-2">日期標題 (例如: D1 第一天)</label>
+                    <input type="text" id="dayTitle" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent">
+                </div>
+                <div>
+                    <label class="block mb-2">行程內容 (每行一個項目，格式: 時間 地點/活動)</label>
+                    <textarea id="dayContent" rows="10" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent" placeholder="例如：&#10;08:00 飯店集合&#10;09:00 前往清水寺&#10;12:00 午餐 - 京都拉麵小路"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="hideAddDayForm()" class="flex-1 py-2 rounded-lg border border-accent">取消</button>
+                    <button onclick="addDay()" class="flex-1 py-2 rounded-lg btn-primary">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增記帳表單 -->
+    <div id="addExpenseForm" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="card rounded-lg p-4 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-accent">新增記帳</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block mb-2">品項</label>
+                    <input type="text" id="expenseItem" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent">
+                </div>
+                <div>
+                    <label class="block mb-2">日幣金額</label>
+                    <input type="number" id="expenseAmount" class="w-full px-4 py-2 rounded-lg border border-accent bg-transparent">
+                </div>
+                <div>
+                    <label class="block mb-2">照片 (選填)</label>
+                    <input type="file" id="expensePhoto" accept="image/*" capture="environment">
+                    <button onclick="document.getElementById('expensePhoto').click()" class="w-full py-2 rounded-lg border border-accent">
+                        <i class="fas fa-camera mr-2"></i>拍照或上傳
+                    </button>
+                    <div id="expensePhotoPreview" class="mt-2"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="hideAddExpenseForm()" class="flex-1 py-2 rounded-lg border border-accent">取消</button>
+                    <button onclick="saveExpense()" class="flex-1 py-2 rounded-lg btn-primary">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentTripId = null;
+        let currentPhotoBase64 = null;
+        let trips = JSON.parse(localStorage.getItem('trips') || '[]');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            renderTripCards();
+            document.getElementById('themeSelector').addEventListener('change', changeTheme);
+            document.getElementById('expensePhoto').addEventListener('change', handlePhotoUpload);
+        });
+
+        // 主題切換
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'minimal';
+            changeTheme({target: {value: savedTheme}});
+            document.getElementById('themeSelector').value = savedTheme;
+        }
+
+        function changeTheme(e) {
+            const theme = e.target.value;
+            document.body.className = `theme-${theme}`;
+            localStorage.setItem('theme', theme);
+        }
+
+        // 行程卡片管理
+        function renderTripCards() {
+            const container = document.getElementById('tripCards');
+            if (trips.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary">還沒有行程，點擊下方按鈕新增</p>';
+                return;
+            }
+            container.innerHTML = trips.map((trip, index) => `
+                <div onclick="selectTrip(${index})" class="card rounded-lg p-4 cursor-pointer hover:scale-105 transition">
+                    <h3 class="text-xl font-bold mb-2 text-accent">${trip.name}</h3>
+                    <p class="text-sm text-secondary">${trip.flightOut || '未設定航班'}</p>
+                </div>
+            `).join('');
+        }
+
+        function showNewTripForm() {
+            document.getElementById('newTripForm').classList.remove('hidden');
+        }
+
+        function hideNewTripForm() {
+            document.getElementById('newTripForm').classList.add('hidden');
+            document.getElementById('tripName').value = '';
+            document.getElementById('flightOut').value = '';
+            document.getElementById('flightBack').value = '';
+            document.getElementById('hotelName').value = '';
+            document.getElementById('hotelAddress').value = '';
+        }
+
+        function createNewTrip() {
+            const trip = {
+                id: Date.now(),
+                name: document.getElementById('tripName').value || '未命名行程',
+                flightOut: document.getElementById('flightOut').value,
+                flightBack: document.getElementById('flightBack').value,
+                hotelName: document.getElementById('hotelName').value,
+                hotelAddress: document.getElementById('hotelAddress').value,
+                days: [],
+                guides: [],
+                expenses: [],
+                checklist: ['護照', '機票', '網卡', '充電器', '轉接頭'],
+                memo: ''
+            };
+            trips.push(trip);
+            localStorage.setItem('trips', JSON.stringify(trips));
+            renderTripCards();
+            hideNewTripForm();
+            selectTrip(trips.length - 1);
+        }
+
+        function selectTrip(index) {
+            currentTripId = trips[index].id;
+            const trip = trips[index];
+            
+            document.getElementById('tripSelectionPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            document.getElementById('currentTripName').textContent = trip.name;
+            document.getElementById('flightOutInfo').textContent = trip.flightOut || '未設定';
+            document.getElementById('flightBackInfo').textContent = trip.flightBack || '未設定';
+            document.getElementById('hotelInfo').textContent = `${trip.hotelName || ''} ${trip.hotelAddress || ''}`.trim() || '未設定';
+            
+            loadTripData();
+        }
+
+        function backToTripSelection() {
+            document.getElementById('tripSelectionPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            saveCurrentTrip();
+        }
+
+        // 分頁切換
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            event.target.closest('.nav-item').classList.add('active');
+            if (tabName === 'wallet') {
+                loadExpenses();
+            } else if (tabName === 'lists') {
+                loadChecklist();
+                loadMemo();
+            }
+        }
+
+        // 行程管理
+        function loadTripData() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip) return;
+            
+            renderPlan();
+            renderGuide();
+            if (trip.expenses) loadExpenses();
+            if (trip.checklist) loadChecklist();
+            if (trip.memo) loadMemo();
+        }
+
+        function renderPlan() {
+            const trip = trips.find(t => t.id === currentTripId);
+            const container = document.getElementById('planContent');
+            
+            if (!trip.days || trip.days.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary">還沒有行程，點擊上方按鈕新增</p>';
+                return;
+            }
+            
+            container.innerHTML = trip.days.map((day, dayIndex) => {
+                const items = day.content.split('\n').filter(line => line.trim());
+                return `
+                    <div class="card rounded-lg p-4">
+                        <h3 class="text-xl font-bold mb-4 text-accent">${day.title}</h3>
+                        <div class="space-y-3">
+                            ${items.map((item, itemIndex) => {
+                                const parts = item.trim().split(/\s+/);
+                                const time = parts[0];
+                                const rest = parts.slice(1).join(' ');
+                                const isImportant = rest.includes('集合') || rest.includes('出發');
+                                const hasLocation = rest.match(/([\u4e00-\u9fa5]+寺|[\u4e00-\u9fa5]+神社|[\u4e00-\u9fa5]+公園|[\u4e00-\u9fa5]+博物館|[\u4e00-\u9fa5]+塔)/);
+                                
+                                return `
+                                    <div class="timeline-item ${isImportant ? 'bg-accent bg-opacity-10 p-3 rounded-lg' : ''}">
+                                        <div class="timeline-dot"></div>
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <span class="font-bold text-accent">${time}</span>
+                                                <span class="ml-2 ${isImportant ? 'font-bold' : ''}">${rest}</span>
+                                            </div>
+                                            ${hasLocation ? `
+                                                <a href="https://www.google.com/maps/search/${encodeURIComponent(hasLocation[1])}" target="_blank" class="ml-2 px-2 py-1 rounded text-xs btn-primary">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                </a>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <button onclick="deleteDay(${dayIndex})" class="mt-3 text-sm text-red-500">
+                            <i class="fas fa-trash mr-1"></i>刪除
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showAddDayForm() {
+            document.getElementById('addDayForm').classList.remove('hidden');
+        }
+
+        function hideAddDayForm() {
+            document.getElementById('addDayForm').classList.add('hidden');
+            document.getElementById('dayTitle').value = '';
+            document.getElementById('dayContent').value = '';
+        }
+
+        function addDay() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.days) trip.days = [];
+            
+            trip.days.push({
+                title: document.getElementById('dayTitle').value || '未命名',
+                content: document.getElementById('dayContent').value
+            });
+            
+            saveCurrentTrip();
+            renderPlan();
+            hideAddDayForm();
+        }
+
+        function deleteDay(dayIndex) {
+            const trip = trips.find(t => t.id === currentTripId);
+            trip.days.splice(dayIndex, 1);
+            saveCurrentTrip();
+            renderPlan();
+        }
+
+        // 導覽管理
+        function renderGuide() {
+            const trip = trips.find(t => t.id === currentTripId);
+            const container = document.getElementById('guideContent');
+            
+            if (!trip.guides || trip.guides.length === 0) {
+                container.innerHTML = `
+                    <div class="card rounded-lg p-4 text-center">
+                        <p class="text-secondary mb-4">還沒有導覽內容</p>
+                        <button onclick="addDefaultGuides()" class="px-4 py-2 rounded-lg btn-primary">
+                            載入範例導覽
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = trip.guides.map((guide, index) => `
+                <div class="card rounded-lg p-4">
+                    <h3 class="text-xl font-bold mb-3 text-accent">${guide.title}</h3>
+                    <div class="text-sm leading-relaxed space-y-3">${guide.content}</div>
+                    ${guide.mapUrl ? `
+                        <div class="mt-4">
+                            <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
+                                src="${guide.mapUrl}"></iframe>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function addDefaultGuides() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.guides) trip.guides = [];
+            
+            trip.guides.push({
+                title: '清水寺',
+                content: '<p>清水寺是京都最古老的寺院，建於公元798年，現存建築物為1633年重建。主要供奉千手觀音，是日本國寶級文物。寺內最著名的「清水舞台」由139根高數十米的大圓木支撐，未使用一根釘子，展現了日本傳統建築工藝的精湛。</p><p class="mt-2"><strong>冷知識：</strong>「清水舞台」的日語「清水の舞台から飛び降りる」意為「從清水舞台跳下去」，比喻下定決心做某事，可見其高度令人敬畏。</p>',
+                mapUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=135.7830,34.9940,135.7890,35.0000&layer=mapnik&marker=34.997,135.786'
+            });
+            
+            saveCurrentTrip();
+            renderGuide();
+        }
+
+        // 記帳管理
+        function calculateExchange() {
+            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0.22;
+            const input = document.getElementById('calcInput').value;
+            
+            try {
+                const result = eval(input);
+                const twd = (result * rate).toFixed(2);
+                document.getElementById('calcResult').innerHTML = `
+                    <div class="text-2xl">${result.toLocaleString()} JPY</div>
+                    <div class="text-lg text-secondary">= ${twd} TWD</div>
+                `;
+            } catch (e) {
+                document.getElementById('calcResult').innerHTML = '<div class="text-red-500">計算錯誤</div>';
+            }
+        }
+
+        function showAddExpenseForm() {
+            document.getElementById('addExpenseForm').classList.remove('hidden');
+            currentPhotoBase64 = null;
+            document.getElementById('expensePhotoPreview').innerHTML = '';
+        }
+
+        function hideAddExpenseForm() {
+            document.getElementById('addExpenseForm').classList.add('hidden');
+            document.getElementById('expenseItem').value = '';
+            document.getElementById('expenseAmount').value = '';
+            currentPhotoBase64 = null;
+        }
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxSize = 400;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('expensePhotoPreview').innerHTML = `
+                        <img src="${currentPhotoBase64}" class="w-full rounded-lg" alt="預覽">
+                    `;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveExpense() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.expenses) trip.expenses = [];
+            
+            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0.22;
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            
+            trip.expenses.push({
+                id: Date.now(),
+                item: document.getElementById('expenseItem').value || '未命名',
+                amount: amount,
+                twd: (amount * rate).toFixed(2),
+                photo: currentPhotoBase64,
+                date: new Date().toLocaleString('zh-TW')
+            });
+            
+            saveCurrentTrip();
+            loadExpenses();
+            hideAddExpenseForm();
+        }
+
+        function loadExpenses() {
+            const trip = trips.find(t => t.id === currentTripId);
+            const container = document.getElementById('expenseList');
+            
+            if (!trip.expenses || trip.expenses.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary">還沒有記帳記錄</p>';
+                return;
+            }
+            
+            const total = trip.expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            const totalTWD = trip.expenses.reduce((sum, e) => sum + parseFloat(e.twd), 0);
+            
+            container.innerHTML = `
+                <div class="mb-4 p-3 rounded-lg bg-accent bg-opacity-10 text-center">
+                    <div class="text-sm text-secondary">總計</div>
+                    <div class="text-xl font-bold text-accent">${total.toLocaleString()} JPY / ${totalTWD.toFixed(2)} TWD</div>
+                </div>
+                ${trip.expenses.map((expense, index) => `
+                    <div class="card rounded-lg p-3 flex items-start gap-3">
+                        ${expense.photo ? `<img src="${expense.photo}" class="photo-thumbnail" alt="照片">` : '<div class="photo-thumbnail bg-accent bg-opacity-20 flex items-center justify-center"><i class="fas fa-image text-accent"></i></div>'}
+                        <div class="flex-1">
+                            <div class="font-bold">${expense.item}</div>
+                            <div class="text-sm text-secondary">${expense.amount.toLocaleString()} JPY / ${expense.twd} TWD</div>
+                            <div class="text-xs text-secondary mt-1">${expense.date}</div>
+                        </div>
+                        <button onclick="deleteExpense(${index})" class="text-red-500">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function deleteExpense(index) {
+            const trip = trips.find(t => t.id === currentTripId);
+            trip.expenses.splice(index, 1);
+            saveCurrentTrip();
+            loadExpenses();
+        }
+
+        // 清單管理
+        function loadChecklist() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.checklist) trip.checklist = ['護照', '機票', '網卡', '充電器', '轉接頭'];
+            
+            const container = document.getElementById('checklistContent');
+            container.innerHTML = trip.checklist.map((item, index) => {
+                const checked = trip.checklistChecked && trip.checklistChecked[index] ? 'checked' : '';
+                return `
+                    <label class="checklist-item ${checked} flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" ${checked} onchange="toggleChecklist(${index})" class="w-5 h-5">
+                        <span>${item}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function toggleChecklist(index) {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.checklistChecked) trip.checklistChecked = [];
+            trip.checklistChecked[index] = !trip.checklistChecked[index];
+            saveCurrentTrip();
+            loadChecklist();
+        }
+
+        function addChecklistItem() {
+            const item = prompt('輸入新的清單項目：');
+            if (!item) return;
+            
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.checklist) trip.checklist = [];
+            trip.checklist.push(item);
+            if (!trip.checklistChecked) trip.checklistChecked = [];
+            trip.checklistChecked.push(false);
+            
+            saveCurrentTrip();
+            loadChecklist();
+        }
+
+        function loadMemo() {
+            const trip = trips.find(t => t.id === currentTripId);
+            if (!trip.memo) trip.memo = '';
+            
+            document.getElementById('memoContent').value = trip.memo;
+            renderMemoDisplay();
+        }
+
+        function saveMemo() {
+            const trip = trips.find(t => t.id === currentTripId);
+            trip.memo = document.getElementById('memoContent').value;
+            saveCurrentTrip();
+            renderMemoDisplay();
+            alert('已儲存');
+        }
+
+        function renderMemoDisplay() {
+            const trip = trips.find(t => t.id === currentTripId);
+            const container = document.getElementById('memoDisplay');
+            
+            if (!trip.memo) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const lines = trip.memo.split('\n');
+            container.innerHTML = lines.map(line => {
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                if (urlRegex.test(line)) {
+                    return `<div class="mb-2">${line.replace(urlRegex, '<a href="$1" target="_blank" class="text-accent underline break-all">$1</a>')}</div>`;
+                }
+                return `<div class="mb-2">${line}</div>`;
+            }).join('');
+        }
+
+        // 儲存當前行程
+        function saveCurrentTrip() {
+            localStorage.setItem('trips', JSON.stringify(trips));
+        }
+    </script>
+</body>
+</html>
+

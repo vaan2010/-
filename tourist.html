@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的旅遊規劃表</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --delete-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        input.title-input {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            width: 100%;
+            outline: none;
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        input.date-input {
+            font-size: 1.1em;
+            text-align: center;
+            border: none;
+            width: 100%;
+            outline: none;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        /* Day Section */
+        .day-block {
+            margin-bottom: 30px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+        }
+
+        .day-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Activity Rows */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            align-items: start;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .activity-item:hover {
+            background: #f0f4f8;
+        }
+
+        /* Inputs */
+        input, textarea {
+            border: 1px solid transparent;
+            background: transparent;
+            font-family: inherit;
+            padding: 4px;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        input:hover, textarea:hover, input:focus, textarea:focus {
+            background: #fff;
+            border-color: #ddd;
+        }
+
+        .time-input { width: 80px; font-weight: bold; color: var(--accent-color); }
+        .loc-input { flex-grow: 1; font-weight: bold; font-size: 1.1em; }
+        .note-input { width: 100%; font-size: 0.9em; color: #666; resize: none; margin-top: 4px; }
+        .cost-input { width: 100px; text-align: right; color: #27ae60; font-weight: bold;}
+
+        .activity-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            transition: 0.2s;
+        }
+
+        .btn-add { background-color: var(--accent-color); color: white; }
+        .btn-add:hover { background-color: #2980b9; }
+
+        .btn-delete { background-color: transparent; color: #ccc; font-size: 1.2em; padding: 0 5px;}
+        .btn-delete:hover { color: var(--delete-color); }
+
+        .btn-remove-day { background-color: #ffeaea; color: var(--delete-color); font-size: 0.8em; }
+        .btn-remove-day:hover { background-color: #fadbd8; }
+
+        .controls {
+            margin-top: 40px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .big-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .btn-print { background-color: #2c3e50; color: white; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; width: 100%; max-width: 100%; padding: 0; }
+            button, .controls { display: none !important; }
+            input, textarea { border: none !important; background: transparent !important; resize: none; }
+            .day-block { break-inside: avoid; border: none; border-bottom: 1px solid #ddd; padding: 10px 0; }
+            .activity-item { background: transparent; padding: 0; margin-bottom: 15px; }
+            ::-webkit-input-placeholder { color: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <input type="text" id="trip-title" class="title-input" placeholder="點擊輸入旅遊名稱 (例如：東京五天四夜)">
+        <input type="text" id="trip-dates" class="date-input" placeholder="點擊輸入日期 (例如：2023/12/25 - 2023/12/29)">
+    </header>
+
+    <div id="itinerary-container">
+        </div>
+
+    <div class="controls">
+        <button class="big-btn btn-add" onclick="addDay()">+ 新增一天</button>
+        <button class="big-btn btn-print" onclick="window.print()">🖨️ 列印 / 存為 PDF</button>
+        <button class="big-btn btn-reset" onclick="resetData()">⚠️ 清空重置</button>
+    </div>
+</div>
+
+<script>
+    // 預設資料結構
+    let tripData = {
+        title: "",
+        dates: "",
+        days: []
+    };
+
+    // 初始化：載入資料或建立預設第一天
+    function init() {
+        const savedData = localStorage.getItem('myTripData');
+        if (savedData) {
+            tripData = JSON.parse(savedData);
+        } else {
+            addDay(false); // 預設新增一天，但不渲染，避免重複
+        }
+        render();
+    }
+
+    // 儲存資料到 LocalStorage
+    function saveData() {
+        // 從 DOM 抓取最新值更新 data
+        tripData.title = document.getElementById('trip-title').value;
+        tripData.dates = document.getElementById('trip-dates').value;
+        localStorage.setItem('myTripData', JSON.stringify(tripData));
+    }
+
+    // 渲染畫面
+    function render() {
+        document.getElementById('trip-title').value = tripData.title;
+        document.getElementById('trip-dates').value = tripData.dates;
+        
+        const container = document.getElementById('itinerary-container');
+        container.innerHTML = ''; // 清空
+
+        tripData.days.forEach((day, dayIndex) => {
+            const dayHTML = document.createElement('div');
+            dayHTML.className = 'day-block';
+            dayHTML.innerHTML = `
+                <div class="day-header">
+                    <span class="day-title">Day ${dayIndex + 1}</span>
+                    <button class="btn-remove-day" onclick="deleteDay(${dayIndex})">刪除整天</button>
+                </div>
+                <ul class="activity-list" id="day-${dayIndex}-list">
+                    </ul>
+                <button class="btn-add" style="width:100%; margin-top:10px; opacity:0.7" onclick="addActivity(${dayIndex})">+ 新增行程</button>
+            `;
+            container.appendChild(dayHTML);
+
+            const list = document.getElementById(`day-${dayIndex}-list`);
+            day.activities.forEach((act, actIndex) => {
+                const li = document.createElement('li');
+                li.className = 'activity-item';
+                li.innerHTML = `
+                    <input type="text" class="time-input" value="${act.time}" placeholder="00:00" oninput="updateAct(${dayIndex}, ${actIndex}, 'time', this.value)">
+                    <div class="activity-content">
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" class="loc-input" value="${act.location}" placeholder="地點 / 行程名稱" oninput="updateAct(${dayIndex}, ${actIndex}, 'location', this.value)">
+                            <input type="text" class="cost-input" value="${act.cost}" placeholder="費用" oninput="updateAct(${dayIndex}, ${actIndex}, 'cost', this.value)">
+                        </div>
+                        <textarea rows="1" class="note-input" placeholder="備註 (交通方式、預約號碼...)" oninput="updateAct(${dayIndex}, ${actIndex}, 'note', this.value)">${act.note}</textarea>
+                    </div>
+                    <button class="btn-delete" onclick="deleteActivity(${dayIndex}, ${actIndex})">×</button>
+                `;
+                list.appendChild(li);
+            });
+        });
+        
+        // 綁定標題變更事件
+        document.getElementById('trip-title').oninput = saveData;
+        document.getElementById('trip-dates').oninput = saveData;
+    }
+
+    // 邏輯功能
+    function addDay(shouldRender = true) {
+        tripData.days.push({
+            activities: [
+                { time: "09:00", location: "", note: "", cost: "" },
+                { time: "12:00", location: "午餐", note: "", cost: "" },
+                { time: "14:00", location: "", note: "", cost: "" }
+            ]
+        });
+        if(shouldRender) { saveData(); render(); }
+    }
+
+    function deleteDay(index) {
+        if(confirm('確定要刪除這一整天的行程嗎？')) {
+            tripData.days.splice(index, 1);
+            saveData();
+            render();
+        }
+    }
+
+    function addActivity(dayIndex) {
+        tripData.days[dayIndex].activities.push({ time: "", location: "", note: "", cost: "" });
+        saveData();
+        render();
+    }
+
+    function deleteActivity(dayIndex, actIndex) {
+        tripData.days[dayIndex].activities.splice(actIndex, 1);
+        saveData();
+        render();
+    }
+
+    function updateAct(dayIndex, actIndex, field, value) {
+        tripData.days[dayIndex].activities[actIndex][field] = value;
+        saveData();
+    }
+
+    function resetData() {
+        if(confirm('警告：這將清除所有已儲存的行程資料，確定嗎？')) {
+            localStorage.removeItem('myTripData');
+            tripData = { title: "", dates: "", days: [] };
+            addDay(false);
+            render();
+        }
+    }
+
+    // 啟動
+    init();
+
+</script>
+</body>
+</html>
