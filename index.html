@@ -2679,9 +2679,8 @@
             if(detailView) {
                 // 確保詳情頁面在編輯模態框下面（z-index 較低）
                 detailView.style.zIndex = '2000';
-                // 將詳情頁面移到屏幕右側外（準備滑入動畫）
-                detailView.style.transform = 'translateX(100%)';
-                detailView.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                // 詳情頁面保持在正確位置（已經顯示，不需要動畫）
+                detailView.style.transform = 'translateX(0)';
             }
             // 從詳情頁面進入時，背景設為透明，避免詳情頁面變暗
             accountModal.style.background = 'transparent';
@@ -2704,12 +2703,17 @@
         const accountModal = document.getElementById('accountModal');
         const modalWrapper = accountModal ? accountModal.querySelector('.modal-content-wrapper') : null;
         
-        // 如果從詳情頁面進入，先確保詳情頁面可見，避免變暗
+        // 如果從詳情頁面進入，先確保詳情頁面在編輯模態框之下，這樣才能看到編輯模態框的滑出動畫
         if(editingFromDetail && currentDetailAcc) {
             const detailView = document.getElementById('detailView');
             if(detailView) {
-                // 確保詳情頁面在編輯模態框之上或至少可見
-                detailView.style.zIndex = '2002';
+                // 確保詳情頁面在編輯模態框之下（z-index 較低），這樣才能看到編輯模態框的滑出動畫
+                detailView.style.zIndex = '2000';
+                // 確保詳情頁面已經打開並在正確位置
+                if(!detailView.classList.contains('active')) {
+                    detailView.classList.add('active');
+                }
+                detailView.style.transform = 'translateX(0)';
             }
             // 立即讓背景變透明（在動畫開始前）
             accountModal.style.background = 'transparent';
@@ -2721,29 +2725,8 @@
         }
         
         if(modalWrapper) {
-            // 如果從詳情頁面進入，讓詳情頁面從右側滑入（與從清單進入詳情時的動畫一致）
-            if(editingFromDetail && currentDetailAcc) {
-                const detailView = document.getElementById('detailView');
-                if(detailView) {
-                    // 確保詳情頁面已經打開
-                    if(!detailView.classList.contains('active')) {
-                        detailView.classList.add('active');
-                    }
-                    // 移除 swiping 類，確保過渡動畫啟用
-                    detailView.classList.remove('swiping');
-                    // 確保詳情頁面有過渡動畫
-                    detailView.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    // 先設置初始位置（屏幕右側外）
-                    detailView.style.transform = 'translateX(100%)';
-                    // 使用 requestAnimationFrame 確保瀏覽器已經渲染初始狀態
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            // 然後動畫滑入到正確位置
-                            detailView.style.transform = 'translateX(0)';
-                        }, 10);
-                    });
-                }
-            }
+            // 確保過渡動畫啟用
+            modalWrapper.classList.remove('swiping');
             
             // 然後動畫滑出
             modalWrapper.style.transform = 'translateX(100%)';
@@ -4432,7 +4415,7 @@
             accountModal.style.background = 'transparent';
             accountModal.classList.add('closing');
             
-            // 如果從詳情頁面進入，確保詳情頁面可見並在正確位置
+            // 如果從詳情頁面進入，確保詳情頁面在編輯模態框之下，這樣才能看到編輯模態框的滑出動畫
             if(editingFromDetail && currentDetailAcc) {
                 const detailView = document.getElementById('detailView');
                 if(detailView) {
@@ -4440,8 +4423,8 @@
                     if(!detailView.classList.contains('active')) {
                         detailView.classList.add('active');
                     }
-                    // 確保詳情頁面在編輯模態框之上
-                    detailView.style.zIndex = '2002';
+                    // 確保詳情頁面在編輯模態框之下（z-index 較低），這樣才能看到編輯模態框的滑出動畫
+                    detailView.style.zIndex = '2000';
                     // 確保詳情頁面在正確位置（完全顯示）
                     detailView.style.transform = 'translateX(0)';
                 }
