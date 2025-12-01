@@ -999,7 +999,10 @@
         <div class="navbar">
             <button class="btn-icon" onclick="closeDetailView()"><i class="fas fa-arrow-left"></i></button>
             <h1 id="detailTitleName">資產詳情</h1>
-            <button class="btn-icon" onclick="editCurrentAsset()"><i class="fas fa-edit"></i></button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-icon" onclick="deleteCurrentAsset()" style="color: #ff453a;" title="刪除"><i class="fas fa-trash"></i></button>
+                <button class="btn-icon" onclick="editCurrentAsset()"><i class="fas fa-edit"></i></button>
+            </div>
         </div>
         <div class="detail-header">
             <div class="detail-title" id="dName">NVDA</div>
@@ -4092,6 +4095,26 @@
             editingFromDetail = true; // 標記是從詳情頁面進入
             editAccount(currentDetailAcc.id); 
         } 
+    }
+    
+    function deleteCurrentAsset() {
+        if (!currentDetailAcc) return;
+        
+        const name = currentDetailAcc.name || '此資產';
+        if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+        if (!confirm(`再次確認：確定要刪除「${name}」嗎？\n此操作無法復原！`)) return;
+        
+        // 從 accounts 中刪除
+        accounts = accounts.filter(x => x.id !== currentDetailAcc.id);
+        saveData();
+        
+        // 關閉詳情頁面
+        closeDetailView();
+        currentDetailAcc = null;
+        
+        // 刷新列表和圖表
+        renderAssets();
+        updateChartData();
     }
 
     // AI
