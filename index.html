@@ -26,8 +26,8 @@
             }
             
             function initFavicon() {
-                const externalUrl = 'https://meee.com.tw/o6AMCxZ';
-                const faviconPath = './favicon.png';
+                const externalUrl = 'https://meee.com.tw/QZEW2Ba';
+                const faviconPath = './favico.png';
                 
                 // 檢查本地 favicon 是否存在
                 const testImg = new Image();
@@ -622,9 +622,6 @@
                 height: 56px;
                 z-index: 10001; /* 確保在最上層 */
             }
-            #chartTextColorToggleBtn {
-                bottom: 150px; /* 在幣別切換按鈕上方 */
-            }
         }
 
         /* Page Swiper */
@@ -924,11 +921,6 @@
                     <button id="currencyToggleBtn" class="currency-toggle-btn" onclick="event.stopPropagation(); toggleCurrency();" title="切換幣別">
                         <i class="fas fa-exchange-alt"></i>
                         <span id="currencyToggleText">TWD</span>
-                    </button>
-                    
-                    <!-- Chart Text Color Toggle Button -->
-                    <button id="chartTextColorToggleBtn" class="currency-toggle-btn" style="bottom: 60px;" onclick="event.stopPropagation(); toggleChartTextColor();" title="切換圖表字體顏色">
-                        <i class="fas fa-font" id="chartTextColorIcon"></i>
                     </button>
                 </div>
 
@@ -5048,34 +5040,6 @@
         }
     }
     
-    function toggleChartTextColor() {
-        // 根據主題自動決定顏色，不再手動切換
-        const currentTheme = settings.theme || 'dark';
-        if(currentTheme === 'dark') {
-            settings.chartTextColor = 'white';
-        } else {
-            settings.chartTextColor = 'black';
-        }
-        saveSettings();
-        updateChartTextColorButton();
-        updateChartTextColor();
-    }
-    
-    function updateChartTextColorButton() {
-        const icon = document.getElementById('chartTextColorIcon');
-        if(icon) {
-            // 根據主題顯示當前顏色
-            const currentTheme = settings.theme || 'dark';
-            const currentColor = currentTheme === 'dark' ? 'white' : 'black';
-            if(currentColor === 'white') {
-                icon.className = 'fas fa-font';
-                icon.parentElement.title = '切換圖表字體顏色（當前：白色）';
-            } else {
-                icon.className = 'fas fa-font';
-                icon.parentElement.title = '切換圖表字體顏色（當前：黑色）';
-            }
-        }
-    }
     
     function toggleTheme() {
         if(!settings.theme) {
@@ -5181,7 +5145,6 @@
         applyTheme();
         updateThemeButton();
         updateCurrencyButton();
-        updateChartTextColorButton();
         chartLevel = 'root';
         currentPage = 0;
         renderAssets();
