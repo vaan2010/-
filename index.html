@@ -66,7 +66,12 @@
         :root {
             --bg-color: #000000; --card-bg: #1c1c1e; --text-primary: #ffffff; --text-secondary: #8e8e93;
             --color-bank: #64d2ff; --color-stock: #bf5af2; --color-twstock: #0a84ff; --color-crypto: #ff9f0a; --color-debt: #ff453a;
-            --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e;
+            --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e; --active-bg: #3a3a3c;
+        }
+        :root[data-theme="light"] {
+            --bg-color: #ffffff; --card-bg: #f5f5f7; --text-primary: #000000; --text-secondary: #6e6e73;
+            --color-bank: #007aff; --color-stock: #af52de; --color-twstock: #007aff; --color-crypto: #ff9500; --color-debt: #ff3b30;
+            --color-up: #34c759; --color-down: #ff3b30; --border-color: #d1d1d6; --active-bg: #e5e5ea;
         }
         * { box-sizing: border-box; }
         body { background-color: var(--bg-color); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
@@ -91,7 +96,7 @@
         /* Sidebar */
         .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(2px); }
         .sidebar-overlay.active { opacity: 1; visibility: visible; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #1c1c1e; z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card-bg); z-index: 999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: max(20px, env(safe-area-inset-top)); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
         .sidebar.active { left: 0; }
         @media (min-width: 768px) {
             .sidebar-overlay { display: block !important; }
@@ -198,15 +203,15 @@
             .sidebar.collapsed ~ .main-content .sidebar-toggle-btn-navbar { display: block !important; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; z-index: 1001; }
             .navbar .btn-group { margin-left: 50px; }
         }
-        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid #2c2c2e; transition: opacity 0.3s; display: flex; align-items: center; justify-content: space-between; }
-        .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; flex: 1; }
+        .sidebar-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); transition: opacity 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        .sidebar-header h2 { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-primary); flex: 1; }
         .user-avatar-container { position: relative; cursor: pointer; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #0a84ff; object-fit: cover; transition: all 0.2s; display: flex; align-items: center; justify-content: center; background: #2c2c2e; font-size: 24px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid #0a84ff; object-fit: cover; transition: all 0.2s; display: flex; align-items: center; justify-content: center; background: var(--border-color); font-size: 24px; }
         .user-avatar-container:hover .user-avatar { transform: scale(1.1); border-color: #64d2ff; }
         .user-avatar-container:active .user-avatar { transform: scale(0.95); }
         .sidebar-menu { padding: 10px 0; flex: 1; overflow-y: auto; transition: opacity 0.3s; }
-        .menu-item { padding: 15px 25px; display: flex; align-items: center; font-size: 17px; color: #fff; cursor: pointer; transition: background 0.2s; }
-        .menu-item:hover { background: #2c2c2e; }
+        .menu-item { padding: 15px 25px; display: flex; align-items: center; font-size: 17px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; }
+        .menu-item:hover { background: var(--border-color); }
         .menu-item i { margin-right: 15px; width: 24px; text-align: center; color: #0a84ff; font-size: 20px; }
         .menu-text { flex: 1; }
         .menu-label { 
@@ -231,7 +236,7 @@
         .menu-section { overflow: hidden; transition: max-height 0.3s ease-out; }
         .menu-section.collapsed { max-height: 0; }
         .menu-section:not(.collapsed) { max-height: 1000px; }
-        .page-visibility-item { padding: 12px 25px; display: flex; align-items: center; font-size: 16px; color: #fff; }
+        .page-visibility-item { padding: 12px 25px; display: flex; align-items: center; font-size: 16px; color: var(--text-primary); }
         .page-visibility-item label { display: flex; align-items: center; cursor: pointer; width: 100%; flex: 1; }
         .page-visibility-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: #0a84ff; }
         .page-visibility-item span { flex: 1; }
@@ -253,9 +258,33 @@
         .total-label-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .total-label { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-amount-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; margin-left: 30px; font-family: 'Roboto', sans-serif; }
-        .eye-toggle-btn { background: none; border: none; color: #0a84ff; font-size: 16px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
+        .total-amount { font-size: 40px; font-weight: 700; margin: 5px 0 3px 0; font-family: 'Roboto', sans-serif; position: relative; display: inline-block; }
+        .eye-toggle-btn { 
+            background: none; 
+            border: none; 
+            color: #0a84ff; 
+            font-size: 16px; 
+            cursor: pointer; 
+            padding: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            outline: none;
+        }
         .eye-toggle-btn:hover { opacity: 0.8; }
+        .eye-toggle-btn:active {
+            transform: none;
+            opacity: 0.9;
+        }
         
         /* 隱藏數字樣式 */
         .numbers-hidden .numbers-content {
@@ -291,26 +320,54 @@
         
         /* 列表項目單獨隱藏 */
         .item-hidden .item-numbers {
-            visibility: hidden;
+            font-size: 0 !important;
+            line-height: 0;
+            color: transparent;
             position: relative;
+            display: inline-block;
+            width: auto;
+            min-width: 0;
+            padding: 0;
+            margin: 0;
         }
         .item-hidden .item-numbers::after {
             content: '****';
-            visibility: visible;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
             font-size: inherit;
+            line-height: inherit;
+            color: var(--text-secondary);
+            position: static;
+            display: inline-block;
+            visibility: visible;
+            white-space: nowrap;
             font-weight: inherit;
+            vertical-align: baseline;
         }
-        .item-hidden .amount-val.item-numbers::after { font-size: 17px; }
-        .item-hidden .amount-pnl.item-numbers::after { font-size: 11px; }
+        .item-hidden .amount-val.item-numbers { 
+            font-size: 0 !important;
+            display: inline-block;
+            width: auto;
+        }
+        .item-hidden .amount-val.item-numbers::after { 
+            font-size: 17px !important; 
+            line-height: 1.3;
+            position: static;
+            display: inline-block;
+        }
+        .item-hidden .amount-pnl.item-numbers { 
+            font-size: 0 !important;
+            display: inline-block;
+            width: auto;
+        }
+        .item-hidden .amount-pnl.item-numbers::after { 
+            font-size: 11px !important; 
+            line-height: 1.3;
+            position: static;
+            display: inline-block;
+        }
+        /* 當數字隱藏時，確保按鈕對齊正確 */
+        .item-hidden .amount-val-wrapper {
+            align-items: center;
+        }
         .item-eye-btn {
             background: none;
             border: none;
@@ -325,10 +382,31 @@
             opacity: 0.7;
             transition: opacity 0.2s;
             flex-shrink: 0;
-            min-width: clamp(18px, 2.5vw, 24px);
+            width: clamp(20px, 2.8vw, 28px);
+            height: clamp(20px, 2.8vw, 28px);
+            min-width: clamp(20px, 2.8vw, 28px);
+            min-height: clamp(20px, 2.8vw, 28px);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .item-eye-btn i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
         .item-eye-btn:hover {
             opacity: 1;
+        }
+        .item-eye-btn:active {
+            transform: none;
+            opacity: 0.9;
+            position: relative;
         }
         .item-amount-wrapper {
             display: flex;
@@ -338,7 +416,7 @@
         .pnl-badge { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); }
         .pnl-up { color: var(--color-up); } .pnl-down { color: var(--color-down); }
         .rate-info { display: flex; justify-content: center; gap: 10px; margin-top: 3px; margin-bottom: 5px; }
-        .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: #1c1c1e; padding: 4px 10px; border-radius: 12px; }
+        .rate-badge { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); background: var(--card-bg); padding: 4px 10px; border-radius: 12px; }
         .rate-badge i { font-size: 10px; margin-right: 5px; color: #ffcc00; }
 
         #chartWrapper { flex: 0 0 auto; background: transparent; position: relative; min-height: 280px; max-height: 40vh; width: 100%; max-width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; z-index: 80; box-sizing: border-box; padding: 0 10px; margin: auto 0; }
@@ -360,7 +438,7 @@
         #chartWrapper .highcharts-point:hover + .highcharts-data-label text,
         #chartWrapper .highcharts-point:hover .highcharts-data-label text { fill: #fff !important; opacity: 1 !important; }
         
-        #customTooltip { position: absolute; background: rgba(255, 255, 255, 0.95); color: #000; padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none; z-index: 200; display: none; white-space: nowrap; top: 0; left: 0; transform: translate(-50%, -100%); transition: opacity 0.15s, top 0.15s, left 0.15s; margin-top: -15px; }
+        #customTooltip { position: absolute; background: var(--card-bg); color: var(--text-primary); padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none; z-index: 200; display: none; white-space: nowrap; top: 0; left: 0; transform: translate(-50%, -100%); transition: opacity 0.15s, top 0.15s, left 0.15s; margin-top: -15px; border: 1px solid var(--border-color); }
         #customTooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent; }
         #customTooltip.bottom { transform: translate(-50%, 0); margin-top: 20px; }
         #customTooltip.bottom::after { top: -12px; border-color: transparent transparent rgba(255,255,255,0.95) transparent; }
@@ -375,7 +453,7 @@
         .list-item { display: flex; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: var(--card-bg); min-width: 0; position: relative; }
         /* 總覽頁面：讓標題和金額對齊 */
         #group-overview .list-item { align-items: center; }
-        .list-item:last-child { border-bottom: none; } .list-item:active { background-color: #2c2c2e; }
+        .list-item:last-child { border-bottom: none; } .list-item:active { background-color: var(--active-bg); }
         .list-item:has(.item-name-row) { padding-top: 40px; }
         /* 負債項目不可拖動 */
         #group-debt .list-item { cursor: pointer !important; }
@@ -432,8 +510,32 @@
         .amount-val-wrapper { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
         /* 總覽和銀行分頁：讓眼睛按鈕對齊到金額中線 */
         #group-overview .amount-val-wrapper, #group-bank .amount-val-wrapper { align-items: center; }
-        #group-overview .item-eye-btn, #group-bank .item-eye-btn { align-self: center; }
-        .amount-val { font-size: 18px; font-weight: 500; font-family: 'Roboto', sans-serif; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; }
+        #group-overview .item-eye-btn, #group-bank .item-eye-btn { 
+            align-self: center;
+            flex-shrink: 0;
+        }
+        /* 確保按鈕在所有情況下都保持固定位置 */
+        .amount-val-wrapper .item-eye-btn {
+            flex-shrink: 0;
+            position: relative;
+        }
+        .amount-val { 
+            font-size: 18px; 
+            font-weight: 500; 
+            font-family: 'Roboto', sans-serif; 
+            line-height: 1.3; 
+            margin-bottom: 3px; 
+            white-space: nowrap; 
+            position: relative;
+        }
+        /* 當數字隱藏時，讓 **** 的寬度與按鈕對齊 */
+        .item-hidden .amount-val-wrapper {
+            position: relative;
+        }
+        .item-hidden .amount-val::after {
+            position: relative;
+            display: inline-block;
+        }
         /* 總覽頁面：讓金額和標題對齊 */
         #group-overview .list-item { align-items: baseline; }
         #group-overview .item-content { display: flex; flex-direction: column; justify-content: flex-start; }
@@ -519,6 +621,9 @@
                 width: 56px;
                 height: 56px;
                 z-index: 10001; /* 確保在最上層 */
+            }
+            #chartTextColorToggleBtn {
+                bottom: 150px; /* 在幣別切換按鈕上方 */
             }
         }
 
@@ -639,64 +744,66 @@
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow: hidden; }
-        .modal-content-wrapper { width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; overflow: hidden; }
-        .modal-header { display: flex; justify-content: space-between; padding: 15px 20px; background: #1c1c1e; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #2c2c2e; flex-shrink: 0; }
+        .modal-content-wrapper { width: 100%; height: 100%; background: var(--bg-color); display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; padding: 15px 20px; background: var(--card-bg); align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .modal-title { font-size: 17px; font-weight: 600; }
-        .modal-tabs { display: flex; padding: 10px 16px; gap: 10px; border-bottom: 1px solid #2c2c2e; background: #1c1c1e; flex-shrink: 0; }
-        .modal-tab { flex: 1; text-align: center; padding: 8px; color: #8e8e93; font-size: 14px; font-weight: 600; border-radius: 8px; background: #2c2c2e; cursor: pointer; }
-        .modal-tab.active { background: #3a3a3c; color: #fff; }
+        .modal-tabs { display: flex; padding: 10px 16px; gap: 10px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); flex-shrink: 0; }
+        .modal-tab { flex: 1; text-align: center; padding: 8px; color: var(--text-secondary); font-size: 14px; font-weight: 600; border-radius: 8px; background: var(--border-color); cursor: pointer; }
+        .modal-tab.active { background: var(--card-bg); color: var(--text-primary); }
         .tab-content { display: none; padding-bottom: 40px; flex: 1; overflow-y: auto; } .tab-content.active { display: block; }
-        .form-group { background: #1c1c1e; margin-top: 20px; border-radius: 12px; overflow: hidden; margin-left: 16px; margin-right: 16px; }
+        .form-group { background: var(--card-bg); margin-top: 20px; border-radius: 12px; overflow: hidden; margin-left: 16px; margin-right: 16px; }
         .form-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); }
         .form-row:last-child { border-bottom: none; }
-        .form-label { font-size: 16px; color: #fff; min-width: 80px; }
+        .form-label { font-size: 16px; color: var(--text-primary); min-width: 80px; }
         .form-input { background: transparent; border: none; color: var(--text-secondary); text-align: right; font-size: 16px; outline: none; width: 100%; }
         select.form-input { appearance: none; direction: rtl; }
-        .calc-btn { background: #2c2c2e; border: none; color: #0a84ff; font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
-        .calc-btn:hover { background: #3a3a3c; transform: scale(1.05); }
+        .calc-btn { background: var(--border-color); border: none; color: #0a84ff; font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .calc-btn:hover { background: var(--card-bg); transform: scale(1.05); }
         .calc-btn:active { transform: scale(0.95); }
         
         /* Calculator Styles */
-        .calc-key { background: #2c2c2e; border: none; color: #fff; font-size: 24px; font-weight: 400; cursor: pointer; padding: 20px; border-radius: 12px; transition: all 0.15s; user-select: none; touch-action: manipulation; }
-        .calc-key:active { background: #3a3a3c; transform: scale(0.95); }
-        .calc-key:hover { background: #3a3a3c; }
-        .calc-key-function { background: #3a3a3c; color: #0a84ff; font-size: 18px; }
+        .calc-key { background: var(--border-color); border: none; color: var(--text-primary); font-size: 24px; font-weight: 400; cursor: pointer; padding: 20px; border-radius: 12px; transition: all 0.15s; user-select: none; touch-action: manipulation; }
+        .calc-key:active { background: var(--card-bg); transform: scale(0.95); }
+        .calc-key:hover { background: var(--card-bg); }
+        .calc-key-function { background: var(--card-bg); color: #0a84ff; font-size: 18px; }
         .calc-key-operator { background: #0a84ff; color: #fff; font-size: 24px; font-weight: 500; }
         .calc-key-operator:active { background: #0970d6; }
         .calc-key-equals { background: #0a84ff; color: #fff; font-size: 24px; font-weight: 500; }
         .calc-key-equals:active { background: #0970d6; }
         .delete-btn-area { margin-top: 30px; padding: 0 16px; padding-bottom: 50px; }
-        .btn-delete { width: 100%; background: #1c1c1e; color: var(--color-debt); border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 500; }
-        .hint-text { color: #555; font-size: 12px; margin-top: 8px; padding: 0 20px; }
+        .btn-delete { width: 100%; background: var(--card-bg); color: var(--color-debt); border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 500; }
+        .hint-text { color: var(--text-secondary); font-size: 12px; margin-top: 8px; padding: 0 20px; opacity: 0.7; }
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #30d158; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; z-index: 2000; display: none; }
         .ai-btn-area { margin: 15px 16px 0 16px; }
         .btn-ai { width: 100%; background: linear-gradient(135deg, #0a84ff, #5e5ce6); color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
-        .btn-ai:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; opacity: 0.6; }
-        .progress-container { width: 100%; height: 4px; background: #2c2c2e; border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+        .btn-ai:disabled { background: var(--card-bg); color: var(--text-secondary); cursor: not-allowed; opacity: 0.6; }
+        .progress-container { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #0a84ff, #5e5ce6); width: 0%; transition: width 0.3s ease; border-radius: 2px; }
 
         /* Detail View */
-        #detailView { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
+        #detailView { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
         #detailView.active { transform: translateX(0); }
-        .detail-header { padding: 10px 20px 20px; border-bottom: 1px solid #2c2c2e; background: #1c1c1e; flex-shrink: 0; }
+        .detail-header { padding: 10px 20px 20px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); flex-shrink: 0; }
         #detailView .navbar { position: relative; z-index: 1; }
-        .detail-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 5px; }
-        .detail-subtitle { font-size: 14px; color: #8e8e93; }
+        .detail-title { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 5px; }
+        .detail-subtitle { font-size: 14px; color: var(--text-secondary); }
         .detail-stats { display: flex; justify-content: space-between; margin-top: 20px; }
         .stat-item { text-align: center; flex: 1; }
-        .stat-val { font-size: 18px; font-weight: 600; display: block; color: #fff; }
-        .stat-lbl { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
+        .stat-val { font-size: 18px; font-weight: 600; display: block; color: var(--text-primary); }
+        .stat-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: block; }
         .val-green { color: var(--color-up); } .val-red { color: var(--color-down); }
         .detail-list { flex: 1; overflow-y: auto; padding: 15px; }
-        .tx-item { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
+        .tx-item { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border-color); }
         .tx-header-row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         .tx-badge { background: #64d2ff; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .tx-date { color: #8e8e93; font-size: 13px; }
+        .tx-date { color: var(--text-secondary); font-size: 13px; }
         .tx-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 15px; }
-        .tx-label { color: #8e8e93; }
-        .tx-val { color: #fff; font-weight: 500; }
+        .tx-label { color: var(--text-secondary); }
+        .tx-val { color: var(--text-primary); font-weight: 500; }
+        .tx-val.val-green { color: var(--color-up) !important; }
+        .tx-val.val-red { color: var(--color-down) !important; }
         .tx-pnl { font-weight: bold; font-size: 14px; }
-        .tx-no-data { text-align: center; color: #666; padding: 30px 0; font-size: 14px; }
+        .tx-no-data { text-align: center; color: var(--text-secondary); padding: 30px 0; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -765,6 +872,7 @@
                 <div class="menu-section" id="menuSection-pages">
                     <div id="pageVisibilitySettings"></div>
                 </div>
+                <div class="menu-item" onclick="toggleTheme(); toggleSidebar();"><i class="fas fa-moon" id="themeIcon"></i><span class="menu-text" id="themeText">深色模式</span></div>
             </div>
         </div>
 
@@ -793,12 +901,12 @@
                     <div class="summary-card">
                         <div class="total-label-wrapper">
                             <div class="total-label" id="summaryLabel">總淨資產</div>
-                        </div>
-                        <div class="total-amount-wrapper">
-                            <div class="total-amount numbers-content" id="totalNetWorth">--</div>
                             <button class="eye-toggle-btn" id="toggleNumbersBtn" onclick="toggleNumbers()" title="隱藏/顯示數字">
                                 <i class="fas fa-eye" id="toggleNumbersIcon"></i>
                             </button>
+                        </div>
+                        <div class="total-amount-wrapper">
+                            <div class="total-amount numbers-content" id="totalNetWorth">--</div>
                         </div>
                         <div id="totalPnLBlock" style="display:none;"><div class="pnl-badge numbers-content" id="totalPnLBadge">今日: +0</div></div>
                         <div class="rate-info">
@@ -816,6 +924,11 @@
                     <button id="currencyToggleBtn" class="currency-toggle-btn" onclick="event.stopPropagation(); toggleCurrency();" title="切換幣別">
                         <i class="fas fa-exchange-alt"></i>
                         <span id="currencyToggleText">TWD</span>
+                    </button>
+                    
+                    <!-- Chart Text Color Toggle Button -->
+                    <button id="chartTextColorToggleBtn" class="currency-toggle-btn" style="bottom: 60px;" onclick="event.stopPropagation(); toggleChartTextColor();" title="切換圖表字體顏色">
+                        <i class="fas fa-font" id="chartTextColorIcon"></i>
                     </button>
                 </div>
 
@@ -934,7 +1047,7 @@
                 <div class="ai-btn-area" id="aiArea" style="display:none;">
                     <div style="margin-bottom: 10px; padding: 0 5px;">
                         <span style="font-size: 12px; color: #8e8e93;">選擇券商 (手續費率)</span>
-                        <select id="brokerSelect" class="form-input" style="background: #333; border-radius: 8px; padding: 5px; margin-top: 5px;" onchange="updateFeeDisplay()">
+                        <select id="brokerSelect" class="form-input" style="background: var(--border-color); border-radius: 8px; padding: 5px; margin-top: 5px;" onchange="updateFeeDisplay()">
                             <option value="cathay">國泰證券 (1.425%)</option>
                             <option value="cathay_fixed">國泰證券 (定期定額 固定1元)</option>
                             <option value="fubon">富邦證券 (0.25%)</option>
@@ -967,14 +1080,14 @@
 
     <!-- Calculator Modal -->
     <div id="calculatorModal" class="modal" style="z-index: 2000;" onclick="event.target.id === 'calculatorModal' && closeCalculator()">
-        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e;" onclick="event.stopPropagation()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: var(--card-bg);" onclick="event.stopPropagation()">
             <div class="modal-header" style="border-radius: 20px 20px 0 0;">
                 <span class="modal-title">計算機</span>
                 <button class="btn-icon" onclick="closeCalculator()" style="font-weight:bold;">完成</button>
             </div>
-            <div style="padding: 20px; background: #000;">
-                <div style="background: #1c1c1e; border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: flex-end;">
-                    <div id="calcDisplay" style="color: #fff; font-size: 36px; font-weight: 300; text-align: right; word-break: break-all; width: 100%; font-family: 'SF Mono', 'Monaco', monospace;">0</div>
+            <div style="padding: 20px; background: var(--bg-color);">
+                <div style="background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: flex-end;">
+                    <div id="calcDisplay" style="color: var(--text-primary); font-size: 36px; font-weight: 300; text-align: right; word-break: break-all; width: 100%; font-family: 'SF Mono', 'Monaco', monospace;">0</div>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
                     <button class="calc-key calc-key-function" onclick="calcInput('C')">C</button>
@@ -1008,14 +1121,14 @@
 
     <!-- User Selector Modal -->
     <div id="userSelectorModal" class="modal" style="z-index: 2001;" onclick="event.target.id === 'userSelectorModal' && closeUserSelector()">
-        <div class="modal-content-wrapper" style="width: 100%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: var(--card-bg); overflow-y: auto;" onclick="event.stopPropagation()">
             <div class="modal-header" style="border-radius: 20px 20px 0 0;">
                 <span class="modal-title">選擇使用者</span>
                 <button class="btn-icon" onclick="closeUserSelector()" style="font-weight:bold;">完成</button>
             </div>
-            <div style="padding: 20px; background: #000;">
+            <div style="padding: 20px; background: var(--bg-color);">
                 <div id="userListContainer" style="margin-bottom: 30px;"></div>
-                <div style="border-top: 1px solid #2c2c2e; padding-top: 20px; margin-top: 20px;">
+                <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px;">
                     <button class="btn-primary" onclick="createNewUser()" style="width: 100%; padding: 15px; background: #0a84ff; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
                         <i class="fas fa-plus"></i> 新增使用者
                     </button>
@@ -1026,25 +1139,25 @@
 
     <!-- User Edit Modal -->
     <div id="userEditModal" class="modal" style="z-index: 2003;" onclick="event.target.id === 'userEditModal' && closeUserEditModal()">
-        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: var(--card-bg); overflow-y: auto;" onclick="event.stopPropagation()">
             <div class="modal-header" style="border-radius: 20px 20px 0 0;">
                 <span class="modal-title">編輯使用者</span>
                 <button class="btn-icon" onclick="closeUserEditModal()" style="font-weight:bold;">完成</button>
             </div>
-            <div style="padding: 20px; background: #000;">
+            <div style="padding: 20px; background: var(--bg-color);">
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #8e8e93; font-size: 14px; margin-bottom: 10px;">使用者名稱</label>
-                    <input type="text" id="userEditNameInput" style="width: 100%; padding: 12px; background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; color: #fff; font-size: 16px; box-sizing: border-box;" placeholder="輸入使用者名稱">
+                    <label style="display: block; color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">使用者名稱</label>
+                    <input type="text" id="userEditNameInput" style="width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 16px; box-sizing: border-box;" placeholder="輸入使用者名稱">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #8e8e93; font-size: 14px; margin-bottom: 10px;">頭像</label>
-                    <button onclick="openAvatarSelectorFromEdit()" style="width: 100%; padding: 15px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <label style="display: block; color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">頭像</label>
+                    <button onclick="openAvatarSelectorFromEdit()" style="width: 100%; padding: 15px; background: var(--border-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
                         <i class="fas fa-image"></i> 選擇頭像
                     </button>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button onclick="saveUserEdit()" style="flex: 1; padding: 12px; background: #0a84ff; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">儲存</button>
-                    <button onclick="closeUserEditModal(); editingUserId = null;" style="flex: 1; padding: 12px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
+                    <button onclick="closeUserEditModal(); editingUserId = null;" style="flex: 1; padding: 12px; background: var(--border-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
                 </div>
             </div>
         </div>
@@ -1052,25 +1165,25 @@
 
     <!-- Avatar Selector Modal -->
     <div id="avatarSelectorModal" class="modal" style="z-index: 2002;" onclick="event.target.id === 'avatarSelectorModal' && closeAvatarSelector()">
-        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: #1c1c1e; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: var(--card-bg); overflow-y: auto;" onclick="event.stopPropagation()">
             <div class="modal-header" style="border-radius: 20px 20px 0 0;">
                 <span class="modal-title">選擇頭像</span>
                 <button class="btn-icon" onclick="closeAvatarSelector()" style="font-weight:bold;">完成</button>
             </div>
-            <div style="padding: 20px; background: #000;">
+            <div style="padding: 20px; background: var(--bg-color);">
                 <div style="margin-bottom: 20px;">
-                    <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">預設頭像</div>
+                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">預設頭像</div>
                     <div id="defaultAvatarsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;"></div>
                 </div>
-                <div style="border-top: 1px solid #2c2c2e; padding-top: 20px; margin-top: 20px;">
-                    <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">上傳照片</div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px;">
+                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">上傳照片</div>
                     <input type="file" id="avatarUploadInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
-                    <button class="btn-primary" onclick="document.getElementById('avatarUploadInput').click()" style="width: 100%; padding: 15px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <button class="btn-primary" onclick="document.getElementById('avatarUploadInput').click()" style="width: 100%; padding: 15px; background: var(--border-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
                         <i class="fas fa-upload"></i> 選擇照片
                     </button>
                     <div id="avatarCropContainer" style="margin-top: 20px; display: none;">
-                        <div style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">裁切照片（拖動調整位置，<span id="zoomHint">滾輪縮放</span>）</div>
-                        <div id="avatarCropWrapper" style="position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; background: #1c1c1e; border-radius: 12px; overflow: hidden; cursor: move;">
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">裁切照片（拖動調整位置，<span id="zoomHint">滾輪縮放</span>）</div>
+                        <div id="avatarCropWrapper" style="position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; background: var(--card-bg); border-radius: 12px; overflow: hidden; cursor: move;">
                             <canvas id="avatarCropCanvas" style="display: block; width: 100%; max-width: 300px; height: 300px; pointer-events: none;"></canvas>
                             <div id="avatarCropOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
                                 <div id="avatarCropCircle" style="position: absolute; border: 3px solid #0a84ff; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); pointer-events: none;"></div>
@@ -1078,7 +1191,7 @@
                         </div>
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
                             <button onclick="confirmAvatarCrop()" style="flex: 1; padding: 12px; background: #0a84ff; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">確認</button>
-                            <button onclick="cancelAvatarCrop()" style="flex: 1; padding: 12px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
+                            <button onclick="cancelAvatarCrop()" style="flex: 1; padding: 12px; background: var(--border-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">取消</button>
                         </div>
                     </div>
                 </div>
@@ -1330,7 +1443,7 @@
         }));
         
         const settings = JSON.parse(localStorage.getItem(userSettingsKey)) || { 
-            apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425 
+            apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425, chartTextColor: 'white', theme: 'dark'
         };
         
         return { accounts, settings };
@@ -2224,11 +2337,12 @@
             if (chartData.length === 0) {
                 return;
             }
+            const chartTextColor = getChartTextColor();
             chartInstance=Highcharts.chart('assetChart',{
                 chart:{type:'pie',backgroundColor:'transparent',spacing:[30,20,20,20],height:'100%',width:null,reflow:true,margin:[30,20,20,20]},
-                title:{text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
+                title:{text:chartTitle,style:{color:chartTextColor,fontSize:'14px'},align:'center',verticalAlign:'middle',y:10},
                 credits:{enabled:false},tooltip:{enabled:false},
-                plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
+                plotOptions:{pie:{innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:animationConfig,dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:chartTextColor,textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666',softConnector:true},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}},
                 series:[{name:'資產',data:chartData}]
             }); 
             disableChartHover();
@@ -2238,10 +2352,11 @@
             }
         } else { 
             if(chartLevel==='root' || (chartLevel==='page' && (currentPage === 0 || currentPage > 0))){ 
-                chartInstance.setTitle({text:chartTitle,style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
+                const chartTextColor = getChartTextColor();
+                chartInstance.setTitle({text:chartTitle,style:{color:chartTextColor,fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                 
                 if(chartInstance.series.length===0){ 
-                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:0},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}, false); 
+                    chartInstance.addSeries({name:'資產',data:chartData,type:'pie',innerSize:'55%',size:'90%',center:['50%','50%'],borderWidth:0,slicedOffset:8,animation:{duration:0},dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:chartTextColor,textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'},states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}},point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}}}, false); 
                     disableChartHover();
                     // 初始化動畫引擎
                     if (!chartAnimationEngine) {
@@ -2299,21 +2414,24 @@
                     duration: CHART_ANIMATION_CONFIG.duration,
                     easing: CHART_ANIMATION_CONFIG.easing,
                     onComplete: () => {
-                        chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
+                        const chartTextColor = getChartTextColor();
+                    chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:chartTextColor,fontSize:'14px'},align:'center',verticalAlign:'middle',y:10});
                         disableChartHover();
                     }
                 });
             } else {
                 // 如果動畫引擎未初始化，直接更新
+                const chartTextColor = getChartTextColor();
                 chartInstance.series[0].remove(false); 
-                chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:CHART_ANIMATION_CONFIG.duration,easing:CHART_ANIMATION_CONFIG.easing}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
-                chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+                chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:CHART_ANIMATION_CONFIG.duration,easing:CHART_ANIMATION_CONFIG.easing}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:chartTextColor,textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, true);
+                chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:chartTextColor,fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
                 disableChartHover();
             }
         } else {
             // 如果沒有系列，直接添加
-            chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:0}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:'#fff',textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, false);
-            chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:'#fff',fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
+            const chartTextColor = getChartTextColor();
+            chartInstance.addSeries({ name:TYPE_NAMES[cat]||cat, data:formattedData, type:'pie', innerSize:'55%', size:'90%', center:['50%','50%'], borderWidth:0, slicedOffset:8, animation:{duration:0}, colorByPoint:true, dataLabels:{enabled:true,distance:3,format:'{point.name}<br><span style="opacity:0.7">{point.percentage:.1f}%</span>',style:{color:chartTextColor,textOutline:'none',fontWeight:'normal',fontSize:'12px',pointerEvents:'none'},connectorColor:'#666'}, states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0},inactive:{opacity:0.3}}, point:{states:{hover:{enabled:false,halo:{size:0},opacity:1,brightness:0}},events:{click:onPointClick}} }, false);
+            chartInstance.setTitle({text:TYPE_NAMES[cat],style:{color:chartTextColor,fontSize:'14px'},align:'center',verticalAlign:'middle',y:10}); 
             disableChartHover();
         }
     }
@@ -2341,11 +2459,12 @@
                     point.style.setProperty('filter', 'brightness(1)', 'important');
                 }
             });
+            const chartTextColor = getChartTextColor();
             const dataLabels = document.querySelectorAll('#chartWrapper .highcharts-data-label, #chartWrapper .highcharts-data-label text');
             dataLabels.forEach(label => {
                 label.style.setProperty('opacity', '1', 'important');
                 if(label.tagName === 'text') {
-                    label.style.setProperty('fill', '#fff', 'important');
+                    label.style.setProperty('fill', chartTextColor, 'important');
                 }
             });
         };
@@ -3083,11 +3202,11 @@
         users.forEach(user => {
             const isCurrent = user.id === currentUserId;
             const userItem = document.createElement('div');
-            userItem.style.cssText = 'display: flex; align-items: center; padding: 15px; margin-bottom: 10px; background: #1c1c1e; border-radius: 12px; cursor: pointer; border: 2px solid ' + (isCurrent ? '#0a84ff' : 'transparent') + ';';
+            userItem.style.cssText = 'display: flex; align-items: center; padding: 15px; margin-bottom: 10px; background: var(--card-bg); border-radius: 12px; cursor: pointer; border: 2px solid ' + (isCurrent ? '#0a84ff' : 'transparent') + ';';
             userItem.onclick = () => switchUser(user.id);
             
             const avatar = document.createElement('div');
-            avatar.style.cssText = 'width: 50px; height: 50px; border-radius: 50%; background: #2c2c2e; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; border: 2px solid ' + (isCurrent ? '#0a84ff' : '#3a3a3c') + ';';
+            avatar.style.cssText = 'width: 50px; height: 50px; border-radius: 50%; background: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; border: 2px solid ' + (isCurrent ? '#0a84ff' : 'var(--border-color)') + ';';
             if (user.avatar.startsWith('data:image')) {
                 const img = document.createElement('img');
                 img.src = user.avatar;
@@ -3100,10 +3219,10 @@
             const info = document.createElement('div');
             info.style.cssText = 'flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0;';
             const name = document.createElement('div');
-            name.style.cssText = 'color: #fff; font-size: 16px; font-weight: 600; margin: 0 0 4px 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;';
+            name.style.cssText = 'color: var(--text-primary); font-size: 16px; font-weight: 600; margin: 0 0 4px 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;';
             name.textContent = user.name;
             const date = document.createElement('div');
-            date.style.cssText = 'color: #8e8e93; font-size: 12px; line-height: 1.2; white-space: nowrap; margin: 0; text-align: left;';
+            date.style.cssText = 'color: var(--text-secondary); font-size: 12px; line-height: 1.2; white-space: nowrap; margin: 0; text-align: left;';
             date.textContent = new Date(user.createdAt).toLocaleDateString('zh-TW');
             info.appendChild(name);
             info.appendChild(date);
@@ -3832,13 +3951,30 @@
         if (currentDetailAcc.transactions && currentDetailAcc.transactions.length > 0) {
             currentDetailAcc.transactions.forEach(tx => {
                 let txPnlHtml = '';
+                let txPriceColor = '';
+                // 成交價顏色：與現價比較，現價高於成交價用綠色（漲），現價低於成交價用紅色（跌）
                 if (price > 0 && tx.price > 0) {
                      let txCost = tx.price * (1 + fee/100); let txProfit = (price - txCost) * tx.shares; 
                      let txProfitConverted = currentDetailAcc.type === 'twstock' ? (currentDisplayCurrency === 'USD' ? txProfit / settings.usdRate : txProfit) : (currentDisplayCurrency === 'USD' ? txProfit : txProfit * settings.usdRate);
                      let txSign = txProfitConverted >= 0 ? '+' : ''; let txColor = txProfitConverted >= 0 ? 'val-green' : 'val-red'; let txPct = ((price - txCost) / txCost) * 100;
                      txPnlHtml = `<div class="tx-row"><span class="tx-label">損益</span><span class="tx-val ${txColor}">${txSign}${formatAmount(txProfitConverted)} (${txPct.toFixed(1)}%)</span></div>`;
+                     // 成交價顏色：與現價比較，現價高於成交價用綠色（漲），現價低於成交價用紅色（跌）
+                     if (price > tx.price) {
+                         txPriceColor = 'val-green';
+                     } else if (price < tx.price) {
+                         txPriceColor = 'val-red';
+                     }
+                } else if (cost > 0 && tx.price > 0) {
+                     // 如果沒有現價，使用平均成本來比較
+                     if (cost > tx.price) {
+                         txPriceColor = 'val-green';
+                     } else if (cost < tx.price) {
+                         txPriceColor = 'val-red';
+                     }
                 }
-                txList.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div>${txPnlHtml}</div>`;
+                // 確保顏色類被正確應用
+                const priceClass = txPriceColor ? ` ${txPriceColor}` : '';
+                txList.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val${priceClass}">$${tx.price.toFixed(2)}</span></div>${txPnlHtml}</div>`;
             });
         } else { txList.innerHTML = '<div class="tx-no-data">無詳細交易紀錄<br>請在編輯模式匯入截圖</div>'; }
         document.getElementById('detailView').classList.add('active');
@@ -4912,12 +5048,140 @@
         }
     }
     
+    function toggleChartTextColor() {
+        // 根據主題自動決定顏色，不再手動切換
+        const currentTheme = settings.theme || 'dark';
+        if(currentTheme === 'dark') {
+            settings.chartTextColor = 'white';
+        } else {
+            settings.chartTextColor = 'black';
+        }
+        saveSettings();
+        updateChartTextColorButton();
+        updateChartTextColor();
+    }
+    
+    function updateChartTextColorButton() {
+        const icon = document.getElementById('chartTextColorIcon');
+        if(icon) {
+            // 根據主題顯示當前顏色
+            const currentTheme = settings.theme || 'dark';
+            const currentColor = currentTheme === 'dark' ? 'white' : 'black';
+            if(currentColor === 'white') {
+                icon.className = 'fas fa-font';
+                icon.parentElement.title = '切換圖表字體顏色（當前：白色）';
+            } else {
+                icon.className = 'fas fa-font';
+                icon.parentElement.title = '切換圖表字體顏色（當前：黑色）';
+            }
+        }
+    }
+    
+    function toggleTheme() {
+        if(!settings.theme) {
+            settings.theme = 'dark';
+        }
+        settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+        
+        // 根據主題自動切換圖表字體顏色
+        if(settings.theme === 'dark') {
+            settings.chartTextColor = 'white';
+        } else {
+            settings.chartTextColor = 'black';
+        }
+        
+        saveSettings();
+        applyTheme();
+        updateThemeButton();
+        updateChartTextColor();
+    }
+    
+    function applyTheme() {
+        const root = document.documentElement;
+        const currentTheme = settings.theme || 'dark';
+        root.setAttribute('data-theme', currentTheme);
+    }
+    
+    function updateThemeButton() {
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        const currentTheme = settings.theme || 'dark';
+        
+        if(icon && text) {
+            if(currentTheme === 'dark') {
+                icon.className = 'fas fa-moon';
+                text.innerText = '深色模式';
+            } else {
+                icon.className = 'fas fa-sun';
+                text.innerText = '淺色模式';
+            }
+        }
+    }
+    
+    // 根據主題獲取圖表文字顏色
+    function getChartTextColor() {
+        const currentTheme = settings.theme || 'dark';
+        return currentTheme === 'dark' ? '#fff' : '#000';
+    }
+    
+    function updateChartTextColor() {
+        if(!chartInstance) return;
+        
+        const textColor = getChartTextColor();
+        
+        // 更新標題顏色
+        if(chartInstance.title) {
+            chartInstance.setTitle({
+                text: chartInstance.title.textStr || '',
+                style: { color: textColor, fontSize: '14px' }
+            }, false);
+        }
+        
+        // 更新數據標籤顏色
+        if(chartInstance.series && chartInstance.series.length > 0) {
+            chartInstance.series.forEach(series => {
+                if(series.options && series.options.dataLabels) {
+                    series.update({
+                        dataLabels: {
+                            ...series.options.dataLabels,
+                            style: {
+                                ...series.options.dataLabels.style,
+                                color: textColor
+                            }
+                        }
+                    }, false);
+                }
+            });
+        }
+        
+        // 強制更新所有文字元素的顏色
+        setTimeout(() => {
+            const dataLabels = document.querySelectorAll('#chartWrapper .highcharts-data-label text, #chartWrapper .highcharts-title text');
+            dataLabels.forEach(label => {
+                label.style.setProperty('fill', textColor, 'important');
+            });
+            
+            // 更新 disableChartHover 中的顏色設置
+            const hoverLabels = document.querySelectorAll('#chartWrapper .highcharts-data-label, #chartWrapper .highcharts-data-label text');
+            hoverLabels.forEach(label => {
+                if(label.tagName === 'text') {
+                    label.style.setProperty('fill', textColor, 'important');
+                }
+            });
+        }, 100);
+        
+        chartInstance.redraw();
+    }
+    
     // 4. Start the app only after everything is defined
     async function init() {
         initSidebarState();
         initNumbersState();
         initSwiper();
+        applyTheme();
+        updateThemeButton();
         updateCurrencyButton();
+        updateChartTextColorButton();
         chartLevel = 'root';
         currentPage = 0;
         renderAssets();
@@ -5203,4 +5467,3 @@
 </script>
 </body>
 </html>
-
