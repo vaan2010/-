@@ -69,7 +69,7 @@
             --color-up: #30d158; --color-down: #ff453a; --border-color: #2c2c2e; --active-bg: #3a3a3c;
         }
         :root[data-theme="light"] {
-            --bg-color: #ffffff; --card-bg: #f5f5f7; --text-primary: #000000; --text-secondary: #6e6e73;
+            --bg-color: #ffffff; --card-bg: #f5f5f7; --text-primary: #000000; --text-secondary: #999999;
             --color-bank: #007aff; --color-stock: #af52de; --color-twstock: #007aff; --color-crypto: #ff9500; --color-debt: #ff3b30;
             --color-up: #34c759; --color-down: #ff3b30; --border-color: #d1d1d6; --active-bg: #e5e5ea;
         }
@@ -176,7 +176,7 @@
             .list-section .group-header { text-align: left; }
             .list-section .page-container > div:first-child.group-header { margin-top: 0; }
             body { padding-bottom: 0; }
-            .tab-bar { position: fixed; bottom: 0; width: 100%; left: 0; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 40px; padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); z-index: 200; }
+            .tab-bar { position: fixed; bottom: 0; width: 100%; left: 0; background: var(--card-bg); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 40px; padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); z-index: 200; }
             .tab-bar .tab-item { width: auto; padding: 0 30px; font-size: 14px; }
             .tab-bar .tab-item i { font-size: 18px; }
             .modal { align-items: center; justify-content: center; display: flex; }
@@ -568,7 +568,7 @@
         #group-debt .list-item:has(.drag-handle) { cursor: pointer !important; }
         #group-debt .list-item:has(.drag-handle):active { cursor: pointer !important; }
 
-        .tab-bar { position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 200; }
+        .tab-bar { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 200; }
         .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; width: 30%; }
         .tab-item i { font-size: 20px; margin-bottom: 4px; display: block; } .tab-item.active { color: #0a84ff; }
         .fa-spin-fast { animation: fa-spin 1s infinite linear; }
@@ -581,10 +581,10 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: rgba(28, 28, 30, 0.8);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             font-size: 14px;
             font-weight: 600;
             display: flex;
@@ -592,7 +592,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             z-index: 10000;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 0;
@@ -600,8 +600,8 @@
         }
         .currency-toggle-btn:hover {
             transform: scale(1.05);
-            background: rgba(28, 28, 30, 0.9);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+            background: var(--active-bg);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
         .currency-toggle-btn:active {
             transform: scale(0.95);
@@ -741,6 +741,7 @@
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow: hidden; }
+        #accountModal { z-index: 2001; } /* 確保編輯模態框在詳情視圖之上 */
         .modal-content-wrapper { width: 100%; height: 100%; background: var(--bg-color); display: flex; flex-direction: column; overflow: hidden; }
         .modal-header { display: flex; justify-content: space-between; padding: 15px 20px; background: var(--card-bg); align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .modal-title { font-size: 17px; font-weight: 600; }
@@ -1071,7 +1072,7 @@
     </div>
 
     <!-- Calculator Modal -->
-    <div id="calculatorModal" class="modal" style="z-index: 2000;" onclick="event.target.id === 'calculatorModal' && closeCalculator()">
+    <div id="calculatorModal" class="modal" style="z-index: 2002;" onclick="event.target.id === 'calculatorModal' && closeCalculator()">
         <div class="modal-content-wrapper" style="width: 100%; max-width: 400px; height: auto; max-height: 90vh; margin: auto; border-radius: 20px; background: var(--card-bg);" onclick="event.stopPropagation()">
             <div class="modal-header" style="border-radius: 20px 20px 0 0;">
                 <span class="modal-title">計算機</span>
@@ -2597,6 +2598,7 @@
     function openModal() { 
         if(isEditMode)return; 
         editingId=null; 
+        editingFromDetail = false; // 重置標記
         window.tempTransactions=[]; 
         document.getElementById('modalTitle').innerText='新增'; 
         document.getElementById('inpName').value=''; 
@@ -2611,10 +2613,21 @@
             }
         }
         handleTypeChange(); 
-        document.getElementById('accountModal').style.display='block'; 
+        document.getElementById('accountModal').style.display='block';
+        initEditModalSwipe();
     }
-    function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; }
-    function closeModal() { document.getElementById('accountModal').style.display='none'; }
+    function editAccount(id) { if(isEditMode)return; editingId=id; const a=accounts.find(x=>x.id===id); document.getElementById('modalTitle').innerText='編輯'; document.getElementById('inpType').value=a.type; document.getElementById('inpName').value=a.name; document.getElementById('inpSymbol').value=a.symbol; if(a.logo) document.getElementById('inpSymbol').setAttribute('data-logo', a.logo); document.getElementById('inpBalance').value=a.balance; document.getElementById('inpCost').value=a.cost||''; document.getElementById('inpCurrency').value=a.currency; window.tempTransactions=a.transactions||[]; renderTransactions(window.tempTransactions); switchTab('basic'); handleTypeChange(); document.getElementById('accountModal').style.display='block'; initEditModalSwipe(); }
+    function closeModal() { 
+        document.getElementById('accountModal').style.display='none';
+        // 如果從詳情頁面進入，關閉編輯頁面後回到詳情頁面
+        if(editingFromDetail && currentDetailAcc) {
+            editingFromDetail = false;
+            // 重新打開詳情頁面以更新數據
+            openDetailView(currentDetailAcc.id);
+        } else {
+            editingFromDetail = false;
+        }
+    }
     
     // --- Calculator Functions ---
     let currentCalcTarget = null; // 當前要填入的輸入欄位ID
@@ -2962,7 +2975,7 @@
             } 
         } 
     }
-    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const balanceInput = document.getElementById('inpBalance').value.trim(); const b = balanceInput === '' ? 0 : (parseFloat(balanceInput) || 0); const costInput = document.getElementById('inpCost').value.trim(); let cost = costInput === '' ? 0 : (parseFloat(costInput) || 0); const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入數量"); cost=0; if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && balanceInput === '')return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); closeModal(); if(currentDetailAcc && currentDetailAcc.id === newA.id && newA.isAuto) { openDetailView(newA.id); } else if(currentDetailAcc && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
+    function saveAccount() { const t=document.getElementById('inpType').value; let s=document.getElementById('inpSymbol').value.trim().toUpperCase(); let n=document.getElementById('inpName').value.trim(); let c=document.getElementById('inpCurrency').value; const balanceInput = document.getElementById('inpBalance').value.trim(); const b = balanceInput === '' ? 0 : (parseFloat(balanceInput) || 0); const costInput = document.getElementById('inpCost').value.trim(); let cost = costInput === '' ? 0 : (parseFloat(costInput) || 0); const auto=(t==='stock'||t==='twstock'||t==='crypto'); let logoUrl = null; if(t==='stock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); else n=cleanCompanyName(n); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } else if(t==='twstock'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入股數"); if(!cost)return alert("請輸入平均成本"); if(!n) n=s; c='TWD'; } else if(t==='crypto'){ if(!s)return alert("請輸入代碼"); if(!b)return alert("請輸入數量"); cost=0; if(!s.includes(':'))s=`COINBASE:${s}-USD`; if(!n) n=s.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT',''); logoUrl = document.getElementById('inpSymbol').getAttribute('data-logo') || null; c='USD'; } if(!auto && !n)return alert("請輸入名稱"); if(!auto && balanceInput === '')return alert("請輸入金額"); const existingAcc = editingId ? accounts.find(x=>x.id===editingId) : null; const newA={ id:editingId||Date.now(), type:t, name:n, symbol:s, currency:c, balance:b, cost:cost, isAuto:auto, logo: logoUrl || (existingAcc && existingAcc.logo) || null, currentPrice:existingAcc?(existingAcc.currentPrice||0):0, dayChange:existingAcc?(existingAcc.dayChange||0):0, dayChangePercent:existingAcc?(existingAcc.dayChangePercent||0):0, order:existingAcc?(existingAcc.order||0):9999, transactions: window.tempTransactions||[] }; if(editingId)accounts[accounts.findIndex(x=>x.id===editingId)]=newA; else accounts.push(newA); saveData(); const wasEditingFromDetail = editingFromDetail; const detailAccId = currentDetailAcc ? currentDetailAcc.id : null; closeModal(); if(wasEditingFromDetail && detailAccId && newA.id === detailAccId && newA.isAuto) { openDetailView(newA.id); } else if(wasEditingFromDetail && detailAccId && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } else if(currentDetailAcc && currentDetailAcc.id === newA.id && newA.isAuto) { openDetailView(newA.id); } else if(currentDetailAcc && !newA.isAuto) { closeDetailView(); currentDetailAcc = null; } if(auto)refreshAllData(); else { renderAssets(); updateChartData(); } }
     function deleteAccount() { 
         const acc = accounts.find(x => x.id === editingId);
         if (!acc) return;
@@ -3970,9 +3983,116 @@
             });
         } else { txList.innerHTML = '<div class="tx-no-data">無詳細交易紀錄<br>請在編輯模式匯入截圖</div>'; }
         document.getElementById('detailView').classList.add('active');
+        initDetailViewSwipe();
     }
     function closeDetailView() { document.getElementById('detailView').classList.remove('active'); }
-    function editCurrentAsset() { if(currentDetailAcc) { closeDetailView(); editAccount(currentDetailAcc.id); } }
+    
+    // Detail View Swipe Gesture
+    let detailTouchStartX = 0;
+    let detailTouchEndX = 0;
+    let detailTouchStartY = 0;
+    let detailTouchEndY = 0;
+    
+    function initDetailViewSwipe() {
+        const detailView = document.getElementById('detailView');
+        if(!detailView) return;
+        
+        // 移除舊的事件監聽器（如果有的話）
+        detailView.removeEventListener('touchstart', handleDetailTouchStart);
+        detailView.removeEventListener('touchend', handleDetailTouchEnd);
+        
+        // 添加新的事件監聽器
+        detailView.addEventListener('touchstart', handleDetailTouchStart, { passive: true });
+        detailView.addEventListener('touchend', handleDetailTouchEnd, { passive: true });
+    }
+    
+    function handleDetailTouchStart(e) {
+        detailTouchStartX = e.touches[0].clientX;
+        detailTouchStartY = e.touches[0].clientY;
+    }
+    
+    function handleDetailTouchEnd(e) {
+        detailTouchEndX = e.changedTouches[0].clientX;
+        detailTouchEndY = e.changedTouches[0].clientY;
+        handleDetailSwipe();
+    }
+    
+    function handleDetailSwipe() {
+        const swipeThreshold = 50;
+        const diffX = detailTouchStartX - detailTouchEndX;
+        const diffY = detailTouchStartY - detailTouchEndY;
+        
+        // 計算水平和垂直滑動的絕對值
+        const absDiffX = Math.abs(diffX);
+        const absDiffY = Math.abs(diffY);
+        
+        // 如果垂直滑動距離大於水平滑動距離，則不觸發（避免與滾動衝突）
+        if(absDiffY > absDiffX) {
+            return;
+        }
+        
+        // 向右滑動（touchEndX > touchStartX，即 diffX < 0）
+        if(diffX < -swipeThreshold && absDiffX > swipeThreshold) {
+            closeDetailView();
+        }
+    }
+    let editingFromDetail = false; // 標記是否從詳情頁面進入編輯
+    
+    // Edit Modal Swipe Gesture
+    let editModalTouchStartX = 0;
+    let editModalTouchEndX = 0;
+    let editModalTouchStartY = 0;
+    let editModalTouchEndY = 0;
+    
+    function initEditModalSwipe() {
+        const accountModal = document.getElementById('accountModal');
+        if(!accountModal) return;
+        
+        // 移除舊的事件監聽器（如果有的話）
+        accountModal.removeEventListener('touchstart', handleEditModalTouchStart);
+        accountModal.removeEventListener('touchend', handleEditModalTouchEnd);
+        
+        // 添加新的事件監聽器
+        accountModal.addEventListener('touchstart', handleEditModalTouchStart, { passive: true });
+        accountModal.addEventListener('touchend', handleEditModalTouchEnd, { passive: true });
+    }
+    
+    function handleEditModalTouchStart(e) {
+        editModalTouchStartX = e.touches[0].clientX;
+        editModalTouchStartY = e.touches[0].clientY;
+    }
+    
+    function handleEditModalTouchEnd(e) {
+        editModalTouchEndX = e.changedTouches[0].clientX;
+        editModalTouchEndY = e.changedTouches[0].clientY;
+        handleEditModalSwipe();
+    }
+    
+    function handleEditModalSwipe() {
+        const swipeThreshold = 50;
+        const diffX = editModalTouchStartX - editModalTouchEndX;
+        const diffY = editModalTouchStartY - editModalTouchEndY;
+        
+        // 計算水平和垂直滑動的絕對值
+        const absDiffX = Math.abs(diffX);
+        const absDiffY = Math.abs(diffY);
+        
+        // 如果垂直滑動距離大於水平滑動距離，則不觸發（避免與滾動衝突）
+        if(absDiffY > absDiffX) {
+            return;
+        }
+        
+        // 向右滑動（touchEndX > touchStartX，即 diffX < 0）
+        if(diffX < -swipeThreshold && absDiffX > swipeThreshold) {
+            closeModal();
+        }
+    }
+    function editCurrentAsset() { 
+        if(currentDetailAcc) { 
+            editingFromDetail = true; // 標記是從詳情頁面進入
+            editAccount(currentDetailAcc.id); 
+        } 
+    }
 
     // AI
     function triggerImageUpload() { if(!settings.geminiKey)return alert("請先設定 Gemini Key"); document.getElementById('imgUpload').click(); }
@@ -4126,7 +4246,46 @@
         } 
         input.value = '';
     }
-    function renderTransactions(list) { const c = document.getElementById('txListContainer'); c.innerHTML = ''; if(!list || list.length === 0) { c.innerHTML = '<div class="tx-no-data">無明細</div>'; return; } list.forEach(tx => { c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val">$${tx.price}</span></div></div>`; }); }
+    function renderTransactions(list) { 
+        const c = document.getElementById('txListContainer'); 
+        c.innerHTML = ''; 
+        if(!list || list.length === 0) { 
+            c.innerHTML = '<div class="tx-no-data">無明細</div>'; 
+            return; 
+        } 
+        
+        // 獲取當前編輯的帳戶信息，用於比較價格
+        let price = 0;
+        let cost = 0;
+        if(editingId) {
+            const acc = accounts.find(x => x.id === editingId);
+            if(acc) {
+                price = acc.currentPrice || 0;
+                cost = acc.cost || 0;
+            }
+        }
+        
+        list.forEach(tx => { 
+            let txPriceColor = '';
+            // 成交價顏色：與現價比較，現價高於成交價用綠色（漲），現價低於成交價用紅色（跌）
+            if (price > 0 && tx.price > 0) {
+                if (price > tx.price) {
+                    txPriceColor = 'val-green';
+                } else if (price < tx.price) {
+                    txPriceColor = 'val-red';
+                }
+            } else if (cost > 0 && tx.price > 0) {
+                // 如果沒有現價，使用平均成本來比較
+                if (cost > tx.price) {
+                    txPriceColor = 'val-green';
+                } else if (cost < tx.price) {
+                    txPriceColor = 'val-red';
+                }
+            }
+            const priceClass = txPriceColor ? ` ${txPriceColor}` : '';
+            c.innerHTML += `<div class="tx-item"><div class="tx-header-row"><div><span class="tx-badge">整股</span> <span class="tx-date">${tx.date}</span></div></div><div class="tx-row"><span class="tx-label">股數</span><span class="tx-val">${tx.shares}</span></div><div class="tx-row"><span class="tx-label">成交價</span><span class="tx-val${priceClass}">$${tx.price}</span></div></div>`; 
+        }); 
+    }
 
     // Async Updates
     async function refreshAllData(updateChart = true) { const icon=document.getElementById('refreshIcon'); if(icon) icon.classList.add('fa-spin-fast'); await updateRates(); if(settings.apiKey||settings.fugleKey)await fetchPrices(); if(updateChart) updateChartData(); setTimeout(()=>{if(icon) icon.classList.remove('fa-spin-fast');},500); }
