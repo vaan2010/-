@@ -976,7 +976,7 @@
             </div>
 
             <!-- Calendar Page -->
-            <div id="calendarPage" style="display: none; padding: 20px; overflow-y: auto; height: calc(100% - 60px); margin-top: 60px; background: var(--bg-color); position: fixed; top: 0; left: 0; right: 0; bottom: 60px;">
+            <div id="calendarPage" style="display: none; padding: 20px; overflow-y: visible; height: calc(100% - 60px); margin-top: 60px; background: var(--bg-color); position: fixed; top: 0; left: 0; right: 0; bottom: 60px;">
                 <div class="calendar-container">
                     <div class="calendar-header">
                         <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
@@ -998,27 +998,27 @@
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                 </div>
-                <div id="calendarTransferDetails" style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display: none;">
-                    <div class="list-section page-swiper" id="journalSwiper" style="position: relative; width: 100%; overflow: hidden; touch-action: pan-y;">
+                <div id="calendarTransferDetails" style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display: none; width: 100%; box-sizing: border-box; overflow: visible;">
+                    <div class="list-section page-swiper" id="journalSwiper" style="position: relative; width: 100%; overflow: hidden; touch-action: pan-x pan-y;">
                         <div class="page-container" id="journalPageContainer" style="display: flex; transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); width: 300%;">
                             <!-- 支出分頁 -->
-                            <div class="page-item" data-journal-page="expense" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
-                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">支出</div>
-                                <div id="journalExpenseList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="page-item" data-journal-page="expense" style="width: 33.333%; flex-shrink: 0; min-width: 0; padding: 0; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;" id="journalExpensePage">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); padding: 15px 15px 10px 15px; position: sticky; top: 0; background: var(--card-bg); z-index: 10; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">支出</div>
+                                <div id="journalExpenseList" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; padding: 15px; overflow-y: auto; overflow-x: visible; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch;">
                                     <!-- 支出記錄將在這裡動態生成 -->
                                 </div>
                             </div>
                             <!-- 收入分頁 -->
-                            <div class="page-item" data-journal-page="income" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
-                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">收入</div>
-                                <div id="journalIncomeList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="page-item" data-journal-page="income" style="width: 33.333%; flex-shrink: 0; min-width: 0; padding: 0; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;" id="journalIncomePage">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); padding: 15px 15px 10px 15px; position: sticky; top: 0; background: var(--card-bg); z-index: 10; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">收入</div>
+                                <div id="journalIncomeList" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; padding: 15px; overflow-y: auto; overflow-x: visible; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch;">
                                     <!-- 收入記錄將在這裡動態生成 -->
                                 </div>
                             </div>
                             <!-- 轉帳分頁 -->
-                            <div class="page-item" data-journal-page="transfer" style="width: 33.333%; flex-shrink: 0; padding: 15px; background: var(--card-bg); border-radius: 12px; max-height: 400px; overflow-y: auto;">
-                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; position: sticky; top: 0; background: var(--card-bg); padding-bottom: 10px; z-index: 1;">轉帳</div>
-                                <div id="journalTransferList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="page-item" data-journal-page="transfer" style="width: 33.333%; flex-shrink: 0; min-width: 0; padding: 0; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;" id="journalTransferPage">
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); padding: 15px 15px 10px 15px; position: sticky; top: 0; background: var(--card-bg); z-index: 10; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">轉帳</div>
+                                <div id="journalTransferList" style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; padding: 15px; overflow-y: auto; overflow-x: visible; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch;">
                                     <!-- 轉帳記錄將在這裡動態生成 -->
                                 </div>
                             </div>
@@ -6497,6 +6497,14 @@
         
         window.addEventListener('resize', handleResize);
         
+        // 監聽窗口大小改變，更新記帳詳情區域高度
+        window.addEventListener('resize', () => {
+            const detailsContainer = document.getElementById('calendarTransferDetails');
+            if(detailsContainer && detailsContainer.style.display !== 'none') {
+                updateJournalDetailsHeight();
+            }
+        });
+        
         // 監聽媒體查詢變化（更可靠的方式）
         if(window.matchMedia) {
             const mediaQuery = window.matchMedia('(min-width: 768px)');
@@ -6777,6 +6785,9 @@
         // 顯示詳情區域
         detailsContainer.style.display = 'block';
         
+        // 計算並設置詳情區域的最大高度
+        updateJournalDetailsHeight();
+        
         // 渲染支出分頁
         renderJournalPage('expense', expenseRecords, transfers);
         
@@ -6801,7 +6812,44 @@
         // 確保滑動手勢已初始化
         setTimeout(() => {
             initJournalSwipe();
+            // 再次更新高度，確保正確
+            updateJournalDetailsHeight();
         }, 100);
+    }
+    
+    // 更新記帳詳情區域的高度
+    function updateJournalDetailsHeight() {
+        const calendarPage = document.getElementById('calendarPage');
+        const calendarContainer = document.querySelector('.calendar-container');
+        const detailsContainer = document.getElementById('calendarTransferDetails');
+        
+        if(!calendarPage || !calendarContainer || !detailsContainer) return;
+        
+        // 獲取視窗高度
+        const windowHeight = window.innerHeight;
+        // 獲取日曆容器的實際高度（包括 padding）
+        const calendarRect = calendarContainer.getBoundingClientRect();
+        const calendarHeight = calendarRect.height;
+        // 獲取 calendarPage 的 padding（上下各 20px）
+        const pagePadding = 40;
+        // 獲取詳情區域的 margin-top
+        const detailsMarginTop = 20;
+        // 計算可用高度
+        const availableHeight = windowHeight - 60 - pagePadding - calendarHeight - detailsMarginTop;
+        // 設置最小高度和最大高度（至少 200px，最多不超過可用空間）
+        const minHeight = 200;
+        const maxHeight = Math.max(minHeight, availableHeight - 20); // 減去一些緩衝
+        
+        // 為每個分頁設置最大高度
+        const expensePage = document.getElementById('journalExpensePage');
+        const incomePage = document.getElementById('journalIncomePage');
+        const transferPage = document.getElementById('journalTransferPage');
+        
+        [expensePage, incomePage, transferPage].forEach(page => {
+            if(page) {
+                page.style.maxHeight = `${maxHeight}px`;
+            }
+        });
     }
     
     // 渲染記帳分頁
@@ -6825,13 +6873,13 @@
                 title = record.category || '收入';
                 const account = accounts.find(acc => acc.id === record.accountId);
                 const accountName = account ? account.name : '未知帳戶';
-                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
                 detailItem.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: var(--color-up);">+$${record.amount.toLocaleString()}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--color-up); flex-shrink: 0; white-space: nowrap;">+$${record.amount.toLocaleString()}</div>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-secondary);">帳戶：${accountName}</div>
+                    <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${accountName}</div>
                 `;
             } else if(record.type === 'expense') {
                 borderColor = 'var(--color-down)';
@@ -6839,13 +6887,13 @@
                 title = record.category || '支出';
                 const account = accounts.find(acc => acc.id === record.accountId);
                 const accountName = account ? account.name : '未知帳戶';
-                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
                 detailItem.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: var(--color-down);">-$${record.amount.toLocaleString()}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--color-down); flex-shrink: 0; white-space: nowrap;">-$${record.amount.toLocaleString()}</div>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-secondary);">帳戶：${accountName}</div>
+                    <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${accountName}</div>
                 `;
             } else if(record.type === 'transfer') {
                 borderColor = '#0a84ff';
@@ -6855,13 +6903,13 @@
                 const toAccount = accounts.find(acc => acc.id === record.toAccountId);
                 const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
                 const toAccountName = toAccount ? toAccount.name : '未知帳戶';
-                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + ';';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
                 detailItem.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center;">${icon}${title}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">$${record.amount.toLocaleString()}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${icon}${title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${record.amount.toLocaleString()}</div>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-secondary);">${fromAccountName} ---> ${toAccountName}</div>
+                    <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fromAccountName} ---> ${toAccountName}</div>
                 `;
             }
             
@@ -6892,13 +6940,13 @@
                 const toAccountName = toAccount ? toAccount.name : '未知帳戶';
                 
                 const detailItem = document.createElement('div');
-                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + ';';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
                 detailItem.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${transfer.title}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary);">$${transfer.amount.toLocaleString()}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${transfer.title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${transfer.amount.toLocaleString()}</div>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-secondary);">${fromAccountName} ---> ${toAccountName}</div>
+                    <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fromAccountName} ---> ${toAccountName}</div>
                 `;
                 list.appendChild(detailItem);
             });
@@ -6911,22 +6959,33 @@
             emptyMsg.textContent = '尚無記錄';
             list.appendChild(emptyMsg);
         }
+        
+        // 添加底部間距，確保最後一項不會被遮住
+        const bottomSpacer = document.createElement('div');
+        bottomSpacer.style.cssText = 'height: 30px; flex-shrink: 0;';
+        list.appendChild(bottomSpacer);
     }
     
     // 切換記帳分頁
     function switchJournalPage(index) {
-        currentJournalPageIndex = index;
+        currentJournalPageIndex = Math.max(0, Math.min(2, index)); // 限制在 0-2 之間
         const container = document.getElementById('journalPageContainer');
         if(container) {
-            container.style.transform = `translateX(-${index * 33.333}%)`;
+            const transformValue = -currentJournalPageIndex * 33.333;
+            container.style.transform = `translateX(${transformValue}%)`;
+            // 更新當前 transform 值
+            journalCurrentTransform = transformValue;
         }
     }
     
     // 記帳詳情滑動相關變數
     let journalTouchStartX = 0;
+    let journalTouchStartY = 0;
     let journalTouchEndX = 0;
+    let journalTouchEndY = 0;
     let journalIsSwiping = false;
     let journalCurrentTransform = 0;
+    let journalSwipeStartIndex = 0;
     
     // 初始化記帳詳情的滑動手勢
     function initJournalSwipe() {
@@ -6946,28 +7005,24 @@
     
     function handleJournalTouchStart(e) {
         journalTouchStartX = e.touches[0].clientX;
+        journalTouchStartY = e.touches[0].clientY;
         journalIsSwiping = false;
-        const container = document.getElementById('journalPageContainer');
-        if(container) {
-            const transform = container.style.transform;
-            if(transform) {
-                const match = transform.match(/translateX\(-?(\d+\.?\d*)%\)/);
-                if(match) {
-                    journalCurrentTransform = parseFloat(match[1]);
-                } else {
-                    journalCurrentTransform = -currentJournalPageIndex * 33.333;
-                }
-            } else {
-                journalCurrentTransform = -currentJournalPageIndex * 33.333;
-            }
-        }
+        journalSwipeStartIndex = currentJournalPageIndex;
+        journalCurrentTransform = -currentJournalPageIndex * 33.333;
     }
     
     function handleJournalTouchMove(e) {
-        if(!journalTouchStartX) return;
+        if(!journalTouchStartX || !journalTouchStartY) return;
+        
         const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
         const diffX = journalTouchStartX - currentX;
+        const diffY = journalTouchStartY - currentY;
         const absDiffX = Math.abs(diffX);
+        const absDiffY = Math.abs(diffY);
+        
+        // 如果垂直滑動距離大於水平滑動距離，不處理（允許垂直滾動）
+        if(absDiffY > absDiffX) return;
         
         if(absDiffX > 10) {
             journalIsSwiping = true;
@@ -6984,8 +7039,8 @@
                 const maxTransform = 0;
                 
                 // 檢查是否在邊界
-                const isAtLeftBoundary = currentJournalPageIndex <= 0 && diffX < 0;
-                const isAtRightBoundary = currentJournalPageIndex >= 2 && diffX > 0;
+                const isAtLeftBoundary = journalSwipeStartIndex <= 0 && diffX < 0;
+                const isAtRightBoundary = journalSwipeStartIndex >= 2 && diffX > 0;
                 
                 if(isAtLeftBoundary || isAtRightBoundary) {
                     // 添加阻力效果
@@ -7006,6 +7061,7 @@
     
     function handleJournalTouchEnd(e) {
         journalTouchEndX = e.changedTouches[0].clientX;
+        journalTouchEndY = e.changedTouches[0].clientY;
         const container = document.getElementById('journalPageContainer');
         if(container && journalIsSwiping) {
             container.classList.remove('swiping');
@@ -7016,15 +7072,27 @@
         }
         
         journalTouchStartX = 0;
+        journalTouchStartY = 0;
         journalTouchEndX = 0;
+        journalTouchEndY = 0;
         journalIsSwiping = false;
     }
     
     function handleJournalSwipe() {
         const swipeThreshold = 50;
         const diffX = journalTouchStartX - journalTouchEndX;
+        const diffY = journalTouchStartY - journalTouchEndY;
+        const absDiffX = Math.abs(diffX);
+        const absDiffY = Math.abs(diffY);
         
-        if(Math.abs(diffX) > swipeThreshold) {
+        // 如果垂直滑動距離大於水平滑動距離，不觸發分頁切換
+        if(absDiffY > absDiffX) {
+            // 回彈到原位置
+            switchJournalPage(currentJournalPageIndex);
+            return;
+        }
+        
+        if(absDiffX > swipeThreshold) {
             if(diffX > 0) {
                 // 向左滑動，顯示下一個分頁
                 if(currentJournalPageIndex < 2) {
