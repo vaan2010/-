@@ -910,12 +910,8 @@
                 </div>
             </div>
 
-            <div class="page-indicator">
-                <button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button>
-                <button class="page-tab" data-page="1" onclick="switchToPage(1)">錢包</button>
-                <button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button>
-                <button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button>
-                <button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>
+            <div class="page-indicator" style="display: none;">
+                <!-- 分頁按鈕將由 JavaScript 動態生成 -->
             </div>
 
             <div class="content-grid">
@@ -2188,6 +2184,11 @@
             tab.textContent = shortName;
             indicator.appendChild(tab);
         });
+        
+        // 確保分頁指示器顯示（如果之前被隱藏）
+        if(orderedPages.length > 0) {
+            indicator.style.display = 'flex';
+        }
     }
     
     // 切換分頁顯示
@@ -7090,17 +7091,17 @@
                 pageIndicator.style.display = 'flex';  // 恢復顯示
                 // 保存當前頁面索引，避免閃爍
                 const savedPage = currentPage;
-                pageIndicator.innerHTML = '<button class="page-tab active" data-page="0" onclick="switchToPage(0)">總覽</button><button class="page-tab" data-page="1" onclick="switchToPage(1)">錢包</button><button class="page-tab" data-page="2" onclick="switchToPage(2)">美股</button><button class="page-tab" data-page="3" onclick="switchToPage(3)">台股</button><button class="page-tab" data-page="4" onclick="switchToPage(4)">加密</button>';
-                // 直接設置正確的 active 狀態，避免閃爍
-                const tabs = pageIndicator.querySelectorAll('.page-tab');
-                tabs.forEach((tab, index) => {
-                    if(index === savedPage) {
-                        tab.classList.add('active');
-                    } else {
-                        tab.classList.remove('active');
+                // 根據 pageVisibility 動態生成分頁按鈕，只顯示啟用的分頁
+                let tabsHTML = '';
+                PAGE_TYPES.forEach((type, index) => {
+                    if(isPageEnabled(index)) {
+                        const pageName = PAGE_NAMES[index];
+                        const isActive = index === savedPage ? 'active' : '';
+                        tabsHTML += `<button class="page-tab ${isActive}" data-page="${index}" onclick="switchToPage(${index})">${pageName}</button>`;
                     }
                 });
-                // 然後調用 switchToPage 來更新內容（但不會改變 active 狀態，因為已經設置好了）
+                pageIndicator.innerHTML = tabsHTML;
+                // 然後調用 switchToPage 來更新內容
                 switchToPage(savedPage);
             }
             if(navbarTitle) navbarTitle.textContent = 'Monee';
