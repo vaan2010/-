@@ -868,6 +868,14 @@
                     <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
                     <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
                 </div>
+                <div class="menu-label" onclick="toggleMenuSection('pnl')">
+                    <span>損益管理</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="menu-section" id="menuSection-pnl">
+                    <div class="menu-item" onclick="resetPnL(); toggleSidebar();"><i class="fas fa-redo"></i><span class="menu-text">損益歸零</span></div>
+                    <div class="menu-item" onclick="restorePnL(); toggleSidebar();"><i class="fas fa-undo"></i><span class="menu-text">恢復損益</span></div>
+                </div>
                 <div class="menu-label" onclick="toggleMenuSection('api')">
                     <span>API 設定</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -1512,7 +1520,9 @@
             <div style="padding: 20px;">
                 <div class="form-group">
                     <div class="form-row"><span class="form-label">標題</span><input type="text" id="fixedTransferTitle" class="form-input" placeholder="例:交通卡充值"></div>
-                    <div class="form-row"><span class="form-label">金額</span><input type="number" id="fixedTransferAmount" class="form-input" placeholder="金額"></div>
+                    <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;"><span class="form-label">使用帳戶全部金額</span><div style="display: flex; align-items: center; gap: 10px;"><span id="fixedTransferUseAccountBalanceLabel" style="color: var(--text-secondary); font-size: 14px;">關閉</span><label class="switch"><input type="checkbox" id="fixedTransferUseAccountBalance" onchange="updateFixedTransferAmountMode()"><span class="slider"></span></label></div></div>
+                    <div class="form-row" id="fixedTransferAccountBalanceSourceRow" style="display: none; cursor: pointer;" onclick="toggleFixedTransferAccountBalanceSource()"><span class="form-label">使用帳戶</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><span id="fixedTransferAccountBalanceSource" style="color: var(--text-secondary);">匯出方（從帳戶）</span><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
+                    <div class="form-row" id="fixedTransferAmountRow"><span class="form-label">金額</span><input type="number" id="fixedTransferAmount" class="form-input" placeholder="金額"></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openAccountSelector('from')"><span class="form-label">從帳戶</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><span id="fixedTransferFromAccount" style="color: var(--text-secondary);">從帳戶</span><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openAccountSelector('to')"><span class="form-label">到帳戶</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><span id="fixedTransferToAccount" style="color: var(--text-secondary);">到帳戶</span><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openTagColorSelector()"><span class="form-label">標籤</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-tag" id="fixedTransferTagIcon" style="color: var(--text-secondary);"></i><span id="fixedTransferTagColor" style="color: var(--text-secondary);">選擇顏色</span></div><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
@@ -3596,6 +3606,8 @@
         const nameInput = document.getElementById('inpName');
         const bankNameRow = document.getElementById('rowBankName');
         const bankNameSelect = document.getElementById('inpBankName');
+        const isEditing = editingId !== null; // 判斷是編輯還是新增模式
+        const currentName = nameInput ? nameInput.value : ''; // 保存當前名稱
         
         if(tag === '現金') {
             // 現金：名稱固定為"現金"
@@ -3606,16 +3618,22 @@
             if(bankNameRow) bankNameRow.style.display = 'none';
             if(bankNameSelect) bankNameSelect.value = '';
         } else if(tag === '銀行' || tag === '信用卡' || tag === '簽帳金融卡') {
-            // 銀行、信用卡、簽帳金融卡：顯示銀行選擇欄位，名稱清空並可編輯
+            // 銀行、信用卡、簽帳金融卡：顯示銀行選擇欄位，名稱可編輯
             if(nameInput) {
-                nameInput.value = '';
+                // 編輯模式下保持原有名稱，新增模式下清空
+                if(!isEditing) {
+                    nameInput.value = '';
+                }
                 nameInput.disabled = false;
             }
             if(bankNameRow) bankNameRow.style.display = 'flex';
         } else {
-            // 電子貨幣等其他標籤：名稱清空並可編輯，不顯示銀行選擇
+            // 電子貨幣等其他標籤：名稱可編輯，不顯示銀行選擇
             if(nameInput) {
-                nameInput.value = '';
+                // 編輯模式下保持原有名稱，新增模式下清空
+                if(!isEditing) {
+                    nameInput.value = '';
+                }
                 nameInput.disabled = false;
             }
             if(bankNameRow) bankNameRow.style.display = 'none';
@@ -5912,14 +5930,16 @@
             // 總覽頁面：股票盈虧 + 記帳盈虧
             const journalDailyPnL = calculateJournalDailyPnL();
             const journalTotalPnL = calculateJournalTotalPnL();
-            totalDailyPnL += journalDailyPnL;
-            totalCostPnL += journalTotalPnL;
+            // 應用偏移值（如果已歸零）
+            totalDailyPnL += journalDailyPnL + getDailyPnLOffset();
+            totalCostPnL += journalTotalPnL + getTotalPnLOffset();
         } else if(currentPage === 1) {
             // 錢包頁面：只顯示記帳盈虧
             const journalDailyPnL = calculateJournalDailyPnL();
             const journalTotalPnL = calculateJournalTotalPnL();
-            totalDailyPnL = journalDailyPnL;
-            totalCostPnL = journalTotalPnL;
+            // 應用偏移值（如果已歸零）
+            totalDailyPnL = journalDailyPnL + getDailyPnLOffset();
+            totalCostPnL = journalTotalPnL + getTotalPnLOffset();
         }
         // 股票頁面（第2、3、4頁）保持原有邏輯，不加入記帳盈虧
 
@@ -7366,7 +7386,7 @@
         // 顏色配置
         const colors = type === 'expense' 
             ? ['#ff453a', '#ff9500', '#ffcc00', '#34c759', '#5ac8fa', '#007aff', '#5856d6', '#af52de', '#ff2d55']  // 支出：多色系
-            : ['#34c759', '#30d158', '#32d74b', '#4ade80', '#22c55e', '#5ac8fa', '#007aff', '#0a84ff', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#fbbf24'];  // 收入：從綠色開始的彩虹色
+            : ['#34c759', '#5ac8fa', '#007aff', '#0a84ff', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#fbbf24', '#30d158', '#32d74b', '#4ade80', '#22c55e'];  // 收入：綠色+藍色+彩虹色
         
         // 轉換為Highcharts格式（不在此處指定顏色，使用plotOptions中的colors數組）
         const chartData = Object.keys(categoryData).map(category => ({
@@ -7467,7 +7487,7 @@
                     dataLabels: {
                         enabled: true,
                         distance: 35,
-                        format: '{point.name}<br/><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                        format: '{point.name}<br/><span style="opacity:0.7">{point.percentage:.1f}%</span><br/><span style="font-size:11px;opacity:0.6;">${point.y:,.0f}</span>',
                         style: {
                             color: chartTextColor,
                             fontSize: '12px',
@@ -7483,7 +7503,7 @@
                         softConnector: true,
                         crop: false,  // 不裁剪標籤
                         overflow: 'allow',  // 允許標籤超出圖表區域
-                        useHTML: false,  // 使用SVG渲染，避免HTML裁剪問題
+                            useHTML: true,  // 使用HTML渲染以支持金額顯示
                         padding: 0  // 移除內邊距
                     },
                     colors: colors,  // 設置顏色數組
@@ -7824,7 +7844,7 @@
             // 顏色配置
             const colors = type === 'expense' 
                 ? ['#ff453a', '#ff9500', '#ffcc00', '#34c759', '#5ac8fa', '#007aff', '#5856d6', '#af52de', '#ff2d55']
-                : ['#34c759', '#30d158', '#32d74b', '#4ade80', '#22c55e', '#5ac8fa', '#007aff', '#0a84ff', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#fbbf24'];  // 收入：從綠色開始的彩虹色
+                : ['#34c759', '#5ac8fa', '#007aff', '#0a84ff', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#fbbf24', '#30d158', '#32d74b', '#4ade80', '#22c55e'];  // 收入：綠色+藍色+彩虹色
             
             // 轉換為Highcharts格式（不在此處指定顏色，使用plotOptions中的colors數組）
             const chartData = Object.keys(categoryData).map(category => ({
@@ -7867,7 +7887,7 @@
                         dataLabels: {
                             enabled: true,
                             distance: 30,
-                            format: '{point.name}<br/><span style="opacity:0.7">{point.percentage:.1f}%</span>',
+                            format: '{point.name}<br/><span style="opacity:0.7">{point.percentage:.1f}%</span><br/><span style="font-size:10px;opacity:0.6;">${point.y:,.0f}</span>',
                             style: {
                                 color: chartTextColor,
                                 fontSize: '11px',
@@ -7883,7 +7903,7 @@
                             softConnector: true,
                             crop: false,  // 不裁剪標籤
                             overflow: 'allow',  // 允許標籤超出圖表區域
-                            useHTML: false,  // 使用SVG渲染，避免HTML裁剪問題
+                            useHTML: true,  // 使用HTML渲染以支持金額顯示
                             padding: 0  // 移除內邊距
                         },
                         colors: colors,  // 設置顏色數組
@@ -8046,12 +8066,15 @@
                 const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
                 const toAccountName = toAccount ? toAccount.name : '未知帳戶';
                 
+                // 計算顯示金額
+                const displayAmount = getFixedTransferDisplayAmount(transfer);
+                
                 const detailItem = document.createElement('div');
                 detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
                 detailItem.innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
                         <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${transfer.title}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${transfer.amount.toLocaleString()}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${displayAmount.toLocaleString()}</div>
                     </div>
                     <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fromAccountName} ---> ${toAccountName}</div>
                 `;
@@ -8274,6 +8297,37 @@
         }
     }
     
+    // 檢查支出記錄是否在某個固定轉帳創建之前創建（如果是，則不應影響信用卡餘額）
+    function isExpenseBeforeFixedTransfer(expenseRecord, creditCardAccountId) {
+        if(!expenseRecord.createdAt) return false; // 如果沒有創建時間，視為可以影響
+        
+        const transfers = loadFixedTransfers();
+        const expenseTime = new Date(expenseRecord.createdAt).getTime();
+        
+        // 檢查是否有固定轉帳涉及這個信用卡，且創建時間在支出記錄之後
+        const relevantTransfers = transfers.filter(t => {
+            return t.toAccountId === creditCardAccountId;
+        });
+        
+        // 如果有任何固定轉帳的創建時間在支出記錄之後，則支出記錄不應影響餘額
+        for(const transfer of relevantTransfers) {
+            // 如果固定轉帳沒有 createdAt，使用 id（時間戳）作為創建時間
+            let transferTime = 0;
+            if(transfer.createdAt) {
+                transferTime = new Date(transfer.createdAt).getTime();
+            } else if(transfer.id) {
+                // 使用 id 作為時間戳（id 是 Date.now().toString()）
+                transferTime = parseInt(transfer.id) || 0;
+            }
+            
+            if(transferTime > expenseTime) {
+                return true; // 支出記錄在固定轉帳之前創建
+            }
+        }
+        
+        return false; // 支出記錄不在任何固定轉帳之前，可以影響餘額
+    }
+    
     // 刪除記帳記錄
     function deleteJournalRecord(recordId) {
         if(!confirm('確定要刪除這筆記錄嗎？')) return;
@@ -8303,10 +8357,17 @@
             // 支出：向帳戶餘額中加上金額（因為支出是減少餘額的）
             const account = accounts.find(acc => String(acc.id) === String(record.accountId));
             if(account) {
-                const amount = parseFloat(record.amount) || 0;
-                account.balance = parseFloat(account.balance) || 0;
-                account.balance += amount;
-                console.log('刪除支出 - 帳戶:', account.name, '餘額:', account.balance, '金額:', amount);
+                // 檢查是否為信用卡，且支出記錄在某個固定轉帳創建之前創建
+                if(account.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(record, account.id)) {
+                    console.log('刪除支出 - 支出記錄在某個固定轉帳創建之前創建，不恢復金額:', account.name);
+                    // 不恢復金額，直接刪除記錄
+                } else {
+                    // 正常恢復金額
+                    const amount = parseFloat(record.amount) || 0;
+                    account.balance = parseFloat(account.balance) || 0;
+                    account.balance += amount;
+                    console.log('刪除支出 - 帳戶:', account.name, '餘額:', account.balance, '金額:', amount);
+                }
             } else {
                 console.error('找不到支出帳戶:', record.accountId, '所有帳戶ID:', accounts.map(a => a.id));
             }
@@ -8601,6 +8662,70 @@
         });
         
         return income - expense;
+    }
+    
+    // 損益歸零：保存當前損益值並將顯示值設為0
+    function resetPnL() {
+        if(!confirm('確定要將當日損益和總損益歸零嗎？此操作可以恢復。')) return;
+        
+        const dailyPnL = calculateJournalDailyPnL();
+        const totalPnL = calculateJournalTotalPnL();
+        
+        // 保存原始值到 localStorage
+        const backup = {
+            dailyPnL: dailyPnL,
+            totalPnL: totalPnL,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(`pnl_backup_${currentUserId}`, JSON.stringify(backup));
+        
+        // 保存偏移值（用於計算顯示值）
+        localStorage.setItem(`pnl_daily_offset_${currentUserId}`, (-dailyPnL).toString());
+        localStorage.setItem(`pnl_total_offset_${currentUserId}`, (-totalPnL).toString());
+        
+        // 重新渲染以更新顯示
+        updateChartData();
+        alert('損益已歸零');
+        // 自動重新整理頁面
+        setTimeout(() => {
+            location.reload();
+        }, 500);
+    }
+    
+    // 恢復損益：恢復到歸零前的值
+    function restorePnL() {
+        const backup = localStorage.getItem(`pnl_backup_${currentUserId}`);
+        if(!backup) {
+            alert('沒有可恢復的損益記錄');
+            return;
+        }
+        
+        if(!confirm('確定要恢復損益嗎？')) return;
+        
+        // 清除偏移值
+        localStorage.removeItem(`pnl_daily_offset_${currentUserId}`);
+        localStorage.removeItem(`pnl_total_offset_${currentUserId}`);
+        localStorage.removeItem(`pnl_backup_${currentUserId}`);
+        
+        // 重新渲染以更新顯示
+        updateChartData();
+        alert('損益已恢復');
+        // 自動重新整理頁面
+        setTimeout(() => {
+            location.reload();
+        }, 500);
+    }
+    
+    // 獲取當日損益偏移值
+    function getDailyPnLOffset() {
+        const offset = localStorage.getItem(`pnl_daily_offset_${currentUserId}`);
+        return offset ? parseFloat(offset) : 0;
+    }
+    
+    // 獲取總損益偏移值
+    function getTotalPnLOffset() {
+        const offset = localStorage.getItem(`pnl_total_offset_${currentUserId}`);
+        return offset ? parseFloat(offset) : 0;
     }
     
     // 計算記帳的總計盈虧（所有收入 - 所有支出）
@@ -9329,6 +9454,11 @@
                 // 還原舊記錄對帳戶餘額的影響
                 const oldAccount = accounts.find(acc => acc.id === oldRecord.accountId);
                 if(oldAccount) {
+                    // 檢查是否為信用卡，且舊記錄在某個固定轉帳創建之前創建
+                    if(oldAccount.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(oldRecord, oldAccount.id)) {
+                        alert('此支出記錄在某個固定轉帳創建之前創建，無法修改或刪除');
+                        return;
+                    }
                     oldAccount.balance += oldRecord.amount;
                 }
                 
@@ -9340,7 +9470,7 @@
                 oldRecord.updatedAt = new Date().toISOString();
             }
         } else {
-            // 新增模式：創建新記錄
+            // 新增模式：創建新記錄（新增的記錄可以正常修改和刪除，因為創建時間在固定轉帳之後）
             const newRecord = {
                 id: Date.now().toString(),
                 type: 'expense',
@@ -9353,7 +9483,7 @@
             records.push(newRecord);
         }
         
-        // 應用新記錄對帳戶餘額的影響
+        // 應用新記錄對帳戶餘額的影響（即使信用卡已被歸零，也要更新餘額）
         account.balance -= amount;
         
         saveJournalRecords(records);
@@ -9514,6 +9644,33 @@
         });
     }
     
+    // 計算固定轉帳的顯示金額
+    function getFixedTransferDisplayAmount(transfer) {
+        if(transfer.useAccountBalance) {
+            // 檢查是否涉及信用卡
+            const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+            const isCreditCardTransfer = toAccount && toAccount.bankTag === '信用卡';
+            
+            // 如果涉及信用卡且已記錄初始金額，使用初始金額（直到下次執行時才更新）
+            if(isCreditCardTransfer && transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
+                return transfer.creditCardInitialAmount;
+            }
+            
+            // 其他情況：使用帳戶全部金額，計算當前帳戶餘額的絕對值（顯示下一次會轉帳的金額）
+            const sourceAccount = transfer.useFromAccount 
+                ? accounts.find(acc => acc.id === transfer.fromAccountId)
+                : accounts.find(acc => acc.id === transfer.toAccountId);
+            
+            if(sourceAccount) {
+                return Math.abs(sourceAccount.balance);
+            }
+            return 0;
+        } else {
+            // 使用固定金額
+            return transfer.amount || 0;
+        }
+    }
+    
     function renderFixedTransferList() {
         const container = document.getElementById('fixedTransferListContainer');
         if(!container) return;
@@ -9527,6 +9684,7 @@
         }
         
         transfers.forEach(transfer => {
+            const displayAmount = getFixedTransferDisplayAmount(transfer);
             const item = document.createElement('div');
             item.style.cssText = 'padding: 15px; border-radius: 12px; background: var(--bg-color); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;';
             item.innerHTML = `
@@ -9534,7 +9692,7 @@
                     <div style="width: 20px; height: 20px; border-radius: 50%; background: ${transfer.tagColor};"></div>
                     <div>
                         <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
-                        <div style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">$${transfer.amount.toLocaleString()}</div>
+                        <div style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">$${displayAmount.toLocaleString()}</div>
                     </div>
                 </div>
                 <button onclick="event.stopPropagation(); deleteFixedTransfer('${transfer.id}')" style="padding: 8px 12px; background: var(--color-down); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;">刪除</button>
@@ -9547,12 +9705,70 @@
         if(!confirm('確定要刪除這個固定轉帳嗎？')) return;
         
         const transfers = loadFixedTransfers();
+        const transfer = transfers.find(t => t.id === id);
+        
+        // 檢查是否涉及信用卡且信用卡已被歸零
+        if(transfer) {
+            const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+            if(toAccount && toAccount.bankTag === '信用卡' && toAccount.isZeroedByFixedTransfer) {
+                console.log('刪除固定轉帳 - 信用卡已被固定轉帳歸零，不恢復金額:', toAccount.name);
+                // 不恢復金額，直接刪除固定轉帳
+            } else if(transfer.useAccountBalance) {
+                // 如果使用帳戶全部金額，需要恢復帳戶餘額
+                const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+                
+                if(fromAccount && toAccount) {
+                    // 計算需要恢復的金額
+                    let restoreAmount = 0;
+                    if(transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
+                        // 如果涉及信用卡，使用記錄的初始金額
+                        restoreAmount = transfer.creditCardInitialAmount;
+                    } else if(transfer.initialAmount !== undefined && transfer.initialAmount !== null) {
+                        // 使用記錄的初始金額
+                        restoreAmount = transfer.initialAmount;
+                    } else {
+                        // 如果沒有記錄，使用當前轉入帳戶的餘額（取絕對值）
+                        restoreAmount = Math.abs(toAccount.balance);
+                    }
+                    
+                    // 恢復帳戶餘額
+                    fromAccount.balance += restoreAmount;
+                    toAccount.balance -= restoreAmount;
+                    console.log('刪除固定轉帳 - 恢復金額:', restoreAmount, '從', fromAccount.name, '到', toAccount.name);
+                }
+            } else {
+                // 使用固定金額，恢復帳戶餘額
+                const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+                const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+                
+                if(fromAccount && toAccount) {
+                    const amount = transfer.amount || 0;
+                    fromAccount.balance += amount;
+                    toAccount.balance -= amount;
+                    console.log('刪除固定轉帳 - 恢復金額:', amount, '從', fromAccount.name, '到', toAccount.name);
+                }
+            }
+            
+            // 保存資料
+            saveData();
+        }
+        
         const filtered = transfers.filter(t => t.id !== id);
         saveFixedTransfers(filtered);
+        
+        // 注意：即使刪除固定轉帳，之前的支出記錄仍然不能影響信用卡餘額（通過時間戳判斷）
         
         // 重新渲染列表和日曆
         renderFixedTransferList();
         renderCalendar();
+        renderAssets();
+        updateChartData();
+        
+        // 更新日期支出資訊（如果當前有選中日期）
+        if(selectedDate) {
+            showFixedTransferDetailsForDate(selectedDate);
+        }
         
         // 如果列表模態框是打開的，確保列表已更新
         const listModal = document.getElementById('fixedTransferListModal');
@@ -9642,8 +9858,17 @@
             startDate: null,
             endDate: null,
             holidayAdjust: 'none',
-            tagColor: null
+            tagColor: null,
+            useAccountBalance: false,
+            useFromAccount: true
         };
+        
+        // 重置表單
+        const useAccountBalanceCheckbox = document.getElementById('fixedTransferUseAccountBalance');
+        if(useAccountBalanceCheckbox) {
+            useAccountBalanceCheckbox.checked = false;
+        }
+        updateFixedTransferAmountMode();
         
         // 如果是編輯模式，載入現有數據
         if(transferId) {
@@ -9681,6 +9906,15 @@
                 // 載入按期數設定
                 fixedTransferData.byPeriod = transfer.byPeriod || false;
                 document.getElementById('fixedTransferByPeriod').checked = fixedTransferData.byPeriod;
+                
+                // 載入使用帳戶全部金額設定
+                fixedTransferData.useAccountBalance = transfer.useAccountBalance || false;
+                fixedTransferData.useFromAccount = transfer.useFromAccount !== undefined ? transfer.useFromAccount : true;
+                const useAccountBalanceCheckbox = document.getElementById('fixedTransferUseAccountBalance');
+                if(useAccountBalanceCheckbox) {
+                    useAccountBalanceCheckbox.checked = fixedTransferData.useAccountBalance;
+                }
+                updateFixedTransferAmountMode();
                 
                 // 載入日期
                 fixedTransferData.startDate = new Date(transfer.startDate);
@@ -9790,11 +10024,16 @@
                 modalWrapper.style.transform = 'translateX(100%)';
                 editingFixedTransferId = null; // 重置編輯狀態
                 
-                // 如果列表模態框之前是打開的，重新打開它
+                // 如果列表模態框之前是打開的，重新打開它並更新列表
                 const listModal = document.getElementById('fixedTransferListModal');
                 if(listModal && listModal.getAttribute('data-was-open') === 'true') {
                     listModal.removeAttribute('data-was-open');
+                    // 先更新列表，再打開模態框
+                    renderFixedTransferList();
                     openFixedTransferList();
+                } else {
+                    // 即使列表模態框沒有打開，也要更新列表（以防用戶之後打開）
+                    renderFixedTransferList();
                 }
             }, 400);
         } else {
@@ -9822,9 +10061,12 @@
             return;
         }
         
-        if(!amount || amount <= 0) {
-            alert('請輸入有效的金額');
-            return;
+        // 如果使用帳戶全部金額，不需要驗證金額
+        if(!fixedTransferData.useAccountBalance) {
+            if(!amount || amount <= 0) {
+                alert('請輸入有效的金額');
+                return;
+            }
         }
         
         if(!fromAccountId || !toAccountId) {
@@ -9850,6 +10092,16 @@
         // 載入現有列表
         const transfers = loadFixedTransfers();
         
+        // 檢查是否涉及信用卡，如果是，記錄信用卡的初始絕對值金額
+        const toAccount = accounts.find(acc => acc.id === toAccountId);
+        const isCreditCardTransfer = toAccount && toAccount.bankTag === '信用卡';
+        let creditCardInitialAmount = null;
+        
+        if(isCreditCardTransfer && fixedTransferData.useAccountBalance) {
+            // 如果轉入帳戶是信用卡且使用帳戶全部金額，記錄信用卡的初始絕對值金額
+            creditCardInitialAmount = Math.abs(toAccount.balance);
+        }
+        
         // 創建或更新固定轉帳對象
         let fixedTransfer;
         if(editingFixedTransferId) {
@@ -9858,9 +10110,9 @@
             if(existingIndex >= 0) {
                 const existing = transfers[existingIndex];
                 fixedTransfer = {
-                    ...existing, // 保留原有屬性（如執行記錄）
+                    ...existing, // 保留原有屬性（如執行記錄、initialAmount）
                     title: title,
-                    amount: amount,
+                    amount: fixedTransferData.useAccountBalance ? 0 : amount, // 如果使用帳戶全部金額，金額設為0（執行時會計算）
                     fromAccountId: fromAccountId,
                     toAccountId: toAccountId,
                     repeat: fixedTransferData.repeat,
@@ -9868,8 +10120,17 @@
                     startDate: fixedTransferData.startDate.toISOString(),
                     endDate: fixedTransferData.endDate ? fixedTransferData.endDate.toISOString() : null,
                     holidayAdjust: fixedTransferData.holidayAdjust,
-                    tagColor: fixedTransferData.tagColor
+                    tagColor: fixedTransferData.tagColor,
+                    useAccountBalance: fixedTransferData.useAccountBalance,
+                    useFromAccount: fixedTransferData.useFromAccount
                 };
+                // 如果涉及信用卡且使用帳戶全部金額，記錄信用卡的初始絕對值金額
+                if(isCreditCardTransfer && fixedTransferData.useAccountBalance && creditCardInitialAmount !== null) {
+                    // 如果是新增模式或編輯模式但還沒有記錄過，記錄初始金額
+                    if(!fixedTransfer.creditCardInitialAmount) {
+                        fixedTransfer.creditCardInitialAmount = creditCardInitialAmount;
+                    }
+                }
                 transfers[existingIndex] = fixedTransfer;
             } else {
                 alert('找不到要編輯的固定轉帳');
@@ -9896,7 +10157,9 @@
             fixedTransfer = {
                 id: Date.now().toString(),
                 title: title,
-                amount: amount,
+                amount: fixedTransferData.useAccountBalance ? 0 : amount, // 如果使用帳戶全部金額，金額設為0（執行時會計算）
+                useAccountBalance: fixedTransferData.useAccountBalance,
+                useFromAccount: fixedTransferData.useFromAccount,
                 fromAccountId: fromAccountId,
                 toAccountId: toAccountId,
                 repeat: fixedTransferData.repeat,
@@ -9905,6 +10168,7 @@
                 endDate: fixedTransferData.endDate ? fixedTransferData.endDate.toISOString() : null,
                 holidayAdjust: fixedTransferData.holidayAdjust,
                 tagColor: fixedTransferData.tagColor,
+                creditCardInitialAmount: creditCardInitialAmount, // 如果涉及信用卡，記錄初始絕對值金額
                 createdAt: new Date().toISOString(),
                 lastExecutedDate: null,
                 executedDates: []
@@ -9917,6 +10181,14 @@
         // 重新渲染列表和日曆
         renderFixedTransferList();
         renderCalendar();
+        
+        // 更新資產列表
+        renderAssets();
+        
+        // 更新日期支出資訊（如果當前有選中日期）
+        if(selectedDate) {
+            showFixedTransferDetailsForDate(selectedDate);
+        }
         
         editingFixedTransferId = null;
         closeFixedTransferModal();
@@ -10112,8 +10384,48 @@
         startDate: null,
         endDate: null,
         holidayAdjust: 'none', // 'none', 'advance', 'delay'
-        tagColor: null // 標籤顏色
+        tagColor: null, // 標籤顏色
+        useAccountBalance: false, // 是否使用帳戶全部金額
+        useFromAccount: true // true: 使用匯出方（從帳戶），false: 使用匯入方（到帳戶）
     };
+    
+    function updateFixedTransferAmountMode() {
+        const useAccountBalanceCheckbox = document.getElementById('fixedTransferUseAccountBalance');
+        const accountBalanceSourceRow = document.getElementById('fixedTransferAccountBalanceSourceRow');
+        const amountRow = document.getElementById('fixedTransferAmountRow');
+        const amountInput = document.getElementById('fixedTransferAmount');
+        const labelElement = document.getElementById('fixedTransferUseAccountBalanceLabel');
+        
+        if(!useAccountBalanceCheckbox) return;
+        
+        fixedTransferData.useAccountBalance = useAccountBalanceCheckbox.checked;
+        
+        if(useAccountBalanceCheckbox.checked) {
+            // 啟用使用帳戶全部金額
+            if(accountBalanceSourceRow) accountBalanceSourceRow.style.display = 'flex';
+            if(amountRow) amountRow.style.display = 'none';
+            if(labelElement) labelElement.textContent = '開啟';
+            updateFixedTransferAccountBalanceSourceDisplay();
+        } else {
+            // 關閉使用帳戶全部金額
+            if(accountBalanceSourceRow) accountBalanceSourceRow.style.display = 'none';
+            if(amountRow) amountRow.style.display = 'flex';
+            if(labelElement) labelElement.textContent = '關閉';
+        }
+    }
+    
+    function toggleFixedTransferAccountBalanceSource() {
+        fixedTransferData.useFromAccount = !fixedTransferData.useFromAccount;
+        updateFixedTransferAccountBalanceSourceDisplay();
+    }
+    
+    function updateFixedTransferAccountBalanceSourceDisplay() {
+        const sourceElement = document.getElementById('fixedTransferAccountBalanceSource');
+        if(sourceElement) {
+            sourceElement.textContent = fixedTransferData.useFromAccount ? '匯出方（從帳戶）' : '匯入方（到帳戶）';
+            sourceElement.style.color = 'var(--text-primary)';
+        }
+    }
     
     // 載入固定轉帳列表
     function loadFixedTransfers() {
@@ -10660,6 +10972,14 @@
             saveFixedTransfers(transfers);
             renderAssets();
             updateChartData();
+            // 更新固定轉帳列表顯示
+            renderFixedTransferList();
+            // 更新日期支出資訊（如果當前有選中日期）
+            if(selectedDate) {
+                showFixedTransferDetailsForDate(selectedDate);
+            }
+            // 更新日曆
+            renderCalendar();
         }
     }
     
@@ -10673,15 +10993,50 @@
             return false;
         }
         
-        // 檢查餘額是否足夠
-        if(fromAccount.balance < transfer.amount) {
-            console.warn(`固定轉帳執行失敗：${fromAccount.name} 餘額不足`, transfer);
-            return false;
+        // 檢查是否涉及信用卡
+        const isCreditCardTransfer = toAccount.bankTag === '信用卡';
+        
+        // 計算轉帳金額
+        let transferAmount = transfer.amount;
+        if(transfer.useAccountBalance) {
+            if(isCreditCardTransfer && transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
+                // 如果涉及信用卡且已記錄初始金額，使用初始金額
+                transferAmount = transfer.creditCardInitialAmount;
+            } else {
+                // 使用帳戶全部金額（取絕對值）
+                const sourceAccount = transfer.useFromAccount ? fromAccount : toAccount;
+                transferAmount = Math.abs(sourceAccount.balance);
+            }
+            
+            if(transferAmount === 0) {
+                console.warn(`固定轉帳執行失敗：金額為0`, transfer);
+                return false;
+            }
+        } else {
+            // 使用固定金額
+            // 檢查餘額是否足夠（只檢查匯出方）
+            if(fromAccount.balance < transferAmount) {
+                console.warn(`固定轉帳執行失敗：${fromAccount.name} 餘額不足`, transfer);
+                return false;
+            }
         }
         
         // 更新帳戶餘額
-        fromAccount.balance -= transfer.amount;
-        toAccount.balance += transfer.amount;
+        fromAccount.balance -= transferAmount;
+        toAccount.balance += transferAmount;
+        
+        // 如果涉及信用卡，檢查轉帳後信用卡是否歸0
+        if(isCreditCardTransfer && Math.abs(toAccount.balance) < 0.01) {
+            // 信用卡已歸0，標記為已被固定轉帳歸零
+            toAccount.isZeroedByFixedTransfer = true;
+            // 更新固定轉帳的信用卡初始金額為0（下次執行時會重新計算）
+            if(transfer.useAccountBalance) {
+                transfer.creditCardInitialAmount = 0;
+            }
+        } else if(isCreditCardTransfer && transfer.useAccountBalance) {
+            // 如果涉及信用卡且使用帳戶全部金額，更新初始金額為轉帳後信用卡的絕對值（下次執行時的金額）
+            transfer.creditCardInitialAmount = Math.abs(toAccount.balance);
+        }
         
         // 記錄執行日期
         const dateStr = executeDate.toISOString().split('T')[0];
@@ -10690,10 +11045,18 @@
         }
         transfer.lastExecutedDate = dateStr;
         
+        // 如果使用帳戶全部金額（非信用卡），更新 initialAmount 為執行時使用的金額（用於記錄）
+        if(transfer.useAccountBalance && !isCreditCardTransfer) {
+            transfer.initialAmount = transferAmount;
+        }
+        
         // 保存資料
         saveData();
         
-        console.log(`固定轉帳已執行：${transfer.title}，金額：${transfer.amount}，從 ${fromAccount.name} 轉到 ${toAccount.name}`);
+        // 更新固定轉帳列表顯示（因為金額可能已改變）
+        renderFixedTransferList();
+        
+        console.log(`固定轉帳已執行：${transfer.title}，金額：${transferAmount}，從 ${fromAccount.name} 轉到 ${toAccount.name}`);
         return true;
     }
     
