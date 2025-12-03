@@ -34,13 +34,29 @@
                 testImg.onerror = function() {
                     // 本地文件不存在或載入失敗，使用外部 URL
                     updateFaviconLinks(externalUrl);
+                    updateLogoImages(externalUrl);
                 };
                 testImg.onload = function() {
                     // 本地文件存在，確保使用本地路徑
                     updateFaviconLinks(faviconPath);
+                    updateLogoImages(faviconPath);
                 };
                 // 添加時間戳避免快取問題
                 testImg.src = faviconPath + '?t=' + Date.now();
+            }
+            
+            function updateLogoImages(url) {
+                // 更新載入遮罩中的圖片
+                const loadingImage = document.querySelector('.loading-image');
+                if(loadingImage) {
+                    loadingImage.src = url;
+                }
+                
+                // 更新標題中的圖片
+                const titleLogos = document.querySelectorAll('.title-logo');
+                titleLogos.forEach(logo => {
+                    logo.src = url;
+                });
             }
             
             function updateFaviconLinks(url) {
@@ -935,7 +951,7 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-header">
-                <img src="image.png" alt="Loading" class="loading-image">
+                <img src="./favico.png" alt="Loading" class="loading-image">
                 <div class="loading-title">Monee</div>
             </div>
             <div class="loading-spinner"></div>
@@ -1025,7 +1041,7 @@
         <div class="main-content">
             <div class="navbar">
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <h1><img src="image.png" alt="Logo" class="title-logo">Monee</h1>
+                <h1><img src="./favico.png" alt="Logo" class="title-logo">Monee</h1>
                 <div class="btn-group">
                     <button class="btn-icon sidebar-toggle-btn-navbar" id="sidebarToggleBtnNavbar" onclick="toggleSidebarCollapse()" title="展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
@@ -7011,7 +7027,7 @@
                 pageIndicator.style.display = 'none';  // 完全隱藏頁面指示器
             }
             if(navbarTitle) {
-                navbarTitle.innerHTML = '<img src="image.png" alt="Logo" class="title-logo">記帳日程';
+                navbarTitle.innerHTML = '<img src="./favico.png" alt="Logo" class="title-logo">記帳日程';
             }
             // 隱藏右上角的新增和排序按鈕，顯示圖表按鈕和新增按鈕
             const addBtn = document.getElementById('addBtn');
@@ -7093,7 +7109,7 @@
                 switchToPage(savedPage);
             }
             if(navbarTitle) {
-                navbarTitle.innerHTML = '<img src="image.png" alt="Logo" class="title-logo">Monee';
+                navbarTitle.innerHTML = '<img src="./favico.png" alt="Logo" class="title-logo">Monee';
             }
             // 顯示右上角的新增和排序按鈕，隱藏圖表按鈕和新增按鈕
             const addBtn = document.getElementById('addBtn');
