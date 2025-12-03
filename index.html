@@ -3287,6 +3287,11 @@
         document.getElementById('inpSymbol').value=''; 
         document.getElementById('inpBalance').value=''; // 清空股數
         document.getElementById('inpCost').value=''; // 清空平均成本
+        // 確保名稱欄位可編輯
+        const nameInput = document.getElementById('inpName');
+        if(nameInput) {
+            nameInput.disabled = false;
+        }
         if(document.getElementById('inpBankTag')) {
             document.getElementById('inpBankTag').value = '現金'; // 預設為現金
         }
@@ -3807,7 +3812,38 @@
             brokerSelect.innerHTML = '<option value="cathay">國泰證券 (0.1%)</option><option value="fubon">富邦證券 (0.25%)</option><option value="custom">自訂...</option>';
         }
     }
-    function handleTypeChange() { const t=document.getElementById('inpType').value; const auto=(t==='stock'||t==='twstock'||t==='crypto'); document.getElementById('rowSymbol').style.display=auto?'flex':'none'; document.getElementById('rowName').style.display=auto?'none':'flex'; document.getElementById('rowCurrency').style.display=auto?'none':'flex'; document.getElementById('rowCost').style.display=(auto && t!=='crypto')?'flex':'none'; document.getElementById('rowBankTag').style.display=(t==='bank')?'flex':'none'; document.getElementById('rowBankName').style.display='none'; document.getElementById('aiArea').style.display=auto?'block':'none'; document.getElementById('lblBalance').innerText=(t==='crypto')?'數量':(auto?'股數':'金額'); if(auto) { updateBrokerOptions(); syncNameFromSymbol(); updateAIButtonState(); } else { document.getElementById('btnAI').disabled=false; } if(t==='bank') { handleBankTagChange(); } }
+    function handleTypeChange() { 
+        const t=document.getElementById('inpType').value; 
+        const auto=(t==='stock'||t==='twstock'||t==='crypto'); 
+        document.getElementById('rowSymbol').style.display=auto?'flex':'none'; 
+        document.getElementById('rowName').style.display=auto?'none':'flex'; 
+        document.getElementById('rowCurrency').style.display=auto?'none':'flex'; 
+        document.getElementById('rowCost').style.display=(auto && t!=='crypto')?'flex':'none'; 
+        document.getElementById('rowBankTag').style.display=(t==='bank')?'flex':'none'; 
+        document.getElementById('rowBankName').style.display='none'; 
+        document.getElementById('aiArea').style.display=auto?'block':'none'; 
+        document.getElementById('lblBalance').innerText=(t==='crypto')?'數量':(auto?'股數':'金額'); 
+        if(auto) { 
+            updateBrokerOptions(); 
+            syncNameFromSymbol(); 
+            updateAIButtonState(); 
+        } else { 
+            document.getElementById('btnAI').disabled=false; 
+        } 
+        if(t==='bank') { 
+            handleBankTagChange(); 
+        } else if(t==='debt') {
+            // 負債類型：確保名稱欄位可編輯
+            const nameInput = document.getElementById('inpName');
+            if(nameInput) {
+                nameInput.disabled = false;
+                // 如果是新增模式且名稱為空或為「現金」，清空名稱欄位
+                if(!editingId && (nameInput.value === '' || nameInput.value === '現金')) {
+                    nameInput.value = '';
+                }
+            }
+        }
+    }
     function handleBankTagChange() {
         const tag = document.getElementById('inpBankTag') ? document.getElementById('inpBankTag').value : '現金';
         const nameInput = document.getElementById('inpName');
