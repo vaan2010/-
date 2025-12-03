@@ -835,7 +835,7 @@
             width: 80px;
             height: 80px;
             opacity: 0;
-            animation: fadeInUpImage 1.5s ease-out 0.5s forwards, pulse 2s ease-in-out 2s infinite;
+            animation: fadeInUpImage 1s ease-out 0s forwards, pulse 2s ease-in-out 1s infinite;
             object-fit: contain;
         }
         .loading-title {
@@ -843,7 +843,7 @@
             font-weight: 700;
             color: var(--text-primary);
             opacity: 0;
-            animation: fadeInUp 1.5s ease-out 0.5s forwards;
+            animation: fadeInUp 1s ease-out 0s forwards;
         }
         @keyframes fadeInUpImage {
             0% {
@@ -2155,15 +2155,9 @@
         });
     }
     
-    // 生成帳戶標籤 HTML（可以有多個標籤）
-    function generateAccountTagHTML(account) {
+    // 獲取帳戶標籤的 class（根據帳戶類型）
+    function getAccountTagClass(account) {
         const bankTag = account.bankTag || '帳戶';
-        const bankName = account.bankName || '';
-        
-        // 判斷是否是銀行、信用卡、簽帳金融卡
-        const isBankType = bankTag === '銀行' || bankTag === '信用卡' || bankTag === '簽帳金融卡';
-        
-        // 根據 bankTag 決定分類標籤的 class
         let tagClass = 'account-tag-account'; // 預設為帳戶
         if(bankTag === '銀行') {
             tagClass = 'account-tag-bank';
@@ -2176,6 +2170,19 @@
         } else if(bankTag === '負債') {
             tagClass = 'account-tag-debt';
         }
+        return tagClass;
+    }
+    
+    // 生成帳戶標籤 HTML（可以有多個標籤）
+    function generateAccountTagHTML(account) {
+        const bankTag = account.bankTag || '帳戶';
+        const bankName = account.bankName || '';
+        
+        // 判斷是否是銀行、信用卡、簽帳金融卡
+        const isBankType = bankTag === '銀行' || bankTag === '信用卡' || bankTag === '簽帳金融卡';
+        
+        // 根據 bankTag 決定分類標籤的 class
+        let tagClass = getAccountTagClass(account);
         
         // 生成標籤 HTML 陣列
         const tags = [];
@@ -2934,6 +2941,8 @@
         
         accounts.forEach(acc=>{ 
             if(acc.type==='debt')return;
+            // 排除信用卡（不納入資產分佈）
+            if(acc.type === 'bank' && acc.bankTag === '信用卡') return;
             // 只計算啟用分頁的資產
             if(acc.type === 'bank' && !pageVisibility['bank']) return;
             if(acc.type === 'stock' && !pageVisibility['stock']) return;
@@ -4069,78 +4078,8 @@
         URL.revokeObjectURL(url);
     }
     function importData() { 
-        const choice = confirm("選擇匯入方式：\n確定 = 貼上JSON文字\n取消 = 選擇檔案");
-        const progressToast = document.getElementById('importProgressToast');
-        const progressBar = document.getElementById('importProgressBar');
-        const progressText = document.getElementById('importProgressText');
-        const importOverlay = document.getElementById('importOverlay');
-        if (choice) {
-            const text = prompt("貼上備份JSON:");
-            if (text) {
-                // 顯示遮罩層和進度條
-                if(importOverlay) importOverlay.style.display = 'block';
-                progressToast.style.display = 'block';
-                progressBar.style.width = '30%';
-                progressText.innerText = '解析JSON中...';
-                try {
-                    setTimeout(() => {
-                        progressBar.style.width = '60%';
-                        progressText.innerText = '驗證資料中...';
-                        const d = JSON.parse(text);
-                        
-                        // 支援新格式（多使用者）和舊格式（單使用者）
-                        if (d.version === '2.0' && d.users && d.usersData) {
-                            // 新格式：多使用者
-                            progressBar.style.width = '80%';
-                            progressText.innerText = '寫入資料中...';
-                            setTimeout(() => {
-                                progressBar.style.width = '100%';
-                                progressText.innerText = '完成！';
-                                localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(d.users));
-                                
-                                // 匯入每個使用者的資料
-                                Object.keys(d.usersData).forEach(userId => {
-                                    const userData = d.usersData[userId];
-                                    localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
-                                    localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
-                                    if(userData.journal !== undefined) {
-                                        localStorage.setItem(`${STORAGE_KEY_JOURNAL}_${userId}`, JSON.stringify(userData.journal || []));
-                                    }
-                                    if(userData.fixedTransfers !== undefined) {
-                                        localStorage.setItem(`${STORAGE_KEY_FIXED_TRANSFERS}_${userId}`, JSON.stringify(userData.fixedTransfers || []));
-                                    }
-                                });
-                                
-                                setTimeout(() => location.reload(), 500);
-                            }, 200);
-                        } else if (d.data && d.settings) {
-                            // 舊格式：單使用者，匯入到當前使用者
-                            progressBar.style.width = '80%';
-                            progressText.innerText = '寫入資料中...';
-                            setTimeout(() => {
-                                progressBar.style.width = '100%';
-                                progressText.innerText = '完成！';
-                                localStorage.setItem(`${STORAGE_KEY_DATA}_${currentUserId}`, JSON.stringify(d.data));
-                                localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${currentUserId}`, JSON.stringify(d.settings));
-                                setTimeout(() => location.reload(), 500);
-                            }, 200);
-                        } else {
-                            if(importOverlay) importOverlay.style.display = 'none';
-                            progressToast.style.display = 'none';
-                            progressBar.style.width = '0%';
-                            alert("格式錯誤：不支援的備份格式");
-                        }
-                    }, 100);
-                } catch(err) {
-                    if(importOverlay) importOverlay.style.display = 'none';
-                    progressToast.style.display = 'none';
-                    progressBar.style.width = '0%';
-                    alert("解析失敗: " + err.message);
-                }
-            }
-        } else {
-            document.getElementById('importFileInput').click();
-        }
+        // 直接觸發檔案選擇，不再提供貼上文字的選項
+        document.getElementById('importFileInput').click();
     }
     function handleFileImport(event) {
         const file = event.target.files[0];
@@ -6546,7 +6485,8 @@
                      htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${tagHTML}</div>`;
                  }
                 
-                let color = 'amount-green';
+                // 如果是信用卡類型，使用紅色；否則使用綠色
+                let color = (acc.type === 'bank' && acc.bankTag === '信用卡') ? 'amount-red' : 'amount-green';
                 let hdl = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
                 let clk = isEditMode ? '' : `onclick="openDetailView(${acc.id})"`;
                 let dailyPnL = acc.isAuto ? calculateDailyPnL(acc) : 0;
@@ -7030,14 +6970,14 @@
         
         // 載入完成，等待 Monee 字樣動畫完成後再隱藏載入遮罩
         if(loadingOverlay) {
-            // Monee 字樣動畫：0.5s 延遲 + 1.5s 動畫 = 2s，再加上一點緩衝時間
+            // Monee 字樣動畫：1s 動畫時間
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
                 // 完全隱藏後移除元素（可選，如果想保留 DOM 可以註解掉）
                 setTimeout(() => {
                     loadingOverlay.style.display = 'none';
                 }, 300); // 等待淡出動畫完成
-            }, 2200); // 等待 Monee 字樣動畫完成（0.5s 延遲 + 1.5s 動畫 + 0.2s 緩衝）
+            }, 1000); // 等待 Monee 字樣動畫完成（1s 動畫）
         }
     }
     
@@ -8066,6 +8006,13 @@
                 const toAccount = accounts.find(acc => acc.id === record.toAccountId);
                 const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
                 const toAccountName = toAccount ? toAccount.name : '未知帳戶';
+                
+                // 生成帳戶標籤 HTML（顯示帳戶名稱，使用帳戶類型決定顏色）
+                const fromAccountTagClass = fromAccount ? getAccountTagClass(fromAccount) : 'account-tag-account';
+                const toAccountTagClass = toAccount ? getAccountTagClass(toAccount) : 'account-tag-account';
+                const fromAccountTagHTML = `<span class="account-tag ${fromAccountTagClass}">${fromAccountName}</span>`;
+                const toAccountTagHTML = `<span class="account-tag ${toAccountTagClass}">${toAccountName}</span>`;
+                
                 detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + borderColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible; cursor: pointer;';
                 detailItem.onclick = () => editJournalRecord(record.id);
                 detailItem.innerHTML = `
@@ -8074,7 +8021,11 @@
                         <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${record.amount.toLocaleString()}</div>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                        <div style="font-size: 14px; color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fromAccountName} ---> ${toAccountName}</div>
+                        <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; flex-wrap: wrap;">
+                            ${fromAccountTagHTML}
+                            <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 12px; margin: 0 2px;"></i>
+                            ${toAccountTagHTML}
+                        </div>
                         <div style="display: flex; gap: 8px; flex-shrink: 0;">
                             <button onclick="event.stopPropagation(); editJournalRecord('${record.id}')" style="background: none; border: none; color: #0a84ff; font-size: 16px; padding: 4px 8px; cursor: pointer;" title="編輯"><i class="fas fa-edit"></i></button>
                             <button onclick="event.stopPropagation(); deleteJournalRecord('${record.id}')" style="background: none; border: none; color: #ff453a; font-size: 16px; padding: 4px 8px; cursor: pointer;" title="刪除"><i class="fas fa-trash"></i></button>
@@ -8109,18 +8060,30 @@
                 const fromAccountName = fromAccount ? fromAccount.name : '未知帳戶';
                 const toAccountName = toAccount ? toAccount.name : '未知帳戶';
                 
+                // 生成帳戶標籤 HTML（顯示帳戶名稱，使用帳戶類型決定顏色）
+                const fromAccountTagClass = fromAccount ? getAccountTagClass(fromAccount) : 'account-tag-account';
+                const toAccountTagClass = toAccount ? getAccountTagClass(toAccount) : 'account-tag-account';
+                const fromAccountTagHTML = `<span class="account-tag ${fromAccountTagClass}">${fromAccountName}</span>`;
+                const toAccountTagHTML = `<span class="account-tag ${toAccountTagClass}">${toAccountName}</span>`;
+                
                 // 計算顯示金額
                 const displayAmount = getFixedTransferDisplayAmount(transfer);
                 
                 const detailItem = document.createElement('div');
-                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible;';
+                detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible; cursor: pointer;';
                 detailItem.innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
                         <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${transfer.title}</div>
                         <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${displayAmount.toLocaleString()}</div>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-secondary); width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fromAccountName} ---> ${toAccountName}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%; flex-wrap: wrap;">
+                        ${fromAccountTagHTML}
+                        <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 12px; margin: 0 2px;"></i>
+                        ${toAccountTagHTML}
+                    </div>
                 `;
+                // 添加點擊事件，顯示詳細資料（只讀）
+                detailItem.onclick = () => showFixedTransferDetail(transfer.id);
                 list.appendChild(detailItem);
             });
         }
@@ -10057,7 +10020,190 @@
         }, 300);
     }
     
+    // 顯示固定轉帳詳細資料（只讀模式）
+    function showFixedTransferDetail(transferId) {
+        const modal = document.getElementById('fixedTransferModal');
+        const modalWrapper = modal.querySelector('.modal-content-wrapper');
+        
+        const transfers = loadFixedTransfers();
+        const transfer = transfers.find(t => t.id === transferId);
+        if(!transfer) return;
+        
+        // 設置為只讀模式
+        const saveBtn = modal.querySelector('.modal-header .btn-icon[onclick="saveFixedTransfer()"]');
+        if(saveBtn) {
+            saveBtn.style.display = 'none';
+        }
+        
+        // 禁用所有輸入欄位
+        const titleInput = document.getElementById('fixedTransferTitle');
+        const amountInput = document.getElementById('fixedTransferAmount');
+        const useAccountBalanceCheckbox = document.getElementById('fixedTransferUseAccountBalance');
+        const byPeriodCheckbox = document.getElementById('fixedTransferByPeriod');
+        
+        if(titleInput) {
+            titleInput.disabled = true;
+            titleInput.value = transfer.title;
+        }
+        if(amountInput) {
+            amountInput.disabled = true;
+            amountInput.value = transfer.amount;
+        }
+        if(useAccountBalanceCheckbox) {
+            useAccountBalanceCheckbox.disabled = true;
+            useAccountBalanceCheckbox.checked = transfer.useAccountBalance || false;
+            updateFixedTransferAmountMode();
+        }
+        if(byPeriodCheckbox) {
+            byPeriodCheckbox.disabled = true;
+            byPeriodCheckbox.checked = transfer.byPeriod || false;
+        }
+        
+        // 禁用所有可點擊的欄位
+        const clickableRows = modal.querySelectorAll('.form-row[style*="cursor: pointer"]');
+        clickableRows.forEach(row => {
+            row.style.pointerEvents = 'none';
+            row.style.opacity = '0.7';
+        });
+        
+        // 載入帳戶信息
+        const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
+        const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
+        if(fromAccount) {
+            document.getElementById('fixedTransferFromAccount').textContent = fromAccount.name;
+            document.getElementById('fixedTransferFromAccount').style.color = 'var(--text-primary)';
+        }
+        if(toAccount) {
+            document.getElementById('fixedTransferToAccount').textContent = toAccount.name;
+            document.getElementById('fixedTransferToAccount').style.color = 'var(--text-primary)';
+        }
+        
+        // 載入重複設定
+        const repeatNames = {
+            'daily': '每天',
+            'weekly': '每週',
+            'monthly': '每月',
+            'yearly': '每年'
+        };
+        document.getElementById('fixedTransferRepeat').textContent = repeatNames[transfer.repeat] || '每月';
+        
+        // 載入日期設定
+        if(transfer.startDate) {
+            const startDate = new Date(transfer.startDate);
+            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const startDateStr = `${startDate.getFullYear()}年${startDate.getMonth() + 1}月${startDate.getDate()}日 ${weekdays[startDate.getDay()]}`;
+            document.getElementById('fixedTransferStartDate').textContent = startDateStr;
+            document.getElementById('fixedTransferStartDate').style.color = 'var(--text-primary)';
+        }
+        
+        if(transfer.endDate) {
+            const endDate = new Date(transfer.endDate);
+            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const endDateStr = `${endDate.getFullYear()}年${endDate.getMonth() + 1}月${endDate.getDate()}日 ${weekdays[endDate.getDay()]}`;
+            document.getElementById('fixedTransferEndDate').textContent = endDateStr;
+            document.getElementById('fixedTransferEndDate').style.color = 'var(--text-primary)';
+        } else {
+            document.getElementById('fixedTransferEndDate').textContent = '永不結束';
+            document.getElementById('fixedTransferEndDate').style.color = 'var(--text-primary)';
+        }
+        
+        // 載入假日調整
+        const holidayAdjustNames = {
+            'none': '不調整',
+            'before': '提前到前一個工作日',
+            'after': '延後到下一個工作日'
+        };
+        document.getElementById('fixedTransferHolidayAdjust').textContent = holidayAdjustNames[transfer.holidayAdjust] || '不調整';
+        
+        // 載入標籤顏色
+        if(transfer.tagColor) {
+            document.getElementById('fixedTransferTagIcon').style.color = transfer.tagColor;
+            document.getElementById('fixedTransferTagColor').textContent = '已選擇';
+            document.getElementById('fixedTransferTagColor').style.color = transfer.tagColor;
+        }
+        
+        // 更新週期入帳日程
+        updateNextDatesForTransfer(transfer);
+        
+        // 顯示模態框
+        if(modalWrapper) {
+            modalWrapper.style.transform = 'translateX(100%)';
+            modalWrapper.classList.remove('swiping');
+        }
+        modal.style.display = 'block';
+        modal.style.background = 'transparent';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if(modalWrapper) {
+                    modalWrapper.style.transform = 'translateX(0)';
+                }
+            }, 10);
+        });
+    }
+    
+    // 更新週期入帳日程（用於只讀模式）
+    function updateNextDatesForTransfer(transfer) {
+        if(!transfer.startDate) return;
+        
+        const startDate = new Date(transfer.startDate);
+        const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        
+        // 計算下回日期
+        let nextDate = new Date(startDate);
+        if(transfer.repeat === 'daily') {
+            nextDate.setDate(nextDate.getDate() + 1);
+        } else if(transfer.repeat === 'weekly') {
+            nextDate.setDate(nextDate.getDate() + 7);
+        } else if(transfer.repeat === 'monthly') {
+            nextDate.setMonth(nextDate.getMonth() + 1);
+        } else if(transfer.repeat === 'yearly') {
+            nextDate.setFullYear(nextDate.getFullYear() + 1);
+        }
+        
+        const nextDateStr = `${nextDate.getFullYear()}年${nextDate.getMonth() + 1}月${nextDate.getDate()}日 ${weekdays[nextDate.getDay()]}`;
+        document.getElementById('fixedTransferNextDate').textContent = `:${nextDateStr}`;
+        
+        // 計算下下回日期
+        let nextNextDate = new Date(nextDate);
+        if(transfer.repeat === 'daily') {
+            nextNextDate.setDate(nextNextDate.getDate() + 1);
+        } else if(transfer.repeat === 'weekly') {
+            nextNextDate.setDate(nextNextDate.getDate() + 7);
+        } else if(transfer.repeat === 'monthly') {
+            nextNextDate.setMonth(nextNextDate.getMonth() + 1);
+        } else if(transfer.repeat === 'yearly') {
+            nextNextDate.setFullYear(nextNextDate.getFullYear() + 1);
+        }
+        
+        const nextNextDateStr = `${nextNextDate.getFullYear()}年${nextNextDate.getMonth() + 1}月${nextNextDate.getDate()}日 ${weekdays[nextNextDate.getDay()]}`;
+        document.getElementById('fixedTransferNextNextDate').textContent = `:${nextNextDateStr}`;
+    }
+    
     function closeFixedTransferModal() {
+        // 恢復所有欄位為可編輯狀態
+        const titleInput = document.getElementById('fixedTransferTitle');
+        const amountInput = document.getElementById('fixedTransferAmount');
+        const useAccountBalanceCheckbox = document.getElementById('fixedTransferUseAccountBalance');
+        const byPeriodCheckbox = document.getElementById('fixedTransferByPeriod');
+        
+        if(titleInput) titleInput.disabled = false;
+        if(amountInput) amountInput.disabled = false;
+        if(useAccountBalanceCheckbox) useAccountBalanceCheckbox.disabled = false;
+        if(byPeriodCheckbox) byPeriodCheckbox.disabled = false;
+        
+        // 恢復所有可點擊的欄位
+        const fixedTransferModal = document.getElementById('fixedTransferModal');
+        const clickableRows = fixedTransferModal.querySelectorAll('.form-row[style*="cursor: pointer"]');
+        clickableRows.forEach(row => {
+            row.style.pointerEvents = '';
+            row.style.opacity = '';
+        });
+        
+        // 恢復儲存按鈕
+        const saveBtn = fixedTransferModal.querySelector('.modal-header .btn-icon[onclick="saveFixedTransfer()"]');
+        if(saveBtn) {
+            saveBtn.style.display = '';
+        }
         const modal = document.getElementById('fixedTransferModal');
         const modalWrapper = modal.querySelector('.modal-content-wrapper');
         if(modalWrapper) {
