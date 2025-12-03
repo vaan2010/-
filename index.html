@@ -1662,6 +1662,7 @@
                     <div class="form-row" id="fixedTransferAmountRow"><span class="form-label">金額</span><input type="number" id="fixedTransferAmount" class="form-input" placeholder="金額"></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openAccountSelector('from')"><span class="form-label">從帳戶</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><span id="fixedTransferFromAccount" style="color: var(--text-secondary);">從帳戶</span><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openAccountSelector('to')"><span class="form-label">到帳戶</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><span id="fixedTransferToAccount" style="color: var(--text-secondary);">到帳戶</span><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
+                    <div class="form-row" id="fixedTransferCreditCardSettlementRow" style="display: none;"><span class="form-label">信用卡結算時間</span><input type="number" id="fixedTransferCreditCardSettlement" class="form-input" placeholder="每月幾號" min="1" max="31" style="text-align: right;"></div>
                     <div class="form-row" style="cursor: pointer;" onclick="openTagColorSelector()"><span class="form-label">標籤</span><div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-tag" id="fixedTransferTagIcon" style="color: var(--text-secondary);"></i><span id="fixedTransferTagColor" style="color: var(--text-secondary);">選擇顏色</span></div><i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i></div></div>
                 </div>
                 <div class="form-group" style="margin-top: 30px;">
@@ -7695,14 +7696,14 @@
         // 計算並設置詳情區域的最大高度
         updateJournalDetailsHeight();
         
-        // 渲染支出分頁
-        renderJournalPage('expense', expenseRecords, transfers);
+        // 渲染支出分頁（傳入日期以便計算固定轉帳金額）
+        renderJournalPage('expense', expenseRecords, transfers, date);
         
         // 渲染收入分頁
-        renderJournalPage('income', incomeRecords, transfers);
+        renderJournalPage('income', incomeRecords, transfers, date);
         
         // 渲染轉帳分頁
-        renderJournalPage('transfer', transferRecords, transfers);
+        renderJournalPage('transfer', transferRecords, transfers, date);
         
         // 重置到第一個有內容的分頁
         if(expenseRecords.length > 0 || transfers.length > 0) {
@@ -7763,7 +7764,7 @@
     }
     
     // 渲染記帳分頁
-    function renderJournalPage(type, records, fixedTransfers) {
+    function renderJournalPage(type, records, fixedTransfers, targetDate = null) {
         const listId = type === 'expense' ? 'journalExpenseList' : (type === 'income' ? 'journalIncomeList' : 'journalTransferList');
         const list = document.getElementById(listId);
         if(!list) return;
@@ -8066,8 +8067,9 @@
                 const fromAccountTagHTML = `<span class="account-tag ${fromAccountTagClass}">${fromAccountName}</span>`;
                 const toAccountTagHTML = `<span class="account-tag ${toAccountTagClass}">${toAccountName}</span>`;
                 
-                // 計算顯示金額
-                const displayAmount = getFixedTransferDisplayAmount(transfer);
+                // 計算顯示金額（使用目標日期來計算，如果沒有則使用固定轉帳的開始日期）
+                const calculateDate = targetDate || (transfer.startDate ? new Date(transfer.startDate) : new Date());
+                const displayAmount = getFixedTransferDisplayAmount(transfer, calculateDate);
                 
                 const detailItem = document.createElement('div');
                 detailItem.style.cssText = 'padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 4px solid ' + transfer.tagColor + '; width: calc(100% - 0px); max-width: 100%; box-sizing: border-box; overflow: visible; cursor: pointer;';
@@ -9651,11 +9653,22 @@
     }
     
     // 計算固定轉帳的顯示金額
-    function getFixedTransferDisplayAmount(transfer) {
+    function getFixedTransferDisplayAmount(transfer, targetDate = null) {
         if(transfer.useAccountBalance) {
             // 檢查是否涉及信用卡
             const toAccount = accounts.find(acc => acc.id === transfer.toAccountId);
             const isCreditCardTransfer = toAccount && toAccount.bankTag === '信用卡';
+            
+            // 如果涉及信用卡且有結算時間，計算結算期間內的支出總和
+            if(isCreditCardTransfer && transfer.creditCardSettlementDay) {
+                // 使用目標日期（如果提供）或固定轉帳的開始日期（還款日期）來計算
+                const calculateDate = targetDate || (transfer.startDate ? new Date(transfer.startDate) : new Date());
+                return calculateCreditCardExpensesForSettlement(
+                    transfer.toAccountId,
+                    transfer.creditCardSettlementDay,
+                    calculateDate
+                );
+            }
             
             // 如果涉及信用卡且已記錄初始金額，使用初始金額（直到下次執行時才更新）
             if(isCreditCardTransfer && transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
@@ -9956,6 +9969,25 @@
                     document.getElementById('fixedTransferTagIcon').style.color = transfer.tagColor;
                 }
                 
+                // 載入信用卡結算時間
+                const creditCardSettlementRow = document.getElementById('fixedTransferCreditCardSettlementRow');
+                const creditCardSettlementInput = document.getElementById('fixedTransferCreditCardSettlement');
+                if(toAccount && toAccount.bankTag === '信用卡') {
+                    if(creditCardSettlementRow) {
+                        creditCardSettlementRow.style.display = 'flex';
+                    }
+                    if(creditCardSettlementInput && transfer.creditCardSettlementDay) {
+                        creditCardSettlementInput.value = transfer.creditCardSettlementDay;
+                    }
+                } else {
+                    if(creditCardSettlementRow) {
+                        creditCardSettlementRow.style.display = 'none';
+                    }
+                    if(creditCardSettlementInput) {
+                        creditCardSettlementInput.value = '';
+                    }
+                }
+                
                 updatePeriodCount();
             }
         } else {
@@ -9989,6 +10021,16 @@
             fixedTransferData.tagColor = null;
             window.fixedTransferFromAccountId = null;
             window.fixedTransferToAccountId = null;
+            
+            // 隱藏信用卡結算時間欄位
+            const creditCardSettlementRow = document.getElementById('fixedTransferCreditCardSettlementRow');
+            const creditCardSettlementInput = document.getElementById('fixedTransferCreditCardSettlement');
+            if(creditCardSettlementRow) {
+                creditCardSettlementRow.style.display = 'none';
+            }
+            if(creditCardSettlementInput) {
+                creditCardSettlementInput.value = '';
+            }
         }
         
         updateNextDates();
@@ -10286,6 +10328,18 @@
         const isCreditCardTransfer = toAccount && toAccount.bankTag === '信用卡';
         let creditCardInitialAmount = null;
         
+        // 如果是信用卡，獲取結算時間
+        let creditCardSettlementDay = null;
+        if(isCreditCardTransfer) {
+            const settlementInput = document.getElementById('fixedTransferCreditCardSettlement');
+            if(settlementInput && settlementInput.value) {
+                const day = parseInt(settlementInput.value);
+                if(day >= 1 && day <= 31) {
+                    creditCardSettlementDay = day;
+                }
+            }
+        }
+        
         if(isCreditCardTransfer && fixedTransferData.useAccountBalance) {
             // 如果轉入帳戶是信用卡且使用帳戶全部金額，記錄信用卡的初始絕對值金額
             creditCardInitialAmount = Math.abs(toAccount.balance);
@@ -10311,7 +10365,8 @@
                     holidayAdjust: fixedTransferData.holidayAdjust,
                     tagColor: fixedTransferData.tagColor,
                     useAccountBalance: fixedTransferData.useAccountBalance,
-                    useFromAccount: fixedTransferData.useFromAccount
+                    useFromAccount: fixedTransferData.useFromAccount,
+                    creditCardSettlementDay: creditCardSettlementDay // 信用卡結算時間
                 };
                 // 如果涉及信用卡且使用帳戶全部金額，記錄信用卡的初始絕對值金額
                 if(isCreditCardTransfer && fixedTransferData.useAccountBalance && creditCardInitialAmount !== null) {
@@ -10358,6 +10413,7 @@
                 holidayAdjust: fixedTransferData.holidayAdjust,
                 tagColor: fixedTransferData.tagColor,
                 creditCardInitialAmount: creditCardInitialAmount, // 如果涉及信用卡，記錄初始絕對值金額
+                creditCardSettlementDay: creditCardSettlementDay, // 信用卡結算時間
                 createdAt: new Date().toISOString(),
                 lastExecutedDate: null,
                 executedDates: []
@@ -10561,6 +10617,22 @@
             window.fixedTransferFromAccountId = account.id;
         } else {
             window.fixedTransferToAccountId = account.id;
+            // 如果選擇的到帳戶是信用卡，顯示信用卡結算時間選項
+            const creditCardSettlementRow = document.getElementById('fixedTransferCreditCardSettlementRow');
+            if(account.bankTag === '信用卡') {
+                if(creditCardSettlementRow) {
+                    creditCardSettlementRow.style.display = 'flex';
+                }
+            } else {
+                if(creditCardSettlementRow) {
+                    creditCardSettlementRow.style.display = 'none';
+                }
+                // 清除結算時間
+                const settlementInput = document.getElementById('fixedTransferCreditCardSettlement');
+                if(settlementInput) {
+                    settlementInput.value = '';
+                }
+            }
         }
         
         closeAccountSelector();
@@ -11172,6 +11244,61 @@
         }
     }
     
+    // 計算信用卡在結算期間內的支出總和
+    function calculateCreditCardExpensesForSettlement(creditCardAccountId, settlementDay, executeDate) {
+        const records = loadJournalRecords();
+        const expenseRecords = records.filter(r => r.type === 'expense' && String(r.accountId) === String(creditCardAccountId));
+        
+        // 計算結算期間：從上一個結算日期到當前結算日期
+        // 例如：如果結算日是23號，執行日期是1月9號，那麼結算期間是11月24日到12月23日（要還12月的帳單）
+        const executeYear = executeDate.getFullYear();
+        const executeMonth = executeDate.getMonth();
+        const executeDay = executeDate.getDate();
+        
+        // 當前結算日期（上一個月的結算日，也就是要還款的帳單的結算日）
+        // 無論執行日期是在結算日之前還是之後，都應該使用上一個月的結算日
+        // 例如：1月9號還款，還的是12月的帳單（12月23號結算）
+        const currentSettlementDate = new Date(executeYear, executeMonth - 1, settlementDay);
+        
+        // 上一個結算日期（再上一個月的結算日）
+        const previousSettlementDate = new Date(currentSettlementDate.getFullYear(), currentSettlementDate.getMonth() - 1, settlementDay);
+        
+        // 結算期間的開始日期（上一個結算日期的次日）
+        const periodStartDate = new Date(previousSettlementDate);
+        periodStartDate.setDate(periodStartDate.getDate() + 1);
+        periodStartDate.setHours(0, 0, 0, 0);
+        
+        // 結算期間的結束日期（當前結算日期）
+        const periodEndDate = new Date(currentSettlementDate);
+        periodEndDate.setHours(23, 59, 59, 999);
+        
+        // 計算該期間內的所有支出總和
+        let totalExpenses = 0;
+        expenseRecords.forEach(record => {
+            if(!record.date) return;
+            const recordDateStr = record.date.split('T')[0]; // 獲取 YYYY-MM-DD 格式
+            const recordDate = new Date(recordDateStr);
+            recordDate.setHours(0, 0, 0, 0);
+            
+            // 檢查記錄日期是否在結算期間內（包含開始和結束日期）
+            if(recordDate >= periodStartDate && recordDate <= periodEndDate) {
+                totalExpenses += Math.abs(parseFloat(record.amount) || 0);
+            }
+        });
+        
+        console.log('計算信用卡支出:', {
+            creditCardAccountId,
+            settlementDay,
+            executeDate: executeDate.toISOString().split('T')[0],
+            periodStartDate: periodStartDate.toISOString().split('T')[0],
+            periodEndDate: periodEndDate.toISOString().split('T')[0],
+            expenseRecordsCount: expenseRecords.length,
+            totalExpenses
+        });
+        
+        return totalExpenses;
+    }
+    
     // 執行固定轉帳
     function executeFixedTransfer(transfer, executeDate) {
         const fromAccount = accounts.find(acc => acc.id === transfer.fromAccountId);
@@ -11188,7 +11315,14 @@
         // 計算轉帳金額
         let transferAmount = transfer.amount;
         if(transfer.useAccountBalance) {
-            if(isCreditCardTransfer && transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
+            // 如果涉及信用卡且有結算時間，計算結算期間內的支出總和
+            if(isCreditCardTransfer && transfer.creditCardSettlementDay) {
+                transferAmount = calculateCreditCardExpensesForSettlement(
+                    transfer.toAccountId,
+                    transfer.creditCardSettlementDay,
+                    executeDate
+                );
+            } else if(isCreditCardTransfer && transfer.creditCardInitialAmount !== undefined && transfer.creditCardInitialAmount !== null) {
                 // 如果涉及信用卡且已記錄初始金額，使用初始金額
                 transferAmount = transfer.creditCardInitialAmount;
             } else {
