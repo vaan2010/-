@@ -7,6 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Monee</title>
     
+    <!-- Google API Client Library -->
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <!-- Favicon -->
     <!-- 使用絕對路徑，確保在 GitHub Pages 上能正確載入 -->
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
@@ -1021,6 +1025,7 @@
                 <div class="menu-section collapsed" id="menuSection-data">
                     <div class="menu-item" onclick="exportData(); toggleSidebar();"><i class="fas fa-file-export"></i><span class="menu-text">匯出備份</span></div>
                     <div class="menu-item" onclick="importData(); toggleSidebar();"><i class="fas fa-file-import"></i><span class="menu-text">匯入還原</span></div>
+                    <div class="menu-item" onclick="setupCloudBackup(); toggleSidebar();"><i class="fas fa-cloud"></i><span class="menu-text">雲端備份設定</span></div>
                 </div>
                 <div class="menu-label collapsed" onclick="toggleMenuSection('pnl')">
                     <span>損益管理</span>
@@ -2125,7 +2130,9 @@
         }));
         
         const settings = JSON.parse(localStorage.getItem(userSettingsKey)) || { 
-            apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425, chartTextColor: 'white', theme: 'dark'
+            apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425, chartTextColor: 'white', theme: 'dark',
+            cloudBackupEnabled: false, cloudBackupInterval: 24, cloudBackupLastTime: null, cloudBackupToken: null,
+            googleDriveClientId: '', googleDriveAccessToken: null, googleDriveRefreshToken: null, googleDriveTokenExpiry: null
         };
         
         return { accounts, settings };
@@ -4136,6 +4143,579 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+    
+    // 雲端備份功能
+    async function setupCloudBackup() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content-wrapper" style="max-width: 400px; padding: 20px;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px;">雲端備份設定</div>
+                <div class="form-group">
+                    <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="form-label">啟用自動備份</span>
+                        <label class="switch">
+                            <input type="checkbox" id="cloudBackupEnabled" ${settings.cloudBackupEnabled ? 'checked' : ''} onchange="updateCloudBackupSetting()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-row" id="cloudBackupIntervalRow" style="${settings.cloudBackupEnabled ? '' : 'display: none;'}">
+                        <span class="form-label">備份頻率（小時）</span>
+                        <input type="number" id="cloudBackupInterval" class="form-input" value="${settings.cloudBackupInterval || 24}" min="1" max="168" style="text-align: right; width: 100px;" onchange="updateCloudBackupSetting()">
+                    </div>
+                    <div class="form-row" style="${settings.cloudBackupEnabled ? '' : 'display: none;'}" id="cloudBackupStatusRow">
+                        <span class="form-label">上次備份</span>
+                        <span id="cloudBackupLastTime" style="color: var(--text-secondary);">${settings.cloudBackupLastTime ? new Date(settings.cloudBackupLastTime).toLocaleString('zh-TW') : '尚未備份'}</span>
+                    </div>
+                    <div class="form-row">
+                        <span class="form-label">Google Client ID</span>
+                        <input type="text" id="googleDriveClientId" class="form-input" placeholder="輸入您的 Google Client ID" value="${settings.googleDriveClientId || ''}" style="text-align: left;" onchange="updateGoogleDriveClientId()">
+                    </div>
+                    <div class="form-row" style="margin-top: 10px; padding: 10px; background: var(--card-bg); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
+                        <div style="margin-bottom: 8px; font-weight: 600;">如何獲取 Client ID：</div>
+                        <div>1. 前往 <a href="https://console.cloud.google.com" target="_blank" style="color: #4285f4;">Google Cloud Console</a></div>
+                        <div>2. 創建專案或選擇現有專案</div>
+                        <div>3. 啟用 Google Drive API</div>
+                        <div>4. 創建 OAuth 2.0 憑證（網頁應用程式）</div>
+                        <div>5. 添加授權重定向 URI: <code style="background: var(--bg-color); padding: 2px 4px; border-radius: 4px;">${window.location.origin}</code></div>
+                        <div>6. 複製 Client ID 並貼上到上方欄位</div>
+                    </div>
+                    <div class="form-row" style="margin-top: 20px;">
+                        <button onclick="authorizeGoogleDrive()" style="width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; ${settings.googleDriveClientId ? '' : 'opacity: 0.5; cursor: not-allowed;'}" ${settings.googleDriveClientId ? '' : 'disabled'}>
+                            <i class="fab fa-google"></i> ${settings.googleDriveAccessToken ? '重新授權' : '授權 Google Drive'}
+                        </button>
+                    </div>
+                    ${settings.googleDriveAccessToken ? `
+                    <div class="form-row" style="margin-top: 10px;">
+                        <button onclick="listGoogleDriveBackups()" style="width: 100%; padding: 12px; background: var(--color-up); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-list"></i> 查看備份列表
+                        </button>
+                    </div>
+                    ` : ''}
+                    <div class="form-row" style="margin-top: 10px;">
+                        <button onclick="testCloudBackup()" style="width: 100%; padding: 12px; background: var(--color-up); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-cloud-upload-alt"></i> 立即備份
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="closeCloudBackupModal()" style="padding: 10px 20px; background: var(--border-color); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer;">關閉</button>
+                </div>
+            </div>
+        `;
+        modal.onclick = (e) => {
+            if(e.target === modal) closeCloudBackupModal();
+        };
+        document.body.appendChild(modal);
+        window.cloudBackupModal = modal;
+        modal.style.display = 'block';
+    }
+    
+    function closeCloudBackupModal() {
+        if(window.cloudBackupModal) {
+            window.cloudBackupModal.style.display = 'none';
+            setTimeout(() => {
+                if(window.cloudBackupModal && window.cloudBackupModal.parentNode) {
+                    window.cloudBackupModal.parentNode.removeChild(window.cloudBackupModal);
+                }
+            }, 300);
+        }
+    }
+    
+    function updateCloudBackupSetting() {
+        const enabled = document.getElementById('cloudBackupEnabled').checked;
+        const interval = parseInt(document.getElementById('cloudBackupInterval').value) || 24;
+        settings.cloudBackupEnabled = enabled;
+        settings.cloudBackupInterval = interval;
+        saveSettings();
+        
+        const intervalRow = document.getElementById('cloudBackupIntervalRow');
+        const statusRow = document.getElementById('cloudBackupStatusRow');
+        if(intervalRow) intervalRow.style.display = enabled ? 'flex' : 'none';
+        if(statusRow) statusRow.style.display = enabled ? 'flex' : 'none';
+        
+        if(enabled) {
+            startCloudBackupTimer();
+        } else {
+            stopCloudBackupTimer();
+        }
+    }
+    
+    let cloudBackupTimer = null;
+    
+    function startCloudBackupTimer() {
+        stopCloudBackupTimer();
+        if(!settings.cloudBackupEnabled || !settings.cloudBackupToken) return;
+        
+        const intervalMs = (settings.cloudBackupInterval || 24) * 60 * 60 * 1000;
+        cloudBackupTimer = setInterval(() => {
+            performCloudBackup();
+        }, intervalMs);
+        
+        // 檢查是否需要立即備份
+        if(!settings.cloudBackupLastTime || 
+           (Date.now() - new Date(settings.cloudBackupLastTime).getTime()) >= intervalMs) {
+            performCloudBackup();
+        }
+    }
+    
+    function stopCloudBackupTimer() {
+        if(cloudBackupTimer) {
+            clearInterval(cloudBackupTimer);
+            cloudBackupTimer = null;
+        }
+    }
+    
+    // 等待 Google API 載入
+    function waitForGoogleAPI() {
+        return new Promise((resolve, reject) => {
+            if(window.gapi && window.gapi.load) {
+                resolve();
+                return;
+            }
+            
+            // 如果 gapi 未載入，嘗試載入
+            if(!window.gapi) {
+                const script = document.createElement('script');
+                script.src = 'https://apis.google.com/js/api.js';
+                script.async = true;
+                script.defer = true;
+                
+                let checkCount = 0;
+                const checkInterval = setInterval(() => {
+                    checkCount++;
+                    if(window.gapi && window.gapi.load) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    } else if(checkCount > 50) { // 等待最多 5 秒
+                        clearInterval(checkInterval);
+                        reject(new Error('Google API 載入超時，請確認網路連線正常'));
+                    }
+                }, 100);
+                
+                script.onload = () => {
+                    // 等待 gapi 對象初始化
+                    setTimeout(() => {
+                        if(window.gapi && window.gapi.load) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 500);
+                };
+                
+                script.onerror = () => {
+                    clearInterval(checkInterval);
+                    reject(new Error('無法載入 Google API，請確認網路連線正常'));
+                };
+                
+                document.head.appendChild(script);
+            } else {
+                resolve();
+            }
+        });
+    }
+    
+    function updateGoogleDriveClientId() {
+        const clientId = document.getElementById('googleDriveClientId').value.trim();
+        settings.googleDriveClientId = clientId;
+        saveSettings();
+        
+        const authBtn = event.target.closest('.form-group').querySelector('button[onclick="authorizeGoogleDrive()"]');
+        if(authBtn) {
+            if(clientId) {
+                authBtn.style.opacity = '1';
+                authBtn.style.cursor = 'pointer';
+                authBtn.disabled = false;
+            } else {
+                authBtn.style.opacity = '0.5';
+                authBtn.style.cursor = 'not-allowed';
+                authBtn.disabled = true;
+            }
+        }
+    }
+    
+    async function authorizeGoogleDrive() {
+        if(!settings.googleDriveClientId) {
+            alert('請先輸入 Google Client ID');
+            return;
+        }
+        
+        try {
+            // 等待 Google API 載入
+            await waitForGoogleAPI();
+            
+            // 初始化 Google API
+            await new Promise((resolve, reject) => {
+                if(window.gapi && window.gapi.load) {
+                    window.gapi.load('client:auth2', {
+                        callback: resolve,
+                        onerror: reject,
+                        timeout: 10000,
+                        ontimeout: () => reject(new Error('Google API 載入超時'))
+                    });
+                } else {
+                    reject(new Error('Google API 未正確載入'));
+                }
+            });
+            
+            // 初始化 OAuth 2.0 客戶端
+            await window.gapi.client.init({
+                clientId: settings.googleDriveClientId,
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+            });
+            
+            const authInstance = window.gapi.auth2.getAuthInstance();
+            const user = authInstance.currentUser.get();
+            
+            if(user.isSignedIn()) {
+                // 已經授權，更新 token
+                const authResponse = user.getAuthResponse();
+                settings.googleDriveAccessToken = authResponse.access_token;
+                if(authResponse.refresh_token) {
+                    settings.googleDriveRefreshToken = authResponse.refresh_token;
+                }
+                settings.cloudBackupToken = 'google_drive';
+                settings.googleDriveTokenExpiry = Date.now() + (authResponse.expires_in * 1000);
+                saveSettings();
+                alert('Google Drive 授權成功！');
+                if(window.cloudBackupModal) {
+                    closeCloudBackupModal();
+                    setTimeout(() => setupCloudBackup(), 300);
+                }
+            } else {
+                // 需要授權
+                authInstance.signIn().then(() => {
+                    const authResponse = authInstance.currentUser.get().getAuthResponse();
+                    settings.googleDriveAccessToken = authResponse.access_token;
+                    if(authResponse.refresh_token) {
+                        settings.googleDriveRefreshToken = authResponse.refresh_token;
+                    }
+                    settings.cloudBackupToken = 'google_drive';
+                    settings.googleDriveTokenExpiry = Date.now() + (authResponse.expires_in * 1000);
+                    saveSettings();
+                    alert('Google Drive 授權成功！');
+                    if(window.cloudBackupModal) {
+                        closeCloudBackupModal();
+                        setTimeout(() => setupCloudBackup(), 300);
+                    }
+                }).catch(err => {
+                    console.error('授權失敗:', err);
+                    alert('授權失敗：' + (err.error || err.message || '未知錯誤'));
+                });
+            }
+        } catch(err) {
+            console.error('Google Drive 初始化失敗:', err);
+            alert('初始化失敗：' + err.message + '\n\n請確認：\n1. 已正確輸入 Client ID\n2. 已在 Google Cloud Console 啟用 Google Drive API\n3. 已配置正確的授權重定向 URI');
+        }
+    }
+    
+    async function refreshGoogleDriveToken() {
+        if(!settings.googleDriveRefreshToken) return null;
+        
+        try {
+            const response = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    client_id: settings.googleDriveClientId,
+                    refresh_token: settings.googleDriveRefreshToken,
+                    grant_type: 'refresh_token'
+                })
+            });
+            
+            const data = await response.json();
+            if(data.access_token) {
+                settings.googleDriveAccessToken = data.access_token;
+                settings.googleDriveTokenExpiry = Date.now() + (data.expires_in * 1000);
+                saveSettings();
+                return data.access_token;
+            }
+        } catch(err) {
+            console.error('刷新 token 失敗:', err);
+        }
+        return null;
+    }
+    
+    async function getGoogleDriveAccessToken() {
+        // 檢查 token 是否過期
+        if(settings.googleDriveTokenExpiry && Date.now() >= settings.googleDriveTokenExpiry - 60000) {
+            // Token 即將過期，刷新它
+            await refreshGoogleDriveToken();
+        }
+        return settings.googleDriveAccessToken;
+    }
+    
+    async function performCloudBackup() {
+        if(!settings.cloudBackupEnabled) return;
+        
+        try {
+            // 生成備份資料
+            const backupData = await generateBackupData();
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `my_assets_backup_${timestamp}.json`;
+            
+            if(settings.cloudBackupToken === 'local_storage_backup') {
+                // 簡化版本：備份到 localStorage
+                localStorage.setItem(`cloud_backup_${timestamp}`, jsonStr);
+                // 只保留最近 10 個備份
+                const backupKeys = Object.keys(localStorage).filter(k => k.startsWith('cloud_backup_')).sort().reverse();
+                if(backupKeys.length > 10) {
+                    backupKeys.slice(10).forEach(k => localStorage.removeItem(k));
+                }
+                settings.cloudBackupLastTime = new Date().toISOString();
+                saveSettings();
+                console.log('雲端備份完成（本地）:', filename);
+            } else if(settings.cloudBackupToken === 'google_drive') {
+                // 完整版本：上傳到 Google Drive
+                await uploadToGoogleDrive(jsonStr, filename);
+            }
+        } catch(e) {
+            console.error('雲端備份失敗:', e);
+        }
+    }
+    
+    async function generateBackupData() {
+        const allUsersData = {};
+        users.forEach(user => {
+            const userDataKey = `${STORAGE_KEY_DATA}_${user.id}`;
+            const userSettingsKey = `${STORAGE_KEY_SETTINGS}_${user.id}`;
+            const userJournalKey = `${STORAGE_KEY_JOURNAL}_${user.id}`;
+            const userFixedTransfersKey = `${STORAGE_KEY_FIXED_TRANSFERS}_${user.id}`;
+            const userAccounts = JSON.parse(localStorage.getItem(userDataKey)) || [];
+            const userSettings = JSON.parse(localStorage.getItem(userSettingsKey)) || {};
+            const userJournal = JSON.parse(localStorage.getItem(userJournalKey)) || [];
+            const userFixedTransfers = JSON.parse(localStorage.getItem(userFixedTransfersKey)) || [];
+            allUsersData[user.id] = {
+                user: user,
+                data: userAccounts,
+                settings: userSettings,
+                journal: userJournal,
+                fixedTransfers: userFixedTransfers
+            };
+        });
+        
+        return {
+            version: '2.0',
+            users: users,
+            usersData: allUsersData,
+            exportDate: new Date().toISOString()
+        };
+    }
+    
+    async function uploadToGoogleDrive(jsonStr, filename) {
+        const accessToken = await getGoogleDriveAccessToken();
+        if(!accessToken) {
+            throw new Error('無法獲取有效的訪問令牌，請重新授權');
+        }
+        
+        // 檢查是否已存在同名文件
+        const existingFile = await findGoogleDriveFile(filename);
+        
+        const metadata = {
+            name: filename,
+            mimeType: 'application/json'
+        };
+        
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([jsonStr], { type: 'application/json' }));
+        
+        let url = 'https://www.googleapis.com/upload/drive/v3/files';
+        if(existingFile) {
+            // 更新現有文件
+            url += `/${existingFile.id}`;
+            url += '?uploadType=multipart';
+        } else {
+            // 創建新文件
+            url += '?uploadType=multipart';
+        }
+        
+        const response = await fetch(url, {
+            method: existingFile ? 'PATCH' : 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: form
+        });
+        
+        if(!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || '上傳失敗');
+        }
+        
+        const file = await response.json();
+        settings.cloudBackupLastTime = new Date().toISOString();
+        saveSettings();
+        console.log('Google Drive 備份完成:', file.name);
+        return file;
+    }
+    
+    async function findGoogleDriveFile(filename) {
+        const accessToken = await getGoogleDriveAccessToken();
+        if(!accessToken) return null;
+        
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(filename)}'&fields=files(id,name)`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }
+            );
+            
+            if(response.ok) {
+                const data = await response.json();
+                return data.files && data.files.length > 0 ? data.files[0] : null;
+            }
+        } catch(err) {
+            console.error('查找文件失敗:', err);
+        }
+        return null;
+    }
+    
+    async function listGoogleDriveBackups() {
+        const accessToken = await getGoogleDriveAccessToken();
+        if(!accessToken) {
+            alert('無法獲取訪問令牌，請重新授權');
+            return;
+        }
+        
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files?q=name contains 'my_assets_backup'&orderBy=createdTime desc&fields=files(id,name,createdTime,size)`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }
+            );
+            
+            if(!response.ok) {
+                throw new Error('獲取備份列表失敗');
+            }
+            
+            const data = await response.json();
+            const backups = data.files || [];
+            
+            if(backups.length === 0) {
+                alert('尚未有備份文件');
+                return;
+            }
+            
+            // 顯示備份列表
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.zIndex = '3001';
+            modal.innerHTML = `
+                <div class="modal-content-wrapper" style="max-width: 500px; padding: 20px; max-height: 80vh; overflow-y: auto;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px;">備份列表</div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${backups.map(backup => `
+                            <div style="padding: 12px; margin-bottom: 8px; background: var(--card-bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${backup.name}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                        ${new Date(backup.createdTime).toLocaleString('zh-TW')}
+                                    </div>
+                                </div>
+                                <button onclick="restoreFromGoogleDrive('${backup.id}', '${backup.name}')" style="padding: 8px 16px; background: var(--color-up); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                    還原
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button onclick="this.closest('.modal').remove()" style="padding: 10px 20px; background: var(--border-color); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer;">關閉</button>
+                    </div>
+                </div>
+            `;
+            modal.onclick = (e) => {
+                if(e.target === modal) modal.remove();
+            };
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
+        } catch(err) {
+            alert('獲取備份列表失敗：' + err.message);
+        }
+    }
+    
+    async function restoreFromGoogleDrive(fileId, filename) {
+        if(!confirm(`確定要還原備份「${filename}」嗎？這將覆蓋現有的所有資料。`)) return;
+        
+        const accessToken = await getGoogleDriveAccessToken();
+        if(!accessToken) {
+            alert('無法獲取訪問令牌，請重新授權');
+            return;
+        }
+        
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }
+            );
+            
+            if(!response.ok) {
+                throw new Error('下載備份失敗');
+            }
+            
+            const jsonStr = await response.text();
+            const data = JSON.parse(jsonStr);
+            
+            // 使用現有的匯入邏輯
+            if(data.version === '2.0' && data.users && data.usersData) {
+                localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(data.users));
+                Object.keys(data.usersData).forEach(userId => {
+                    const userData = data.usersData[userId];
+                    localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
+                    localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
+                    if(userData.journal !== undefined) {
+                        localStorage.setItem(`${STORAGE_KEY_JOURNAL}_${userId}`, JSON.stringify(userData.journal || []));
+                    }
+                    if(userData.fixedTransfers !== undefined) {
+                        localStorage.setItem(`${STORAGE_KEY_FIXED_TRANSFERS}_${userId}`, JSON.stringify(userData.fixedTransfers || []));
+                    }
+                });
+                alert('還原成功！頁面將重新載入。');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                alert('備份文件格式錯誤');
+            }
+        } catch(err) {
+            alert('還原失敗：' + err.message);
+        }
+    }
+    
+    async function testCloudBackup() {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 備份中...';
+        btn.disabled = true;
+        
+        try {
+            await performCloudBackup();
+            alert('備份完成！');
+            if(window.cloudBackupModal) {
+                const lastTimeEl = document.getElementById('cloudBackupLastTime');
+                if(lastTimeEl) {
+                    lastTimeEl.textContent = settings.cloudBackupLastTime ? new Date(settings.cloudBackupLastTime).toLocaleString('zh-TW') : '尚未備份';
+                }
+            }
+        } catch(e) {
+            alert('備份失敗：' + e.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+    
     function importData() { 
         // 直接觸發檔案選擇，不再提供貼上文字的選項
         document.getElementById('importFileInput').click();
@@ -6987,6 +7567,11 @@
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
+        
+        // 啟動雲端自動備份
+        if(settings.cloudBackupEnabled) {
+            startCloudBackupTimer();
+        }
         
         
         // 初始化選單區塊狀態
@@ -11574,4 +12159,3 @@
 </script>
 </body>
 </html>
-
