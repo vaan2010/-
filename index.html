@@ -1148,17 +1148,37 @@
                 </div>
                 <!-- 月份圓餅圖容器 -->
                 <div id="monthlyChartContainer" style="display: none; margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
-                    <div class="list-section page-swiper" id="monthlyChartSwiper" style="position: relative; width: 100%; overflow: hidden; touch-action: pan-x;">
+                    <div class="list-section page-swiper" id="monthlyChartSwiper" style="position: relative; width: 100%; overflow-y: auto; overflow-x: hidden; touch-action: pan-y pan-x; -webkit-overflow-scrolling: touch;">
                         <div class="page-container" id="monthlyChartPageContainer" style="display: flex; transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); width: 200%;">
                             <!-- 支出圓餅圖 -->
-                            <div class="page-item" style="width: 50%; flex-shrink: 0; min-width: 0; padding: 20px; background: var(--card-bg); border-radius: 12px; overflow: visible; box-sizing: border-box;" id="monthlyExpenseChartPage">
-                                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; text-align: center;">支出</div>
-                                <div id="monthlyExpenseChart" style="width: 100%; height: 400px; box-sizing: border-box; overflow: visible;"></div>
+                            <div class="page-item" style="width: 50%; flex-shrink: 0; min-width: 0; padding: 20px; background: var(--card-bg); border-radius: 12px; overflow: visible; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;" id="monthlyExpenseChartPage">
+                                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); text-align: center;">支出</div>
+                                <div id="monthlyExpenseTotal" style="font-size: 16px; font-weight: 600; color: var(--color-down); text-align: center; margin-bottom: 10px;">本月總支出：$0</div>
+                                <div style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">一般</div>
+                                        <div id="monthlyExpenseChart" style="width: 100%; height: 300px; box-sizing: border-box; overflow: visible;"></div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">代墊</div>
+                                        <div id="monthlyExpenseAdvanceChart" style="width: 100%; height: 300px; box-sizing: border-box; overflow: visible;"></div>
+                                    </div>
+                                </div>
                             </div>
                             <!-- 收入圓餅圖 -->
-                            <div class="page-item" style="width: 50%; flex-shrink: 0; min-width: 0; padding: 20px; background: var(--card-bg); border-radius: 12px; overflow: visible; box-sizing: border-box;" id="monthlyIncomeChartPage">
-                                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 15px; text-align: center;">收入</div>
-                                <div id="monthlyIncomeChart" style="width: 100%; height: 400px; box-sizing: border-box; overflow: visible;"></div>
+                            <div class="page-item" style="width: 50%; flex-shrink: 0; min-width: 0; padding: 20px; background: var(--card-bg); border-radius: 12px; overflow: visible; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;" id="monthlyIncomeChartPage">
+                                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); text-align: center;">收入</div>
+                                <div id="monthlyIncomeTotal" style="font-size: 16px; font-weight: 600; color: var(--color-up); text-align: center; margin-bottom: 10px;">本月總收入：$0</div>
+                                <div style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">一般</div>
+                                        <div id="monthlyIncomeChart" style="width: 100%; height: 300px; box-sizing: border-box; overflow: visible;"></div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">代墊</div>
+                                        <div id="monthlyIncomeAdvanceChart" style="width: 100%; height: 300px; box-sizing: border-box; overflow: visible;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1523,6 +1543,13 @@
                             <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
                         </div>
                     </div>
+                    <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="form-label">代墊</span>
+                        <label class="switch">
+                            <input type="checkbox" id="incomeIsAdvance">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1575,6 +1602,13 @@
                             <span id="expenseAccount" style="color: var(--text-secondary);">選擇帳戶</span>
                             <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
                         </div>
+                    </div>
+                    <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="form-label">代墊</span>
+                        <label class="switch">
+                            <input type="checkbox" id="expenseIsAdvance">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -7245,7 +7279,9 @@
     let currentMonthlyChartIndex = 0;
     // 記帳日程圖表動畫引擎
     let monthlyExpenseChartAnimationEngine = null;
+    let monthlyExpenseAdvanceChartAnimationEngine = null;
     let monthlyIncomeChartAnimationEngine = null;
+    let monthlyIncomeAdvanceChartAnimationEngine = null;
     
     // 切換記帳顯示模式（日曆/圓餅圖）
     function toggleJournalChartView() {
@@ -7316,11 +7352,33 @@
         const expenseRecords = monthRecords.filter(r => r.type === 'expense');
         const incomeRecords = monthRecords.filter(r => r.type === 'income');
         
-        // 渲染支出圓餅圖
-        renderMonthlyPieChart('expense', expenseRecords, 'monthlyExpenseChart');
+        // 計算總支出和總收入
+        const totalExpense = expenseRecords.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+        const totalIncome = incomeRecords.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
         
-        // 渲染收入圓餅圖
-        renderMonthlyPieChart('income', incomeRecords, 'monthlyIncomeChart');
+        // 更新總支出和總收入顯示
+        const expenseTotalElement = document.getElementById('monthlyExpenseTotal');
+        const incomeTotalElement = document.getElementById('monthlyIncomeTotal');
+        if(expenseTotalElement) {
+            expenseTotalElement.textContent = `本月總支出：$${totalExpense.toLocaleString()}`;
+        }
+        if(incomeTotalElement) {
+            incomeTotalElement.textContent = `本月總收入：$${totalIncome.toLocaleString()}`;
+        }
+        
+        // 根據代墊狀態分類
+        const expenseRecordsNormal = expenseRecords.filter(r => !r.isAdvance);
+        const expenseRecordsAdvance = expenseRecords.filter(r => r.isAdvance);
+        const incomeRecordsNormal = incomeRecords.filter(r => !r.isAdvance);
+        const incomeRecordsAdvance = incomeRecords.filter(r => r.isAdvance);
+        
+        // 渲染支出圓餅圖（一般和代墊）
+        renderMonthlyPieChart('expense', expenseRecordsNormal, 'monthlyExpenseChart');
+        renderMonthlyPieChart('expense', expenseRecordsAdvance, 'monthlyExpenseAdvanceChart');
+        
+        // 渲染收入圓餅圖（一般和代墊）
+        renderMonthlyPieChart('income', incomeRecordsNormal, 'monthlyIncomeChart');
+        renderMonthlyPieChart('income', incomeRecordsAdvance, 'monthlyIncomeAdvanceChart');
         
         // 確保切換到當前顯示的圖表
         switchMonthlyChartPage(currentMonthlyChartIndex);
@@ -7344,8 +7402,12 @@
             // 清除動畫引擎引用
             if(chartId === 'monthlyExpenseChart') {
                 monthlyExpenseChartAnimationEngine = null;
+            } else if(chartId === 'monthlyExpenseAdvanceChart') {
+                monthlyExpenseAdvanceChartAnimationEngine = null;
             } else if(chartId === 'monthlyIncomeChart') {
                 monthlyIncomeChartAnimationEngine = null;
+            } else if(chartId === 'monthlyIncomeAdvanceChart') {
+                monthlyIncomeAdvanceChartAnimationEngine = null;
             }
             
             // 清除容器並顯示提示文字
@@ -7411,11 +7473,21 @@
                     monthlyExpenseChartAnimationEngine = new ChartAnimationEngine(chartContainer.chartInstance);
                 }
                 animationEngine = monthlyExpenseChartAnimationEngine;
+            } else if(chartId === 'monthlyExpenseAdvanceChart') {
+                if(!monthlyExpenseAdvanceChartAnimationEngine) {
+                    monthlyExpenseAdvanceChartAnimationEngine = new ChartAnimationEngine(chartContainer.chartInstance);
+                }
+                animationEngine = monthlyExpenseAdvanceChartAnimationEngine;
             } else if(chartId === 'monthlyIncomeChart') {
                 if(!monthlyIncomeChartAnimationEngine) {
                     monthlyIncomeChartAnimationEngine = new ChartAnimationEngine(chartContainer.chartInstance);
                 }
                 animationEngine = monthlyIncomeChartAnimationEngine;
+            } else if(chartId === 'monthlyIncomeAdvanceChart') {
+                if(!monthlyIncomeAdvanceChartAnimationEngine) {
+                    monthlyIncomeAdvanceChartAnimationEngine = new ChartAnimationEngine(chartContainer.chartInstance);
+                }
+                animationEngine = monthlyIncomeAdvanceChartAnimationEngine;
             }
             
             // 使用動畫引擎更新圖表
@@ -7439,8 +7511,12 @@
         // 清除動畫引擎引用（如果圖表被銷毀）
         if(chartId === 'monthlyExpenseChart') {
             monthlyExpenseChartAnimationEngine = null;
+        } else if(chartId === 'monthlyExpenseAdvanceChart') {
+            monthlyExpenseAdvanceChartAnimationEngine = null;
         } else if(chartId === 'monthlyIncomeChart') {
             monthlyIncomeChartAnimationEngine = null;
+        } else if(chartId === 'monthlyIncomeAdvanceChart') {
+            monthlyIncomeAdvanceChartAnimationEngine = null;
         }
         
         // 確保容器完全清空（包括任何提示文字和DOM元素）
@@ -7453,9 +7529,9 @@
             chart: {
                 type: 'pie',
                 backgroundColor: 'transparent',
-                height: 400,
-                spacing: [50, 80, 50, 80],  // 進一步增加上下左右的間距，為標籤留出更多空間
-                margin: [30, 60, 30, 60],  // 進一步增加邊距
+                height: 300,  // 調整高度以適應上下兩個圖表
+                spacing: [40, 60, 40, 60],  // 調整間距
+                margin: [20, 50, 20, 50],  // 調整邊距
                 plotBackgroundColor: 'transparent',
                 plotBorderWidth: 0
             },
@@ -7660,11 +7736,17 @@
                 if(index === 0) {
                     // 重新渲染支出圖表
                     const expenseRecords = monthRecords.filter(r => r.type === 'expense');
-                    renderMonthlyPieChart('expense', expenseRecords, 'monthlyExpenseChart');
+                    const expenseRecordsNormal = expenseRecords.filter(r => !r.isAdvance);
+                    const expenseRecordsAdvance = expenseRecords.filter(r => r.isAdvance);
+                    renderMonthlyPieChart('expense', expenseRecordsNormal, 'monthlyExpenseChart');
+                    renderMonthlyPieChart('expense', expenseRecordsAdvance, 'monthlyExpenseAdvanceChart');
                 } else {
                     // 重新渲染收入圖表
                     const incomeRecords = monthRecords.filter(r => r.type === 'income');
-                    renderMonthlyPieChart('income', incomeRecords, 'monthlyIncomeChart');
+                    const incomeRecordsNormal = incomeRecords.filter(r => !r.isAdvance);
+                    const incomeRecordsAdvance = incomeRecords.filter(r => r.isAdvance);
+                    renderMonthlyPieChart('income', incomeRecordsNormal, 'monthlyIncomeChart');
+                    renderMonthlyPieChart('income', incomeRecordsAdvance, 'monthlyIncomeAdvanceChart');
                 }
             }, 50);
         }
@@ -8336,6 +8418,57 @@
         return false; // 支出記錄不在任何固定轉帳之前，可以影響餘額
     }
     
+    // 檢查支出記錄是否在已執行固定轉帳的結算期間內，且已經超過結算期間
+    // 如果是，則不應該影響固定轉帳的金額（不恢復餘額）
+    function isExpenseInSettledPeriod(expenseRecord, creditCardAccountId) {
+        if(!expenseRecord.date) return false; // 如果沒有日期，視為可以影響
+        
+        const transfers = loadFixedTransfers();
+        const expenseDate = new Date(expenseRecord.date);
+        expenseDate.setHours(0, 0, 0, 0);
+        
+        // 檢查是否有固定轉帳涉及這個信用卡，且有結算時間設定，且已經執行過
+        const relevantTransfers = transfers.filter(t => {
+            return t.toAccountId === creditCardAccountId && 
+                   t.creditCardSettlementDay && 
+                   t.lastExecutedDate &&
+                   t.creditCardSettlementPeriodEnd;
+        });
+        
+        // 檢查支出記錄是否在任何已執行固定轉帳的結算期間內，且已經超過結算期間
+        for(const transfer of relevantTransfers) {
+            const periodEndDate = new Date(transfer.creditCardSettlementPeriodEnd);
+            periodEndDate.setHours(0, 0, 0, 0);
+            
+            // 計算結算期間的開始日期
+            const periodEndYear = periodEndDate.getFullYear();
+            const periodEndMonth = periodEndDate.getMonth();
+            const settlementDay = transfer.creditCardSettlementDay;
+            
+            // 上一個結算日期（再上一個月的結算日）
+            const previousSettlementDate = new Date(periodEndYear, periodEndMonth - 1, settlementDay);
+            
+            // 結算期間的開始日期（上一個結算日期的次日）
+            const periodStartDate = new Date(previousSettlementDate);
+            periodStartDate.setDate(periodStartDate.getDate() + 1);
+            periodStartDate.setHours(0, 0, 0, 0);
+            
+            // 檢查支出記錄是否在結算期間內
+            if(expenseDate >= periodStartDate && expenseDate <= periodEndDate) {
+                // 檢查當前日期是否已經超過結算期間的結束日期
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if(today > periodEndDate) {
+                    // 已經超過結算期間，不應該影響固定轉帳的金額
+                    return true;
+                }
+            }
+        }
+        
+        return false; // 支出記錄不在已結算期間內，可以影響餘額
+    }
+    
     // 刪除記帳記錄
     function deleteJournalRecord(recordId) {
         if(!confirm('確定要刪除這筆記錄嗎？')) return;
@@ -8365,10 +8498,13 @@
             // 支出：向帳戶餘額中加上金額（因為支出是減少餘額的）
             const account = accounts.find(acc => String(acc.id) === String(record.accountId));
             if(account) {
-                // 檢查是否為信用卡，且支出記錄在某個固定轉帳創建之前創建
-                if(account.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(record, account.id)) {
-                    console.log('刪除支出 - 支出記錄在某個固定轉帳創建之前創建，不恢復金額:', account.name);
-                    // 不恢復金額，直接刪除記錄
+                // 檢查是否為信用卡，且支出記錄在已執行固定轉帳的結算期間內，且已經超過結算期間
+                if(account.bankTag === '信用卡' && isExpenseInSettledPeriod(record, account.id)) {
+                    alert('此支出記錄在已結算期間內，且已經超過結算期間，無法修改或刪除');
+                    return;
+                } else if(account.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(record, account.id)) {
+                    alert('此支出記錄在某個固定轉帳創建之前創建，無法修改或刪除');
+                    return;
                 } else {
                     // 正常恢復金額
                     const amount = parseFloat(record.amount) || 0;
@@ -8465,6 +8601,10 @@
             const account = accounts.find(acc => acc.id === record.accountId);
             document.getElementById('incomeAccount').textContent = account ? account.name : '選擇帳戶';
             document.getElementById('incomeAccount').style.color = account ? 'var(--text-primary)' : 'var(--text-secondary)';
+            const isAdvanceCheckbox = document.getElementById('incomeIsAdvance');
+            if(isAdvanceCheckbox) {
+                isAdvanceCheckbox.checked = record.isAdvance || false;
+            }
         } else if(savedFormData && savedFormData.type === 'income') {
             // 恢復保存的表單數據
             document.getElementById('incomeAmount').value = savedFormData.amount || '';
@@ -8494,6 +8634,10 @@
             document.getElementById('incomeCategory').style.color = 'var(--text-secondary)';
             document.getElementById('incomeAccount').textContent = '選擇帳戶';
             document.getElementById('incomeAccount').style.color = 'var(--text-secondary)';
+            const isAdvanceCheckbox = document.getElementById('incomeIsAdvance');
+            if(isAdvanceCheckbox) {
+                isAdvanceCheckbox.checked = false;
+            }
         }
         
         if(modalWrapper) {
@@ -8563,6 +8707,10 @@
             const account = accounts.find(acc => acc.id === record.accountId);
             document.getElementById('expenseAccount').textContent = account ? account.name : '選擇帳戶';
             document.getElementById('expenseAccount').style.color = account ? 'var(--text-primary)' : 'var(--text-secondary)';
+            const isAdvanceCheckbox = document.getElementById('expenseIsAdvance');
+            if(isAdvanceCheckbox) {
+                isAdvanceCheckbox.checked = record.isAdvance || false;
+            }
         } else if(savedFormData && savedFormData.type === 'expense') {
             // 恢復保存的表單數據
             document.getElementById('expenseAmount').value = savedFormData.amount || '';
@@ -8592,6 +8740,10 @@
             document.getElementById('expenseCategory').style.color = 'var(--text-secondary)';
             document.getElementById('expenseAccount').textContent = '選擇帳戶';
             document.getElementById('expenseAccount').style.color = 'var(--text-secondary)';
+            const isAdvanceCheckbox = document.getElementById('expenseIsAdvance');
+            if(isAdvanceCheckbox) {
+                isAdvanceCheckbox.checked = false;
+            }
         }
         
         if(modalWrapper) {
@@ -9462,12 +9614,36 @@
                 // 還原舊記錄對帳戶餘額的影響
                 const oldAccount = accounts.find(acc => acc.id === oldRecord.accountId);
                 if(oldAccount) {
-                    // 檢查是否為信用卡，且舊記錄在某個固定轉帳創建之前創建
-                    if(oldAccount.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(oldRecord, oldAccount.id)) {
+                    // 檢查是否為信用卡，且舊記錄在已執行固定轉帳的結算期間內，且已經超過結算期間
+                    if(oldAccount.bankTag === '信用卡' && isExpenseInSettledPeriod(oldRecord, oldAccount.id)) {
+                        alert('此支出記錄在已結算期間內，且已經超過結算期間，無法修改或刪除');
+                        return;
+                    } else if(oldAccount.bankTag === '信用卡' && isExpenseBeforeFixedTransfer(oldRecord, oldAccount.id)) {
                         alert('此支出記錄在某個固定轉帳創建之前創建，無法修改或刪除');
                         return;
+                    } else {
+                        // 正常恢復舊記錄的金額
+                        oldAccount.balance += oldRecord.amount;
                     }
-                    oldAccount.balance += oldRecord.amount;
+                }
+                
+                // 檢查新記錄是否也在已結算期間內（如果修改了日期或帳戶）
+                if(currentJournalAccountId) {
+                    const newAccount = accounts.find(acc => acc.id === currentJournalAccountId);
+                    if(newAccount && newAccount.bankTag === '信用卡') {
+                        const tempRecord = {
+                            date: dateStr,
+                            accountId: newAccount.id
+                        };
+                        if(isExpenseInSettledPeriod(tempRecord, newAccount.id)) {
+                            alert('新記錄的日期在已結算期間內，且已經超過結算期間，無法修改為此日期');
+                            // 恢復舊記錄的金額（如果已經恢復了）
+                            if(oldAccount && !isExpenseInSettledPeriod(oldRecord, oldAccount.id) && !isExpenseBeforeFixedTransfer(oldRecord, oldAccount.id)) {
+                                oldAccount.balance -= oldRecord.amount;
+                            }
+                            return;
+                        }
+                    }
                 }
                 
                 // 更新記錄
@@ -9475,10 +9651,13 @@
                 oldRecord.amount = amount;
                 oldRecord.category = currentJournalCategory;
                 oldRecord.accountId = currentJournalAccountId;
+                const isAdvanceCheckbox = document.getElementById('expenseIsAdvance');
+                oldRecord.isAdvance = isAdvanceCheckbox ? isAdvanceCheckbox.checked : false;
                 oldRecord.updatedAt = new Date().toISOString();
             }
         } else {
             // 新增模式：創建新記錄（新增的記錄可以正常修改和刪除，因為創建時間在固定轉帳之後）
+            const isAdvanceCheckbox = document.getElementById('expenseIsAdvance');
             const newRecord = {
                 id: Date.now().toString(),
                 type: 'expense',
@@ -9486,12 +9665,41 @@
                 amount: amount,
                 category: currentJournalCategory,
                 accountId: currentJournalAccountId,
+                isAdvance: isAdvanceCheckbox ? isAdvanceCheckbox.checked : false,
                 createdAt: new Date().toISOString()
             };
             records.push(newRecord);
         }
         
-        // 應用新記錄對帳戶餘額的影響（即使信用卡已被歸零，也要更新餘額）
+        // 應用新記錄對帳戶餘額的影響
+        // 檢查是否為信用卡，且新記錄在已執行固定轉帳的結算期間內，且已經超過結算期間
+        if(account.bankTag === '信用卡') {
+            const tempRecord = {
+                date: dateStr,
+                accountId: account.id
+            };
+            
+            if(isExpenseInSettledPeriod(tempRecord, account.id)) {
+                // 新記錄在已結算期間內，且已經超過結算期間，禁止新增或修改
+                alert('此日期在已結算期間內，且已經超過結算期間，無法新增或修改為此日期');
+                // 如果是在編輯模式且已經恢復了舊記錄的金額，需要重新應用
+                if(editingJournalRecordId) {
+                    const oldRecord = records.find(r => r.id === editingJournalRecordId);
+                    if(oldRecord) {
+                        const oldAccount = accounts.find(acc => acc.id === oldRecord.accountId);
+                        if(oldAccount && oldAccount.id !== account.id) {
+                            // 如果帳戶改變了，需要恢復舊帳戶的餘額
+                            if(!isExpenseInSettledPeriod(oldRecord, oldAccount.id) && !isExpenseBeforeFixedTransfer(oldRecord, oldAccount.id)) {
+                                oldAccount.balance -= oldRecord.amount;
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        
+        // 正常更新餘額
         account.balance -= amount;
         
         saveJournalRecords(records);
@@ -9663,6 +9871,23 @@
             if(isCreditCardTransfer && transfer.creditCardSettlementDay) {
                 // 使用目標日期（如果提供）或固定轉帳的開始日期（還款日期）來計算
                 const calculateDate = targetDate || (transfer.startDate ? new Date(transfer.startDate) : new Date());
+                
+                // 檢查是否已經執行過，且目標日期已經超過結算期間的結束日期
+                // 如果是，則使用記錄的金額，不再重新計算
+                if(transfer.lastExecutedDate && transfer.creditCardSettlementPeriodEnd) {
+                    const checkDate = new Date(calculateDate);
+                    checkDate.setHours(0, 0, 0, 0);
+                    const periodEndDate = new Date(transfer.creditCardSettlementPeriodEnd);
+                    periodEndDate.setHours(0, 0, 0, 0);
+                    
+                    // 如果目標日期已經超過結算期間的結束日期，使用記錄的金額
+                    // 這確保了超過結算期間後，修改結算期間內的支出不會影響已記錄的金額
+                    if(checkDate > periodEndDate && transfer.creditCardSettlementAmount !== undefined && transfer.creditCardSettlementAmount !== null) {
+                        return transfer.creditCardSettlementAmount;
+                    }
+                }
+                
+                // 否則重新計算
                 return calculateCreditCardExpensesForSettlement(
                     transfer.toAccountId,
                     transfer.creditCardSettlementDay,
@@ -9709,10 +9934,7 @@
             item.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="editFixedTransfer('${transfer.id}')">
                     <div style="width: 20px; height: 20px; border-radius: 50%; background: ${transfer.tagColor};"></div>
-                    <div>
-                        <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
-                        <div style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">$${displayAmount.toLocaleString()}</div>
-                    </div>
+                    <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
                 </div>
                 <button onclick="event.stopPropagation(); deleteFixedTransfer('${transfer.id}')" style="padding: 8px 12px; background: var(--color-down); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;">刪除</button>
             `;
@@ -11347,6 +11569,20 @@
         // 更新帳戶餘額
         fromAccount.balance -= transferAmount;
         toAccount.balance += transferAmount;
+        
+        // 如果涉及信用卡且有結算時間，記錄執行時計算出的金額和結算期間結束日期
+        if(isCreditCardTransfer && transfer.creditCardSettlementDay && transfer.useAccountBalance) {
+            // 計算結算期間的結束日期
+            const executeYear = executeDate.getFullYear();
+            const executeMonth = executeDate.getMonth();
+            const currentSettlementDate = new Date(executeYear, executeMonth - 1, transfer.creditCardSettlementDay);
+            const periodEndDate = new Date(currentSettlementDate);
+            periodEndDate.setHours(23, 59, 59, 999);
+            
+            // 記錄執行時的金額和結算期間結束日期
+            transfer.creditCardSettlementAmount = transferAmount;
+            transfer.creditCardSettlementPeriodEnd = periodEndDate.toISOString().split('T')[0];
+        }
         
         // 如果涉及信用卡，檢查轉帳後信用卡是否歸0
         if(isCreditCardTransfer && Math.abs(toAccount.balance) < 0.01) {
