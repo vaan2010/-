@@ -460,11 +460,11 @@
         #chartWrapper .highcharts-point:hover .highcharts-data-label text { fill: #fff !important; opacity: 1 !important; }
         
         #customTooltip { position: absolute; background: var(--card-bg); color: var(--text-primary); padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none; z-index: 200; display: none; white-space: nowrap; top: 0; left: 0; transform: translate(-50%, -100%); transition: opacity 0.15s, top 0.15s, left 0.15s; margin-top: -15px; border: 1px solid var(--border-color); }
-        #customTooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent; }
+        #customTooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: var(--card-bg) transparent transparent transparent; }
         #customTooltip.bottom { transform: translate(-50%, 0); margin-top: 20px; }
-        #customTooltip.bottom::after { top: -12px; border-color: transparent transparent rgba(255,255,255,0.95) transparent; }
-        .tt-header { font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; }
-        .tt-body { font-size: 15px; color: #000; font-weight: 700; display: flex; align-items: center; }
+        #customTooltip.bottom::after { top: -12px; border-color: transparent transparent var(--card-bg) transparent; }
+        .tt-header { font-size: 11px; color: var(--text-secondary); margin-bottom: 2px; font-weight: 500; }
+        .tt-body { font-size: 15px; color: var(--text-primary); font-weight: 700; display: flex; align-items: center; }
         .tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .chart-back-btn { position: absolute; top: 10px; left: 20px; z-index: 201; background: rgba(44, 44, 46, 0.9); color: #0a84ff; border: 1px solid #333; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; backdrop-filter: blur(10px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
@@ -4150,9 +4150,9 @@
         modal.className = 'modal';
         modal.style.zIndex = '3000';
         modal.innerHTML = `
-            <div class="modal-content-wrapper" style="max-width: 400px; max-height: 90vh; padding: 20px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;">
-                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; flex-shrink: 0;">雲端備份設定</div>
-                <div class="form-group" style="flex: 1; min-height: 0;">
+            <div class="modal-content-wrapper" style="max-width: 400px; max-height: 90vh; padding: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--card-bg); border-radius: 12px;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); padding: 20px 20px 15px 20px; flex-shrink: 0; border-bottom: 1px solid var(--border-color);">雲端備份設定</div>
+                <div class="form-group" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 15px 20px; -webkit-overflow-scrolling: touch;">
                     <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;">
                         <span class="form-label">啟用自動備份</span>
                         <label class="switch">
@@ -4195,7 +4195,7 @@
                         </button>
                     </div>
                 </div>
-                <div style="margin-top: 20px; text-align: center; flex-shrink: 0;">
+                <div style="padding: 15px 20px; text-align: center; flex-shrink: 0; border-top: 1px solid var(--border-color);">
                     <button onclick="closeCloudBackupModal()" style="padding: 10px 20px; background: var(--border-color); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer;">關閉</button>
                 </div>
             </div>
