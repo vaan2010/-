@@ -2132,7 +2132,7 @@
         const settings = JSON.parse(localStorage.getItem(userSettingsKey)) || { 
             apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425, chartTextColor: 'white', theme: 'dark',
             cloudBackupEnabled: false, cloudBackupInterval: 24, cloudBackupLastTime: null, cloudBackupToken: null,
-            googleDriveClientId: '', googleDriveAccessToken: null, googleDriveRefreshToken: null, googleDriveTokenExpiry: null
+            googleDriveClientId: '', googleDriveApiKey: '', googleDriveAccessToken: null, googleDriveRefreshToken: null, googleDriveTokenExpiry: null
         };
         
         return { accounts, settings };
@@ -4172,6 +4172,11 @@
                         <span class="form-label">Google Client ID</span>
                         <input type="text" id="googleDriveClientId" class="form-input" placeholder="輸入您的 Google Client ID" value="${settings.googleDriveClientId || ''}" style="text-align: left;" onchange="updateGoogleDriveClientId()">
                     </div>
+                    <div class="form-row">
+                        <span class="form-label">Google API Key</span>
+                        <input type="text" id="googleDriveApiKey" class="form-input" placeholder="輸入您的 Google API Key（選填）" value="${settings.googleDriveApiKey || ''}" style="text-align: left;" onchange="updateGoogleDriveApiKey()">
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">API Key 用於載入 Google Drive API，如果留空會自動嘗試載入</div>
+                    </div>
                     <div class="form-row" style="margin-top: 10px; padding: 10px; background: var(--card-bg); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
                         <div style="margin-bottom: 8px; font-weight: 600;">如何獲取 Client ID：</div>
                         <div>1. 前往 <a href="https://console.cloud.google.com" target="_blank" style="color: #4285f4;">Google Cloud Console</a></div>
@@ -4274,53 +4279,77 @@
         }
     }
     
-    // 等待 Google API 載入
+    // 等待 Google API 載入（新版 GIS）
     function waitForGoogleAPI() {
         return new Promise((resolve, reject) => {
-            if(window.gapi && window.gapi.load) {
+            // 檢查 gapi 和 google.accounts 是否都已載入
+            if(window.gapi && window.gapi.load && window.google && window.google.accounts) {
                 resolve();
                 return;
             }
             
-            // 如果 gapi 未載入，嘗試載入
-            if(!window.gapi) {
-                const script = document.createElement('script');
-                script.src = 'https://apis.google.com/js/api.js';
-                script.async = true;
-                script.defer = true;
-                
-                let checkCount = 0;
-                const checkInterval = setInterval(() => {
-                    checkCount++;
-                    if(window.gapi && window.gapi.load) {
-                        clearInterval(checkInterval);
-                        resolve();
-                    } else if(checkCount > 50) { // 等待最多 5 秒
-                        clearInterval(checkInterval);
-                        reject(new Error('Google API 載入超時，請確認網路連線正常'));
-                    }
-                }, 100);
-                
-                script.onload = () => {
-                    // 等待 gapi 對象初始化
-                    setTimeout(() => {
-                        if(window.gapi && window.gapi.load) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 500);
-                };
-                
-                script.onerror = () => {
+            // 如果未載入，等待載入
+            let checkCount = 0;
+            const checkInterval = setInterval(() => {
+                checkCount++;
+                if(window.gapi && window.gapi.load && window.google && window.google.accounts) {
                     clearInterval(checkInterval);
-                    reject(new Error('無法載入 Google API，請確認網路連線正常'));
-                };
-                
-                document.head.appendChild(script);
-            } else {
-                resolve();
-            }
+                    resolve();
+                } else if(checkCount > 100) { // 等待最多 10 秒
+                    clearInterval(checkInterval);
+                    reject(new Error('Google API 載入超時，請確認網路連線正常'));
+                }
+            }, 100);
         });
+    }
+    
+    // 初始化 Google API Client（新版，不包含 clientId 和 scope）
+    function initializeGoogleDriveGapi() {
+        return new Promise((resolve, reject) => {
+            if(googleDriveGapiInited) {
+                resolve();
+                return;
+            }
+            
+            window.gapi.load('client', {
+                callback: async () => {
+                    try {
+                        // 【重要】：只放 apiKey 和 discoveryDocs，不要放 clientId 或 scope
+                        await window.gapi.client.init({
+                            apiKey: settings.googleDriveApiKey || undefined, // API Key 是可選的
+                            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                        });
+                        googleDriveGapiInited = true;
+                        resolve();
+                    } catch(err) {
+                        reject(err);
+                    }
+                },
+                onerror: reject,
+                timeout: 10000,
+                ontimeout: () => reject(new Error('Google API 載入超時'))
+            });
+        });
+    }
+    
+    // 初始化 Google Identity Services
+    function initializeGoogleDriveGIS() {
+        if(googleDriveGisInited && googleDriveTokenClient) {
+            return;
+        }
+        
+        if(!window.google || !window.google.accounts) {
+            throw new Error('Google Identity Services 未載入');
+        }
+        
+        // 【重要】：clientId 和 scope 只在這裡設定
+        googleDriveTokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: settings.googleDriveClientId,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: '' // 在點擊授權時動態定義
+        });
+        
+        googleDriveGisInited = true;
     }
     
     function updateGoogleDriveClientId() {
@@ -4342,6 +4371,17 @@
         }
     }
     
+    function updateGoogleDriveApiKey() {
+        const apiKey = document.getElementById('googleDriveApiKey').value.trim();
+        settings.googleDriveApiKey = apiKey;
+        saveSettings();
+    }
+    
+    // Google Identity Services 相關變數
+    let googleDriveTokenClient = null;
+    let googleDriveGapiInited = false;
+    let googleDriveGisInited = false;
+    
     async function authorizeGoogleDrive() {
         if(!settings.googleDriveClientId) {
             alert('請先輸入 Google Client ID');
@@ -4352,65 +4392,57 @@
             // 等待 Google API 載入
             await waitForGoogleAPI();
             
-            // 初始化 Google API
-            await new Promise((resolve, reject) => {
-                if(window.gapi && window.gapi.load) {
-                    window.gapi.load('client:auth2', {
-                        callback: resolve,
-                        onerror: reject,
-                        timeout: 10000,
-                        ontimeout: () => reject(new Error('Google API 載入超時'))
-                    });
-                } else {
-                    reject(new Error('Google API 未正確載入'));
+            // 初始化 Google API Client（新版，不包含 clientId 和 scope）
+            await initializeGoogleDriveGapi();
+            
+            // 初始化 Google Identity Services
+            initializeGoogleDriveGIS();
+            
+            // 設定 token 回調
+            googleDriveTokenClient.callback = async (resp) => {
+                if(resp.error !== undefined) {
+                    throw resp;
                 }
-            });
-            
-            // 初始化 OAuth 2.0 客戶端
-            await window.gapi.client.init({
-                clientId: settings.googleDriveClientId,
-                scope: 'https://www.googleapis.com/auth/drive.file',
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
-            });
-            
-            const authInstance = window.gapi.auth2.getAuthInstance();
-            const user = authInstance.currentUser.get();
-            
-            if(user.isSignedIn()) {
-                // 已經授權，更新 token
-                const authResponse = user.getAuthResponse();
-                settings.googleDriveAccessToken = authResponse.access_token;
-                if(authResponse.refresh_token) {
-                    settings.googleDriveRefreshToken = authResponse.refresh_token;
+                
+                // 手動將 token 設置到 gapi.client
+                window.gapi.client.setToken(resp);
+                
+                // 保存 token 資訊
+                settings.googleDriveAccessToken = resp.access_token;
+                if(resp.refresh_token) {
+                    settings.googleDriveRefreshToken = resp.refresh_token;
                 }
                 settings.cloudBackupToken = 'google_drive';
-                settings.googleDriveTokenExpiry = Date.now() + (authResponse.expires_in * 1000);
+                settings.googleDriveTokenExpiry = Date.now() + (resp.expires_in * 1000);
                 saveSettings();
+                
                 alert('Google Drive 授權成功！');
                 if(window.cloudBackupModal) {
                     closeCloudBackupModal();
                     setTimeout(() => setupCloudBackup(), 300);
                 }
+            };
+            
+            // 請求 access token
+            // 如果已經有 token 就跳過 consent，沒有就請求
+            const existingToken = window.gapi.client.getToken();
+            if(existingToken === null) {
+                googleDriveTokenClient.requestAccessToken({prompt: 'consent'});
             } else {
-                // 需要授權
-                authInstance.signIn().then(() => {
-                    const authResponse = authInstance.currentUser.get().getAuthResponse();
-                    settings.googleDriveAccessToken = authResponse.access_token;
-                    if(authResponse.refresh_token) {
-                        settings.googleDriveRefreshToken = authResponse.refresh_token;
-                    }
+                // 檢查 token 是否過期
+                if(settings.googleDriveTokenExpiry && Date.now() >= settings.googleDriveTokenExpiry - 60000) {
+                    // Token 即將過期，請求新的 token
+                    googleDriveTokenClient.requestAccessToken({prompt: ''});
+                } else {
+                    // Token 仍然有效，直接使用
                     settings.cloudBackupToken = 'google_drive';
-                    settings.googleDriveTokenExpiry = Date.now() + (authResponse.expires_in * 1000);
                     saveSettings();
-                    alert('Google Drive 授權成功！');
+                    alert('Google Drive 已授權！');
                     if(window.cloudBackupModal) {
                         closeCloudBackupModal();
                         setTimeout(() => setupCloudBackup(), 300);
                     }
-                }).catch(err => {
-                    console.error('授權失敗:', err);
-                    alert('授權失敗：' + (err.error || err.message || '未知錯誤'));
-                });
+                }
             }
         } catch(err) {
             console.error('Google Drive 初始化失敗:', err);
@@ -4508,9 +4540,35 @@
     async function getGoogleDriveAccessToken() {
         // 檢查 token 是否過期
         if(settings.googleDriveTokenExpiry && Date.now() >= settings.googleDriveTokenExpiry - 60000) {
-            // Token 即將過期，刷新它
-            await refreshGoogleDriveToken();
+            // Token 即將過期，嘗試刷新
+            if(settings.googleDriveRefreshToken) {
+                await refreshGoogleDriveToken();
+            } else {
+                // 沒有 refresh token，需要重新授權
+                const existingToken = window.gapi?.client?.getToken();
+                if(existingToken) {
+                    // 使用現有的 token client 請求新 token
+                    if(googleDriveTokenClient) {
+                        googleDriveTokenClient.callback = async (resp) => {
+                            if(resp.error === undefined) {
+                                window.gapi.client.setToken(resp);
+                                settings.googleDriveAccessToken = resp.access_token;
+                                settings.googleDriveTokenExpiry = Date.now() + (resp.expires_in * 1000);
+                                saveSettings();
+                            }
+                        };
+                        googleDriveTokenClient.requestAccessToken({prompt: ''});
+                    }
+                }
+            }
         }
+        
+        // 從 gapi.client 獲取 token
+        const gapiToken = window.gapi?.client?.getToken();
+        if(gapiToken && gapiToken.access_token) {
+            return gapiToken.access_token;
+        }
+        
         return settings.googleDriveAccessToken;
     }
     
