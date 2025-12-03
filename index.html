@@ -4150,9 +4150,9 @@
         modal.className = 'modal';
         modal.style.zIndex = '3000';
         modal.innerHTML = `
-            <div class="modal-content-wrapper" style="max-width: 400px; padding: 20px;">
-                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px;">雲端備份設定</div>
-                <div class="form-group">
+            <div class="modal-content-wrapper" style="max-width: 400px; max-height: 90vh; padding: 20px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;">
+                <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; flex-shrink: 0;">雲端備份設定</div>
+                <div class="form-group" style="flex: 1; min-height: 0;">
                     <div class="form-row" style="display: flex; align-items: center; justify-content: space-between;">
                         <span class="form-label">啟用自動備份</span>
                         <label class="switch">
@@ -4177,22 +4177,6 @@
                         <input type="text" id="googleDriveApiKey" class="form-input" placeholder="輸入您的 Google API Key（選填）" value="${settings.googleDriveApiKey || ''}" style="text-align: left;" onchange="updateGoogleDriveApiKey()">
                         <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">API Key 用於載入 Google Drive API，如果留空會自動嘗試載入</div>
                     </div>
-                    <div class="form-row" style="margin-top: 10px; padding: 10px; background: var(--card-bg); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
-                        <div style="margin-bottom: 8px; font-weight: 600;">如何獲取 Client ID：</div>
-                        <div>1. 前往 <a href="https://console.cloud.google.com" target="_blank" style="color: #4285f4;">Google Cloud Console</a></div>
-                        <div>2. 創建專案或選擇現有專案</div>
-                        <div>3. 啟用 Google Drive API</div>
-                        <div>4. 創建 OAuth 2.0 憑證（網頁應用程式）</div>
-                        <div style="margin-top: 8px; padding: 8px; background: var(--bg-color); border-radius: 4px; border-left: 3px solid #ff9500;">
-                            <div style="font-weight: 600; color: #ff9500; margin-bottom: 4px;">⚠️ 重要：必須添加以下設定</div>
-                            <div><strong>授權的 JavaScript 來源：</strong></div>
-                            <div style="margin: 4px 0;"><code style="background: var(--card-bg); padding: 4px 8px; border-radius: 4px; display: block; word-break: break-all;">${window.location.origin}</code></div>
-                            <div style="margin-top: 8px;"><strong>授權的重新導向 URI：</strong></div>
-                            <div style="margin: 4px 0;"><code style="background: var(--card-bg); padding: 4px 8px; border-radius: 4px; display: block; word-break: break-all;">${window.location.origin}</code></div>
-                            <div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);">如果使用 localhost 測試，請添加：<code style="background: var(--card-bg); padding: 2px 4px; border-radius: 4px;">http://localhost</code> 和 <code style="background: var(--card-bg); padding: 2px 4px; border-radius: 4px;">http://localhost:8000</code></div>
-                        </div>
-                        <div style="margin-top: 8px;">5. 複製 Client ID 並貼上到上方欄位</div>
-                    </div>
                     <div class="form-row" style="margin-top: 20px;">
                         <button onclick="authorizeGoogleDrive()" style="width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; ${settings.googleDriveClientId ? '' : 'opacity: 0.5; cursor: not-allowed;'}" ${settings.googleDriveClientId ? '' : 'disabled'}>
                             <i class="fab fa-google"></i> ${settings.googleDriveAccessToken ? '重新授權' : '授權 Google Drive'}
@@ -4211,7 +4195,7 @@
                         </button>
                     </div>
                 </div>
-                <div style="margin-top: 20px; text-align: center;">
+                <div style="margin-top: 20px; text-align: center; flex-shrink: 0;">
                     <button onclick="closeCloudBackupModal()" style="padding: 10px 20px; background: var(--border-color); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer;">關閉</button>
                 </div>
             </div>
