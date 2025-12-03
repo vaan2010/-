@@ -4178,8 +4178,15 @@
                         <div>2. 創建專案或選擇現有專案</div>
                         <div>3. 啟用 Google Drive API</div>
                         <div>4. 創建 OAuth 2.0 憑證（網頁應用程式）</div>
-                        <div>5. 添加授權重定向 URI: <code style="background: var(--bg-color); padding: 2px 4px; border-radius: 4px;">${window.location.origin}</code></div>
-                        <div>6. 複製 Client ID 並貼上到上方欄位</div>
+                        <div style="margin-top: 8px; padding: 8px; background: var(--bg-color); border-radius: 4px; border-left: 3px solid #ff9500;">
+                            <div style="font-weight: 600; color: #ff9500; margin-bottom: 4px;">⚠️ 重要：必須添加以下設定</div>
+                            <div><strong>授權的 JavaScript 來源：</strong></div>
+                            <div style="margin: 4px 0;"><code style="background: var(--card-bg); padding: 4px 8px; border-radius: 4px; display: block; word-break: break-all;">${window.location.origin}</code></div>
+                            <div style="margin-top: 8px;"><strong>授權的重新導向 URI：</strong></div>
+                            <div style="margin: 4px 0;"><code style="background: var(--card-bg); padding: 4px 8px; border-radius: 4px; display: block; word-break: break-all;">${window.location.origin}</code></div>
+                            <div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);">如果使用 localhost 測試，請添加：<code style="background: var(--card-bg); padding: 2px 4px; border-radius: 4px;">http://localhost</code> 和 <code style="background: var(--card-bg); padding: 2px 4px; border-radius: 4px;">http://localhost:8000</code></div>
+                        </div>
+                        <div style="margin-top: 8px;">5. 複製 Client ID 並貼上到上方欄位</div>
                     </div>
                     <div class="form-row" style="margin-top: 20px;">
                         <button onclick="authorizeGoogleDrive()" style="width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; ${settings.googleDriveClientId ? '' : 'opacity: 0.5; cursor: not-allowed;'}" ${settings.googleDriveClientId ? '' : 'disabled'}>
@@ -4407,7 +4414,67 @@
             }
         } catch(err) {
             console.error('Google Drive 初始化失敗:', err);
-            alert('初始化失敗：' + err.message + '\n\n請確認：\n1. 已正確輸入 Client ID\n2. 已在 Google Cloud Console 啟用 Google Drive API\n3. 已配置正確的授權重定向 URI');
+            
+            // 檢查是否是 origin 未註冊的錯誤
+            if(err.error === 'idpiframe_initialization_failed' || err.details?.includes('has not been registered')) {
+                const currentOrigin = window.location.origin;
+                const clientId = settings.googleDriveClientId;
+                
+                // 構建 Google Cloud Console 的直接連結
+                const consoleUrl = `https://console.cloud.google.com/apis/credentials?project=${clientId ? '&authuser=0' : ''}`;
+                
+                // 顯示詳細的錯誤對話框
+                const errorModal = document.createElement('div');
+                errorModal.className = 'modal';
+                errorModal.style.zIndex = '3002';
+                errorModal.innerHTML = `
+                    <div class="modal-content-wrapper" style="max-width: 500px; padding: 20px;">
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #ff9500; margin-right: 8px;"></i>
+                            需要註冊網址
+                        </div>
+                        <div style="color: var(--text-primary); margin-bottom: 20px; line-height: 1.6;">
+                            <p>當前網址 <strong>${currentOrigin}</strong> 尚未在 Google Cloud Console 中註冊。</p>
+                            <p>請按照以下步驟完成設定：</p>
+                        </div>
+                        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; line-height: 1.8;">
+                            <div style="margin-bottom: 12px;"><strong>步驟 1：</strong> 前往 Google Cloud Console</div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 2：</strong> 選擇您的專案</div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 3：</strong> 前往「API 和服務」→「憑證」</div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 4：</strong> 點擊您的 OAuth 2.0 客戶端 ID</div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 5：</strong> 在「授權的 JavaScript 來源」中添加：</div>
+                            <div style="background: var(--bg-color); padding: 8px; border-radius: 4px; margin: 8px 0; font-family: monospace; word-break: break-all;">
+                                ${currentOrigin}
+                            </div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 6：</strong> 在「授權的重新導向 URI」中添加：</div>
+                            <div style="background: var(--bg-color); padding: 8px; border-radius: 4px; margin: 8px 0; font-family: monospace; word-break: break-all;">
+                                ${currentOrigin}
+                            </div>
+                            <div style="margin-bottom: 12px;"><strong>步驟 7：</strong> 點擊「儲存」</div>
+                            <div><strong>步驟 8：</strong> 等待 1-2 分鐘讓設定生效，然後重新嘗試授權</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button onclick="window.open('${consoleUrl}', '_blank')" style="padding: 12px 24px; background: #4285f4; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                                <i class="fab fa-google"></i> 打開 Google Cloud Console
+                            </button>
+                            <button onclick="this.closest('.modal').remove()" style="padding: 12px 24px; background: var(--border-color); color: var(--text-primary); border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                                關閉
+                            </button>
+                        </div>
+                    </div>
+                `;
+                errorModal.onclick = (e) => {
+                    if(e.target === errorModal) errorModal.remove();
+                };
+                document.body.appendChild(errorModal);
+                errorModal.style.display = 'block';
+            } else {
+                let errorMsg = '初始化失敗：' + (err.message || err.error || '未知錯誤');
+                if(err.details) {
+                    errorMsg += '\n\n詳細資訊：' + err.details;
+                }
+                alert(errorMsg);
+            }
         }
     }
     
