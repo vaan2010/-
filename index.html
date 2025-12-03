@@ -189,7 +189,8 @@
         }
 
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: var(--bg-color); position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 60px; width: 100%; }
-        .navbar h1 { font-size: 20px; margin: 0; font-weight: 700; position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+        .navbar h1 { font-size: 20px; margin: 0; font-weight: 700; position: absolute; left: calc(50% - 15px); transform: translateX(-50%); white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+        .navbar h1 .title-logo { width: 40px; height: 40px; object-fit: contain; }
         .btn-group { display: flex; gap: 15px; }
         .btn-icon { background: none; border: none; color: #0a84ff; font-size: 20px; cursor: pointer; padding: 5px; }
         .btn-icon.active { color: var(--color-up); }
@@ -498,6 +499,16 @@
         .item-name .symbol-small { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
         .item-row { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px; }
         .item-row-compact { font-size: 11px; color: var(--text-secondary); line-height: 1.25; margin-bottom: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 100%; }
+        .account-tag { display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; margin-top: 4px; margin-right: 6px; line-height: 1.4; }
+        .account-tag:last-child { margin-right: 0; }
+        /* 分類標籤：不同類型不同顏色 */
+        .account-tag-bank { background: #e3f2fd; color: #1565c0; } /* 銀行：淡藍底 */
+        .account-tag-credit { background: #fce4ec; color: #c2185b; } /* 信用卡：淡粉底 */
+        .account-tag-debit { background: #f3e5f5; color: #7b1fa2; } /* 簽帳金融卡：淡紫底 */
+        .account-tag-account { background: #fff9c4; color: #f57f17; } /* 帳戶：淡黃底 */
+        .account-tag-debt { background: #ffebee; color: #c62828; } /* 負債：淡紅底 */
+        /* 銀行名稱標籤 */
+        .account-tag-bank-name { background: #b3e5fc; color: #01579b; } /* 銀行名稱：淡藍底 */
         .item-row-compact .item-label { opacity: 0.7; flex-shrink: 0; }
         .item-row-compact span { white-space: nowrap; min-width: 0; }
         .item-row-compact .price-label { margin-right: 4px; }
@@ -788,6 +799,11 @@
             align-items: center;
             gap: 20px;
         }
+        .loading-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -798,6 +814,60 @@
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        .loading-image {
+            width: 80px;
+            height: 80px;
+            opacity: 0;
+            animation: fadeInUpImage 1.5s ease-out 0.5s forwards, pulse 2s ease-in-out 2s infinite;
+            object-fit: contain;
+        }
+        .loading-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 0.5s forwards;
+        }
+        @keyframes fadeInUpImage {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(1);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .loading-text {
             font-size: 16px;
@@ -864,6 +934,10 @@
     <!-- 載入遮罩 -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
+            <div class="loading-header">
+                <img src="image.png" alt="Loading" class="loading-image">
+                <div class="loading-title">Monee</div>
+            </div>
             <div class="loading-spinner"></div>
             <div class="loading-text">讀取中...</div>
         </div>
@@ -951,7 +1025,7 @@
         <div class="main-content">
             <div class="navbar">
                 <button class="btn-icon hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <h1>Monee</h1>
+                <h1><img src="image.png" alt="Logo" class="title-logo">Monee</h1>
                 <div class="btn-group">
                     <button class="btn-icon sidebar-toggle-btn-navbar" id="sidebarToggleBtnNavbar" onclick="toggleSidebarCollapse()" title="展開選單"><i class="fas fa-bars"></i></button>
                     <button class="btn-icon" id="sortBtn" onclick="toggleEditMode()"><i class="fas fa-sort-amount-down"></i></button>
@@ -2065,6 +2139,44 @@
         });
     }
     
+    // 生成帳戶標籤 HTML（可以有多個標籤）
+    function generateAccountTagHTML(account) {
+        const bankTag = account.bankTag || '帳戶';
+        const bankName = account.bankName || '';
+        
+        // 判斷是否是銀行、信用卡、簽帳金融卡
+        const isBankType = bankTag === '銀行' || bankTag === '信用卡' || bankTag === '簽帳金融卡';
+        
+        // 根據 bankTag 決定分類標籤的 class
+        let tagClass = 'account-tag-account'; // 預設為帳戶
+        if(bankTag === '銀行') {
+            tagClass = 'account-tag-bank';
+        } else if(bankTag === '信用卡') {
+            tagClass = 'account-tag-credit';
+        } else if(bankTag === '簽帳金融卡') {
+            tagClass = 'account-tag-debit';
+        } else if(bankTag === '帳戶') {
+            tagClass = 'account-tag-account';
+        } else if(bankTag === '負債') {
+            tagClass = 'account-tag-debt';
+        }
+        
+        // 生成標籤 HTML 陣列
+        const tags = [];
+        
+        if(isBankType && bankName) {
+            // 如果是銀行類型且有銀行名稱，分成兩個標籤：第一個顯示 tag（根據類型不同顏色），第二個顯示銀行名稱（淡藍底）
+            tags.push(`<span class="account-tag ${tagClass}">${bankTag}</span>`);
+            tags.push(`<span class="account-tag account-tag-bank-name">${bankName}</span>`);
+        } else {
+            // 其他情況直接顯示 tag（根據類型不同顏色）
+            tags.push(`<span class="account-tag ${tagClass}">${bankTag}</span>`);
+        }
+        
+        // 返回所有標籤的 HTML（用空格分隔，讓標籤之間有間距）
+        return tags.join(' ');
+    }
+    
     // 保存分頁顯示設置
     function savePageVisibility() {
         localStorage.setItem('pageVisibility', JSON.stringify(pageVisibility));
@@ -2197,7 +2309,14 @@
                     handle: '.drag-handle',
                     filter: 'input, label', // 排除 checkbox 和 label，只允許通過 drag-handle 拖曳
                     preventOnFilter: false,
+                    onStart: function() {
+                        // 開始拖動時，禁用左右滑動
+                        isSorting = true;
+                    },
                     onEnd: function(evt) {
+                        // 結束拖動時，恢復左右滑動
+                        isSorting = false;
+                        
                         // 獲取新的順序（使用外層的 container，這是 pageVisibilitySettings 容器）
                         const settingsContainer = container;
                         const newOrder = Array.from(settingsContainer.children).map(item => {
@@ -5692,6 +5811,7 @@
     let isSwiping = false;
     let currentTransform = 0;
     let swipeStartIndex = 0;
+    let isSorting = false; // 追蹤是否正在拖動排序
     
     function initSwiper() {
         const swiper = document.getElementById('pageSwiper');
@@ -5700,6 +5820,9 @@
         if(!container) return;
         
         swiper.addEventListener('touchstart', (e) => {
+            // 如果正在拖動排序，不處理滑動
+            if(isSorting) return;
+            
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             isSwiping = false;
@@ -5713,6 +5836,9 @@
         }, { passive: true });
         
         swiper.addEventListener('touchmove', (e) => {
+            // 如果正在拖動排序，不處理滑動
+            if(isSorting) return;
+            
             if(!touchStartX || !touchStartY) return;
             
             const currentX = e.touches[0].clientX;
@@ -5842,6 +5968,13 @@
             }, { passive: true });
             
             chartSection.addEventListener('touchend', (e) => {
+                // 如果正在拖動排序，不處理滑動
+                if(isSorting) {
+                    touchStartX = null;
+                    touchStartY = null;
+                    return;
+                }
+                
                 touchEndX = e.changedTouches[0].clientX;
                 touchEndY = e.changedTouches[0].clientY;
                 const container = document.getElementById('pageContainer');
@@ -6129,7 +6262,14 @@
                     if(el) {
                         sortables.push(Sortable.create(el, {
                             animation: 150,
+                            onStart: function() {
+                                // 開始拖動時，禁用左右滑動
+                                isSorting = true;
+                            },
                             onEnd: function(evt) { 
+                                // 結束拖動時，恢復左右滑動
+                                isSorting = false;
+                                
                                 // 獲取新的類別順序
                                 let newCategoryOrder = Array.from(evt.from.children).map(c => {
                                     let dataId = c.getAttribute('data-id');
@@ -6209,39 +6349,8 @@
             let groupPnL = 0;
             let html = '';
             
-            // 如果是錢包類型，按銀行分組
-            if(type === 'bank') {
-                // 按銀行名稱分組
-                const bankGroups = {};
+            // 直接顯示所有帳戶，不按銀行分組
             items.forEach(acc => {
-                    const bankKey = (acc.bankTag === '銀行' || acc.bankTag === '信用卡' || acc.bankTag === '簽帳金融卡') && acc.bankName 
-                        ? acc.bankName 
-                        : (acc.bankTag || '其他');
-                    if(!bankGroups[bankKey]) {
-                        bankGroups[bankKey] = [];
-                    }
-                    bankGroups[bankKey].push(acc);
-                });
-                
-                // 按銀行名稱排序（現金和其他放在最後）
-                const sortedBankKeys = Object.keys(bankGroups).sort((a, b) => {
-                    if(a === '現金') return 1;
-                    if(b === '現金') return -1;
-                    if(a === '其他') return 1;
-                    if(b === '其他') return -1;
-                    return a.localeCompare(b);
-                });
-                
-                sortedBankKeys.forEach(bankKey => {
-                    const bankItems = bankGroups[bankKey];
-                    // 如果是銀行/信用卡/簽帳金融卡且有銀行名稱，顯示銀行標題
-                    if(bankItems[0].bankTag === '銀行' || bankItems[0].bankTag === '信用卡' || bankItems[0].bankTag === '簽帳金融卡') {
-                        if(bankItems[0].bankName) {
-                            html += `<div style="padding: 10px 15px; font-size: 14px; font-weight: 600; color: var(--text-secondary); background: var(--bg-color); margin-top: 10px; border-radius: 8px 8px 0 0;">${bankItems[0].bankName}</div>`;
-                        }
-                    }
-                    
-                    bankItems.forEach(acc => {
                 let val = calculateValue(acc);
                 let pnl = calculatePnL(acc);
                 sum += val;
@@ -6380,9 +6489,9 @@
                         htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
                     }
                  } else {
-                     // 錢包項目：移除幣別顯示，顯示標籤（如果有的話，否則顯示"帳戶"）
-                     const tag = acc.bankTag || '帳戶';
-                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${tag}</div>`;
+                     // 錢包項目：移除幣別顯示，顯示標籤（使用新的標籤格式）
+                     const tagHTML = generateAccountTagHTML(acc);
+                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${tagHTML}</div>`;
                  }
                 
                 let color = 'amount-green';
@@ -6460,229 +6569,6 @@
                     html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${formatAmount(val)}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div>${hdl}</div>`;
                 }
             });
-                });
-            } else {
-                // 非錢包類型，保持原來的邏輯
-                items.forEach(acc => {
-                let val = calculateValue(acc);
-                let pnl = calculatePnL(acc);
-                sum += val;
-                groupPnL += pnl;
-                
-                let htmlContent = '';
-                if(acc.isAuto) {
-                    let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
-                    // 台股和美股/加密貨幣都統一格式，不使用前綴
-                    let pricePrefix = '';
-                    // 簡化價格顯示，去掉單位（台股和美股都統一格式），沒有資料時顯示 N/A
-                    // 對於 USDT/USDC 等穩定幣，價格顯示為 1.00
-                    let price = '';
-                    if(acc.currentPrice) {
-                        if((sym === 'USDT' || sym === 'USDC') && acc.currentPrice === 1) {
-                            price = '1.00';
-                        } else {
-                            price = `${pricePrefix}${acc.currentPrice.toLocaleString()}`;
-                        }
-                    } else {
-                        price = 'N/A';
-                    }
-                    let chg = '';
-                    if(acc.dayChangePercent !== undefined && acc.dayChangePercent !== null) {
-                        // 對於 USDT/USDC 等穩定幣，如果漲跌幅為 0，不顯示
-                        if((sym === 'USDT' || sym === 'USDC') && acc.dayChangePercent === 0) {
-                            chg = '';
-                        } else {
-                            let s = acc.dayChangePercent > 0 ? '+' : '';
-                            let c = acc.dayChangePercent > 0 ? 'sub-green' : 'sub-red';
-                            chg = `<span class="${c}">${s}${acc.dayChangePercent.toFixed(2)}%</span>`;
-                        }
-                    } else if(acc.currentPrice && (sym !== 'USDT' && sym !== 'USDC')) {
-                        // 有價格但沒有漲跌幅，且不是穩定幣，顯示 N/A
-                        chg = `<span>N/A</span>`;
-                    }
-                    // 計算盈虧（用於顯示在當日和成本行的右邊）
-                    let dailyPnL = acc.isAuto ? calculateDailyPnL(acc) : 0;
-                    let costPnL = acc.isAuto ? calculateCostPnL(acc) : 0;
-                    let dailyPnLHtml = '';
-                    let costPnLHtml = '';
-                    
-                    // 美股、台股、加密貨幣：將盈虧顯示在當日和成本行的最右邊
-                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                        if(Math.abs(dailyPnL) > 0.01) {
-                            dailyPnLHtml = `<span style="margin-left: auto;">${formatPnL(dailyPnL)}</span>`;
-                        }
-                        if(acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0 && Math.abs(costPnL) > 0.01) {
-                            costPnLHtml = `<span style="margin-left: auto;">${formatPnL(costPnL)}</span>`;
-                        }
-                    }
-                    
-                    // 第一行：當日標籤 + 價格 + 當天漲跌幅 + 當日盈虧（美股、台股、加密貨幣）
-                    // USDT/USDC 特別處理：不顯示當日和成本行
-                    let line1 = '';
-                    let line2 = '';
-                    if(sym !== 'USDT' && sym !== 'USDC') {
-                        line1 = chg ? `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${chg}${dailyPnLHtml}</div>` : `<div class="item-row-compact"><span class="price-label">當日</span><span>${price}</span>${dailyPnLHtml}</div>`;
-                        // 第二行：成本標籤 + 成本 + 成本百分比 + 成本盈虧（美股、台股；加密貨幣不顯示成本）
-                        if(acc.type !== 'crypto' && acc.cost && acc.cost > 0) {
-                            if(acc.currentPrice && acc.currentPrice > 0) {
-                                let pnlPct = ((acc.currentPrice - acc.cost) / acc.cost) * 100;
-                                let s = pnlPct >= 0 ? '+' : '';
-                                let c = pnlPct >= 0 ? 'sub-green' : 'sub-red';
-                                let costPrefix = '';
-                                // 簡化：只顯示成本和百分比，加上"成本"標籤
-                                // 美股、台股：line2 不包含股數，股數會放在代碼行
-                                line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span class="${c}">${s}${pnlPct.toFixed(1)}%</span>${costPnLHtml}</div>`;
-                            } else {
-                                // 有成本但沒有當前價格，顯示成本和 N/A
-                                let costPrefix = '';
-                                line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>${costPrefix}${acc.cost.toFixed(2)}</span><span>N/A</span>${costPnLHtml}</div>`;
-                            }
-                        } else if(acc.type !== 'crypto') {
-                            // 沒有成本時，顯示 N/A（加密貨幣不顯示）
-                            line2 = `<div class="item-row-compact"><span class="price-label">成本</span><span>N/A</span></div>`;
-                        }
-                    }
-                    // 美股、台股、加密貨幣：分開顯示公司名稱和代號
-                    let displayName = acc.type === 'stock' ? cleanCompanyName(acc.name) : acc.name;
-                    // 美股、台股、加密貨幣使用新佈局：第一行公司名稱，第二行代號+價格資訊
-                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                        // 檢查該項目是否被隱藏（需要在這裡檢查，因為後面會用到 eyeIcon）
-                        let itemHiddenTemp = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
-                        let eyeIconTemp = itemHiddenTemp ? 'fa-eye-slash' : 'fa-eye';
-                        // 第二行：代號，第三行開始：價格資訊（line1 和 line2）
-                        let symbolRow = '';
-                        // 美股、台股、加密貨幣：即使 displayName === sym 也要顯示代碼行（因為需要顯示股數和正確的排版）
-                        if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                            // 美股、台股、加密貨幣：股數放在代碼同一行的最右邊，當日和成本往下移兩行
-                            let balanceUnit = acc.type === 'crypto' ? '' : '股';
-                            // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
-                            let isStableCoin = (sym === 'USDT' || sym === 'USDC');
-                            // 加密貨幣沒有成本行（line2），但 line1 要顯示在 line2 的位置，所以需要兩個 spacer
-                            let spacerHtml = '';
-                            let displayLine1 = '';
-                            let displayLine2 = '';
-                            if(isStableCoin) {
-                                spacerHtml = '';
-                                displayLine1 = '';
-                                displayLine2 = '';
-                            } else if(acc.type === 'crypto') {
-                                spacerHtml = '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>'; // 加密貨幣需要兩個 spacer，讓 line1 顯示在 line2 的位置
-                                displayLine1 = ''; // 第一個 spacer 位置留空
-                                displayLine2 = line1; // line1 顯示在 line2 的位置
-                            } else {
-                                spacerHtml = '<div class="symbol-spacer"></div><div class="symbol-spacer"></div>'; // 美股、台股有 line1 和 line2，所以需要兩個 spacer
-                                displayLine1 = line1;
-                                displayLine2 = line2;
-                            }
-                            if(sym) {
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym || 'N/A'}</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${displayLine1}${displayLine2}</div>`;
-                            } else {
-                                // 沒有代碼時，也要保持排版結構，但代碼顯示 N/A
-                                symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">N/A</span><span class="symbol-balance">${acc.balance || 'N/A'}${balanceUnit}</span></div>${spacerHtml}${displayLine1}${displayLine2}</div>`;
-                            }
-                        } else if(sym && displayName !== sym) {
-                            // 其他類型：只有當 displayName !== sym 時才顯示代碼行
-                            symbolRow = `<div class="item-symbol-row"><div class="symbol-text-row"><span class="symbol-text">${sym}</span></div><div class="symbol-spacer"></div>${line1}${line2}</div>`;
-                        } else {
-                            // 沒有代碼時，直接顯示價格資訊
-                            symbolRow = `<div class="item-symbol-row">${line1}${line2}</div>`;
-                        }
-                        // 股數顯示位置
-                        let balanceDisplay = '';
-                        if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                            // 美股、台股、加密貨幣：股數已移到代碼行，眼睛下方不顯示
-                            balanceDisplay = '';
-                        } else {
-                            // 其他類型：股數放在眼睛按鈕下方
-                            balanceDisplay = `<div class="item-balance-below-eye">${acc.balance || 'N/A'}</div>`;
-                        }
-                        htmlContent = `<div class="item-name-row"><div class="item-name">${displayName}</div><div class="item-eye-wrapper"><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIconTemp}"></i></button>${balanceDisplay}</div></div>${symbolRow}`;
-                    } else {
-                        // 其他分類保持原來的佈局
-                        htmlContent = `<div class="item-name">${displayName}</div>${line1}${line2}`;
-                    }
-                 } else {
-                     // 錢包項目：移除幣別顯示，顯示標籤（如果有的話，否則顯示"帳戶"）
-                     const tag = acc.bankTag || '帳戶';
-                     htmlContent = `<div class="item-name">${acc.name}</div><div class="item-row">${tag}</div>`;
-                 }
-                
-                let color = 'amount-green';
-                let hdl = isEditMode ? `<div class="drag-handle"><i class="fas fa-bars"></i></div>` : '';
-                let clk = isEditMode ? '' : `onclick="openDetailView(${acc.id})"`;
-                let dailyPnL = acc.isAuto ? calculateDailyPnL(acc) : 0;
-                let costPnL = acc.isAuto ? calculateCostPnL(acc) : 0;
-                let pnlHtml = '';
-                
-                if(acc.isAuto) {
-                    // 美股、台股、加密貨幣：盈虧已經顯示在當日和成本行的右邊，所以右側不需要顯示盈虧
-                    if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                        // USDT/USDC 特別處理：不顯示當日和成本行，所以不需要 spacer
-                        let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
-                        let isStableCoin = (sym === 'USDT' || sym === 'USDC');
-                        if(isStableCoin) {
-                            pnlHtml = '';
-                        } else if(acc.type === 'crypto') {
-                            // 加密貨幣只有一行（當日顯示在 line2 位置），所以只需要一個 spacer（對應第二個 symbol-spacer）
-                            pnlHtml = `<div class="amount-spacer"></div>`;
-                        } else {
-                            // 美股、台股有 line1 和 line2，所以需要兩個 spacer
-                            pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
-                        }
-                    } else {
-                        // 其他類型：保持原樣，在右側顯示盈虧
-                        let hasLine3 = (acc.cost && acc.cost > 0 && acc.currentPrice && acc.currentPrice > 0);
-                        let pnlLines = [];
-                        // 同時顯示當日損益和總損益
-                        if(Math.abs(dailyPnL) > 0.01) {
-                            pnlLines.push(`<span style="font-size: 10px; color: #8e8e93;">今日</span><br>${formatPnL(dailyPnL)}`);
-                        }
-                        if(hasLine3 && Math.abs(costPnL) > 0.01) {
-                            pnlLines.push(`<span style="font-size: 10px; color: #8e8e93;">總計</span><br>${formatPnL(costPnL)}`);
-                        }
-                        if(pnlLines.length > 0) {
-                            pnlHtml = pnlLines.map(value => `<div class="amount-pnl item-numbers">${value}</div>`).join('');
-                        } else {
-                            pnlHtml = `<div class="amount-spacer"></div><div class="amount-spacer"></div>`;
-                        }
-                    }
-                } else {
-                    pnlHtml = `<div class="amount-spacer"></div>`;
-                    if(pnl !== 0) {
-                        pnlHtml += `<div class="amount-pnl item-numbers">${formatPnL(pnl)}</div>`;
-                    } else {
-                        pnlHtml += '';
-                    }
-                }
-                
-                // 檢查該項目是否被隱藏
-                let itemHidden = localStorage.getItem(`itemHidden_${acc.id}`) === 'true';
-                let eyeIcon = itemHidden ? 'fa-eye-slash' : 'fa-eye';
-                
-                // 美股和加密貨幣且有 logo 時顯示 logo，否則顯示 icon
-                let iconHtml = '';
-                if((acc.type === 'stock' || acc.type === 'crypto') && acc.logo) {
-                    iconHtml = `<div class="item-icon ${g.s}"><img src="${acc.logo}" alt="${acc.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas ${g.i}\\'></i>';"></div>`;
-                } else {
-                    iconHtml = `<div class="item-icon ${g.s}"><i class="fas ${g.i}"></i></div>`;
-                }
-                 // 美股、台股、加密貨幣使用新佈局：第一行只顯示公司名稱，金額從第二行開始
-                 if(acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') {
-                     // 檢查是否為 USDT/USDC 穩定幣
-                     let sym = acc.symbol.replace('COINBASE:','').replace('OKEX:','').replace('-USD','').replace('-USDT','');
-                     let isStableCoin = (sym === 'USDT' || sym === 'USDC');
-                     // 美股、台股、加密貨幣：現值金額往下移一行（對齊代碼+股數）
-                     // USDT/USDC 特別處理：不顯示當日和成本行，所以只需要一個空白行，不需要兩個 spacer
-                     let nameRowHeight = (acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '19px' : '0';
-                     let pnlSpacer = isStableCoin ? '' : ((acc.type === 'stock' || acc.type === 'twstock' || acc.type === 'crypto') ? '<div class="amount-spacer"></div><div class="amount-spacer"></div>' : '');
-                     // 美股、台股、加密貨幣：現值金額放在第二行（對齊代碼+股數），需要 item-amount-name-row
-                     html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount-name-row" style="height: ${nameRowHeight}; margin-bottom: ${nameRowHeight === '19px' ? '3px' : '0'};"></div><div class="item-amount"><div class="amount-val item-numbers ${color}">${formatAmount(val)}</div>${pnlSpacer}${pnlHtml}</div></div>${hdl}</div>`;
-                } else {
-                    // 其他分類（錢包等）：眼睛按鈕放在金額右邊
-                    html += `<div class="list-item ${itemHidden ? 'item-hidden' : ''}" ${clk} data-id="${acc.id}">${iconHtml}<div class="item-content">${htmlContent}</div><div class="item-amount-wrapper"><div class="item-amount"><div class="amount-val-wrapper"><div class="amount-val item-numbers ${color}">${formatAmount(val)}</div><button class="item-eye-btn" onclick="event.stopPropagation(); toggleItemNumbers(${acc.id})" title="隱藏/顯示數字"><i class="fas ${eyeIcon}"></i></button></div>${pnlHtml}</div></div>${hdl}</div>`;
-                }
-            });
-            }
             
             let pHtml = groupPnL !== 0 ? `<span class="group-pnl numbers-content">${formatPnL(groupPnL)}</span>` : '';
             c.innerHTML = `<div class="group-header"><span>${g.t}</span><div class="group-total-block"><span class="group-total numbers-content">${formatAmount(sum)}</span>${pHtml}</div></div><div class="list-container" id="group-${type}">${html}</div>`;
@@ -6693,7 +6579,15 @@
                 if(el) {
                     sortables.push(Sortable.create(el, {
                         animation: 150,
-                        onEnd: function(evt) { updateOrder(type, evt.from); }
+                        onStart: function() {
+                            // 開始拖動時，禁用左右滑動
+                            isSorting = true;
+                        },
+                        onEnd: function(evt) {
+                            // 結束拖動時，恢復左右滑動
+                            isSorting = false;
+                            updateOrder(type, evt.from);
+                        }
                     }));
                 }
             }
@@ -7082,16 +6976,16 @@
             }
         }
         
-        // 載入完成，隱藏載入遮罩
+        // 載入完成，等待 Monee 字樣動畫完成後再隱藏載入遮罩
         if(loadingOverlay) {
-            // 使用 setTimeout 確保所有渲染完成後再隱藏
+            // Monee 字樣動畫：0.5s 延遲 + 1.5s 動畫 = 2s，再加上一點緩衝時間
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
                 // 完全隱藏後移除元素（可選，如果想保留 DOM 可以註解掉）
                 setTimeout(() => {
                     loadingOverlay.style.display = 'none';
                 }, 300); // 等待淡出動畫完成
-            }, 100);
+            }, 2200); // 等待 Monee 字樣動畫完成（0.5s 延遲 + 1.5s 動畫 + 0.2s 緩衝）
         }
     }
     
@@ -7116,7 +7010,9 @@
                 pageIndicator.innerHTML = '';
                 pageIndicator.style.display = 'none';  // 完全隱藏頁面指示器
             }
-            if(navbarTitle) navbarTitle.textContent = '記帳日程';
+            if(navbarTitle) {
+                navbarTitle.innerHTML = '<img src="image.png" alt="Logo" class="title-logo">記帳日程';
+            }
             // 隱藏右上角的新增和排序按鈕，顯示圖表按鈕和新增按鈕
             const addBtn = document.getElementById('addBtn');
             const sortBtn = document.getElementById('sortBtn');
@@ -7196,7 +7092,9 @@
                 // 然後調用 switchToPage 來更新內容
                 switchToPage(savedPage);
             }
-            if(navbarTitle) navbarTitle.textContent = 'Monee';
+            if(navbarTitle) {
+                navbarTitle.innerHTML = '<img src="image.png" alt="Logo" class="title-logo">Monee';
+            }
             // 顯示右上角的新增和排序按鈕，隱藏圖表按鈕和新增按鈕
             const addBtn = document.getElementById('addBtn');
             const sortBtn = document.getElementById('sortBtn');
@@ -9360,14 +9258,14 @@
                     accountItem.onclick = () => selectJournalAccount(acc, type);
                     
                     const iconClass = acc.type === 'bank' ? 'fa-university' : 'fa-credit-card';
-                    const typeName = acc.type === 'bank' ? '錢包' : '負債';
+                    const tagHTML = acc.type === 'bank' ? generateAccountTagHTML(acc) : '<span class="account-tag account-tag-debt">負債</span>';
                     
                     accountItem.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas ${iconClass}" style="color: var(--text-primary); font-size: 20px;"></i>
                             <div style="flex: 1;">
                                 <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${acc.name}</div>
-                                <div style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">${typeName}</div>
+                                <div style="margin-top: 4px;">${tagHTML}</div>
                             </div>
                         </div>
                     `;
@@ -10401,14 +10299,14 @@
                     accountItem.onclick = () => selectAccountForTransfer(acc);
                     
                     const iconClass = acc.type === 'bank' ? 'fa-university' : 'fa-credit-card';
-                    const typeName = acc.type === 'bank' ? '錢包' : '負債';
+                    const tagHTML = acc.type === 'bank' ? generateAccountTagHTML(acc) : '<span class="account-tag account-tag-debt">負債</span>';
                     
                     accountItem.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas ${iconClass}" style="color: var(--text-primary); font-size: 20px;"></i>
                             <div style="flex: 1;">
                                 <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${acc.name}</div>
-                                <div style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">${typeName}</div>
+                                <div style="margin-top: 4px;">${tagHTML}</div>
                             </div>
                         </div>
                     `;
