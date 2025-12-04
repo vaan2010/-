@@ -1874,6 +1874,10 @@
     const STORAGE_KEY_FIXED_TRANSFERS = 'my_assets_fixed_transfers';
     const STORAGE_KEY_JOURNAL = 'my_assets_journal'; // 收入、支出、轉帳記錄
     
+    // 預設 Google Drive Client ID（可選，如果提供則其他用戶可以直接使用，無需自己申請）
+    // 注意：如果使用預設 Client ID，請確保在 Google Cloud Console 中已設置正確的授權重定向 URI
+    const DEFAULT_GOOGLE_DRIVE_CLIENT_ID = ''; // 如果需要，可以在這裡填入您的 Client ID
+    
     // 預設頭像（使用 emoji 或圖示）
     const DEFAULT_AVATARS = [
         '👤', '👨', '👩', '🧑', '👨‍💼', '👩‍💼'
@@ -2129,11 +2133,18 @@
             cost: safeParseFloat(a.cost || 0), order: (a.order!==undefined)?a.order:index, transactions: a.transactions || [] 
         }));
         
-        const settings = JSON.parse(localStorage.getItem(userSettingsKey)) || { 
+        const defaultSettings = { 
             apiKey: '', fugleKey: '', geminiKey: '', usdRate: 32.5, usdtRate: 1.0, feeRate: 0.1425, chartTextColor: 'white', theme: 'dark',
             cloudBackupEnabled: false, cloudBackupInterval: 24, cloudBackupLastTime: null, cloudBackupToken: null,
             googleDriveClientId: '', googleDriveApiKey: '', googleDriveAccessToken: null, googleDriveRefreshToken: null, googleDriveTokenExpiry: null
         };
+        
+        // 如果用戶沒有設置 Client ID 但有意設值，使用預設值
+        const savedSettings = JSON.parse(localStorage.getItem(userSettingsKey)) || {};
+        const settings = { ...defaultSettings, ...savedSettings };
+        if(!settings.googleDriveClientId && DEFAULT_GOOGLE_DRIVE_CLIENT_ID) {
+            settings.googleDriveClientId = DEFAULT_GOOGLE_DRIVE_CLIENT_ID;
+        }
         
         return { accounts, settings };
     }
@@ -4170,7 +4181,19 @@
                     </div>
                     <div class="form-row">
                         <span class="form-label">Google Client ID</span>
-                        <input type="text" id="googleDriveClientId" class="form-input" placeholder="輸入您的 Google Client ID" value="${settings.googleDriveClientId || ''}" style="text-align: left;" onchange="updateGoogleDriveClientId()">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="googleDriveClientId" class="form-input" placeholder="${DEFAULT_GOOGLE_DRIVE_CLIENT_ID ? '可使用預設值或輸入自己的' : '輸入您的 Google Client ID'}" value="${settings.googleDriveClientId || DEFAULT_GOOGLE_DRIVE_CLIENT_ID || ''}" style="text-align: left; flex: 1;" onchange="updateGoogleDriveClientId()">
+                            ${DEFAULT_GOOGLE_DRIVE_CLIENT_ID && !settings.googleDriveClientId ? `
+                            <button onclick="useDefaultClientId()" style="padding: 8px 12px; background: var(--color-up); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;" title="使用預設的 Client ID">
+                                使用預設
+                            </button>
+                            ` : ''}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            ${DEFAULT_GOOGLE_DRIVE_CLIENT_ID ? 
+                                '可以使用預設的 Client ID（無需自己申請），或輸入您自己的 Client ID。每個用戶的備份會上傳到各自的 Google Drive。' : 
+                                '可以與他人共用同一個 Client ID，每個用戶的備份會上傳到各自的 Google Drive。如需自己申請，請前往 Google Cloud Console。'}
+                        </div>
                     </div>
                     <div class="form-row">
                         <span class="form-label">Google API Key</span>
@@ -4337,11 +4360,21 @@
     }
     
     function updateGoogleDriveClientId() {
-        const clientId = document.getElementById('googleDriveClientId').value.trim();
+        const clientIdInput = document.getElementById('googleDriveClientId');
+        if(!clientIdInput) return;
+        
+        let clientId = clientIdInput.value.trim();
+        // 如果為空且有意設值，使用預設值
+        if(!clientId && DEFAULT_GOOGLE_DRIVE_CLIENT_ID) {
+            clientId = DEFAULT_GOOGLE_DRIVE_CLIENT_ID;
+            clientIdInput.value = clientId;
+        }
+        
         settings.googleDriveClientId = clientId;
         saveSettings();
         
-        const authBtn = event.target.closest('.form-group').querySelector('button[onclick="authorizeGoogleDrive()"]');
+        const authBtn = event?.target?.closest('.form-group')?.querySelector('button[onclick="authorizeGoogleDrive()"]') || 
+                        document.querySelector('button[onclick="authorizeGoogleDrive()"]');
         if(authBtn) {
             if(clientId) {
                 authBtn.style.opacity = '1';
@@ -4351,6 +4384,34 @@
                 authBtn.style.opacity = '0.5';
                 authBtn.style.cursor = 'not-allowed';
                 authBtn.disabled = true;
+            }
+        }
+    }
+    
+    function useDefaultClientId() {
+        if(!DEFAULT_GOOGLE_DRIVE_CLIENT_ID) {
+            alert('沒有設定預設的 Client ID');
+            return;
+        }
+        
+        const clientIdInput = document.getElementById('googleDriveClientId');
+        if(clientIdInput) {
+            clientIdInput.value = DEFAULT_GOOGLE_DRIVE_CLIENT_ID;
+            settings.googleDriveClientId = DEFAULT_GOOGLE_DRIVE_CLIENT_ID;
+            saveSettings();
+            
+            // 更新授權按鈕狀態
+            const authBtn = document.querySelector('button[onclick="authorizeGoogleDrive()"]');
+            if(authBtn) {
+                authBtn.style.opacity = '1';
+                authBtn.style.cursor = 'pointer';
+                authBtn.disabled = false;
+            }
+            
+            // 移除「使用預設」按鈕
+            const defaultBtn = document.querySelector('button[onclick="useDefaultClientId()"]');
+            if(defaultBtn) {
+                defaultBtn.remove();
             }
         }
     }
@@ -4367,8 +4428,14 @@
     let googleDriveGisInited = false;
     
     async function authorizeGoogleDrive() {
+        // 如果沒有設置 Client ID，嘗試使用預設值
+        if(!settings.googleDriveClientId && DEFAULT_GOOGLE_DRIVE_CLIENT_ID) {
+            settings.googleDriveClientId = DEFAULT_GOOGLE_DRIVE_CLIENT_ID;
+            saveSettings();
+        }
+        
         if(!settings.googleDriveClientId) {
-            alert('請先輸入 Google Client ID');
+            alert('請先輸入 Google Client ID 或使用預設值');
             return;
         }
         
