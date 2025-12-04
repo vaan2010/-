@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a84ff">
+    <link rel="manifest" href="./manifest.json">
     <title>Monee</title>
     
     <!-- Google API Client Library -->
@@ -4277,6 +4279,18 @@
            (Date.now() - new Date(settings.cloudBackupLastTime).getTime()) >= intervalMs) {
             performCloudBackup();
         }
+        
+        // 註冊背景同步（如果支援）
+        if('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+            navigator.serviceWorker.ready.then((registration) => {
+                // 定期註冊背景同步
+                setInterval(() => {
+                    registration.sync.register('cloud-backup').catch((err) => {
+                        console.log('背景同步註冊失敗（可能不支援）:', err);
+                    });
+                }, intervalMs);
+            });
+        }
     }
     
     function stopCloudBackupTimer() {
@@ -7825,6 +7839,39 @@
         await updateRates(); 
         if(settings.apiKey||settings.fugleKey) fetchPrices();
         setInterval(() => { refreshAllData(false); }, 60000);
+        
+        // 註冊 Service Worker（支援背景執行）
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker 註冊成功:', registration.scope);
+                    
+                    // 監聽 Service Worker 更新
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if(newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('Service Worker 有新版本可用');
+                            }
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.log('Service Worker 註冊失敗:', error);
+                });
+            
+            // 監聽來自 Service Worker 的消息（背景備份）
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if(event.data && event.data.type === 'BACKGROUND_BACKUP') {
+                    console.log('收到背景備份請求');
+                    if(settings.cloudBackupEnabled) {
+                        performCloudBackup().catch(err => {
+                            console.error('背景備份失敗:', err);
+                        });
+                    }
+                }
+            });
+        }
         
         // 啟動雲端自動備份
         if(settings.cloudBackupEnabled) {
