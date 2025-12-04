@@ -4150,7 +4150,11 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `my_assets_backup_${new Date().toISOString().split('T')[0]}.json`;
+        // 生成包含日期和時間的檔名，格式：my_assets_backup_2025-12-04_12-20-34.json
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // 2025-12-04
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // 12:20:34 -> 12-20-34
+        a.download = `my_assets_backup_${dateStr}_${timeStr}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -4688,12 +4692,16 @@
             // 生成備份資料
             const backupData = await generateBackupData();
             const jsonStr = JSON.stringify(backupData, null, 2);
-            const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `my_assets_backup_${timestamp}.json`;
+            // 生成包含日期和時間的檔名，格式：my_assets_backup_2025-12-04_12-20-34.json
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // 2025-12-04
+            const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // 12:20:34 -> 12-20-34
+            const filename = `my_assets_backup_${dateStr}_${timeStr}.json`;
             
             if(settings.cloudBackupToken === 'local_storage_backup') {
                 // 簡化版本：備份到 localStorage
-                localStorage.setItem(`cloud_backup_${timestamp}`, jsonStr);
+                // 使用完整的檔名（包含日期和時間）作為 key
+                localStorage.setItem(`cloud_backup_${dateStr}_${timeStr}`, jsonStr);
                 // 只保留最近 10 個備份
                 const backupKeys = Object.keys(localStorage).filter(k => k.startsWith('cloud_backup_')).sort().reverse();
                 if(backupKeys.length > 10) {
@@ -4745,9 +4753,7 @@
             throw new Error('無法獲取有效的訪問令牌，請重新授權');
         }
         
-        // 檢查是否已存在同名文件
-        const existingFile = await findGoogleDriveFile(filename);
-        
+        // 由於檔名包含日期和時間，每個備份都是新文件，不需要檢查同名文件
         const metadata = {
             name: filename,
             mimeType: 'application/json'
@@ -4757,18 +4763,11 @@
         form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
         form.append('file', new Blob([jsonStr], { type: 'application/json' }));
         
-        let url = 'https://www.googleapis.com/upload/drive/v3/files';
-        if(existingFile) {
-            // 更新現有文件
-            url += `/${existingFile.id}`;
-            url += '?uploadType=multipart';
-        } else {
-            // 創建新文件
-            url += '?uploadType=multipart';
-        }
+        // 創建新文件（檔名包含時間，不會重複）
+        const url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
         
         const response = await fetch(url, {
-            method: existingFile ? 'PATCH' : 'POST',
+            method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             },
