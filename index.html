@@ -1197,7 +1197,7 @@
                                         <div id="monthlyIncomeTotal" style="font-size: 16px; font-weight: 600; color: var(--color-up); text-align: center; margin-bottom: 10px;">總收入：$0</div>
                                         <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">原始收入+代墊</div>
                                         <div id="monthlyIncomeTotalChart" style="width: 100%; height: 300px; box-sizing: border-box; overflow: visible;"></div>
-                                    </div>
+                            </div>
                                     <div>
                                         <div id="monthlyIncomeNormalTotal" style="font-size: 16px; font-weight: 600; color: var(--color-up); text-align: center; margin-bottom: 10px;">原始收入：$0</div>
                                         <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-align: center;">原始收入</div>
@@ -4211,7 +4211,7 @@
     function closeCloudBackupModal() {
         if(window.cloudBackupModal) {
             window.cloudBackupModal.style.display = 'none';
-            setTimeout(() => {
+                            setTimeout(() => {
                 if(window.cloudBackupModal && window.cloudBackupModal.parentNode) {
                     window.cloudBackupModal.parentNode.removeChild(window.cloudBackupModal);
                 }
@@ -4408,15 +4408,29 @@
             };
             
             // 請求 access token
-            // 如果已經有 token 就跳過 consent，沒有就請求
-            const existingToken = window.gapi.client.getToken();
-            if(existingToken === null) {
+            // 如果沒有 refresh token，強制要求 consent 以獲得 refresh token
+            // 如果有 refresh token 但 token 已過期，先嘗試刷新
+            if(!settings.googleDriveRefreshToken) {
+                // 沒有 refresh token，強制要求 consent 以獲得 refresh token
                 googleDriveTokenClient.requestAccessToken({prompt: 'consent'});
             } else {
-                // 檢查 token 是否過期
+                // 有 refresh token，檢查 token 是否過期
                 if(settings.googleDriveTokenExpiry && Date.now() >= settings.googleDriveTokenExpiry - 60000) {
-                    // Token 即將過期，請求新的 token
-                    googleDriveTokenClient.requestAccessToken({prompt: ''});
+                    // Token 即將過期或已過期，先嘗試刷新
+                    const refreshedToken = await refreshGoogleDriveToken();
+                    if(refreshedToken) {
+                        // 刷新成功
+                        settings.cloudBackupToken = 'google_drive';
+                        saveSettings();
+                        alert('Google Drive 授權已更新！');
+                        if(window.cloudBackupModal) {
+                            closeCloudBackupModal();
+                            setTimeout(() => setupCloudBackup(), 300);
+                        }
+                    } else {
+                        // 刷新失敗，需要重新授權
+                        googleDriveTokenClient.requestAccessToken({prompt: 'consent'});
+                    }
                 } else {
                     // Token 仍然有效，直接使用
                     settings.cloudBackupToken = 'google_drive';
@@ -4495,7 +4509,10 @@
     }
     
     async function refreshGoogleDriveToken() {
-        if(!settings.googleDriveRefreshToken) return null;
+        if(!settings.googleDriveRefreshToken) {
+            console.log('沒有 refresh token，無法刷新');
+            return null;
+        }
         
         try {
             const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -4509,10 +4526,36 @@
             });
             
             const data = await response.json();
+            if(data.error) {
+                console.error('刷新 token 失敗:', data.error, data.error_description);
+                // 如果 refresh token 無效，清除它
+                if(data.error === 'invalid_grant') {
+                    settings.googleDriveRefreshToken = null;
+                    settings.googleDriveAccessToken = null;
+                    settings.googleDriveTokenExpiry = null;
+                    saveSettings();
+                }
+                return null;
+            }
+            
             if(data.access_token) {
                 settings.googleDriveAccessToken = data.access_token;
                 settings.googleDriveTokenExpiry = Date.now() + (data.expires_in * 1000);
+                // 如果返回了新的 refresh token，更新它
+                if(data.refresh_token) {
+                    settings.googleDriveRefreshToken = data.refresh_token;
+                }
                 saveSettings();
+                
+                // 更新 gapi.client 的 token
+                if(window.gapi?.client) {
+                    window.gapi.client.setToken({
+                        access_token: data.access_token,
+                        expires_in: data.expires_in
+                    });
+                }
+                
+                console.log('Token 刷新成功');
                 return data.access_token;
             }
         } catch(err) {
@@ -4522,37 +4565,38 @@
     }
     
     async function getGoogleDriveAccessToken() {
-        // 檢查 token 是否過期
-        if(settings.googleDriveTokenExpiry && Date.now() >= settings.googleDriveTokenExpiry - 60000) {
-            // Token 即將過期，嘗試刷新
+        // 檢查 token 是否過期或即將過期（提前 5 分鐘刷新）
+        const expiryBuffer = 5 * 60 * 1000; // 5 分鐘
+        if(!settings.googleDriveTokenExpiry || Date.now() >= settings.googleDriveTokenExpiry - expiryBuffer) {
+            // Token 已過期或即將過期，嘗試刷新
             if(settings.googleDriveRefreshToken) {
-                await refreshGoogleDriveToken();
-            } else {
-                // 沒有 refresh token，需要重新授權
-                const existingToken = window.gapi?.client?.getToken();
-                if(existingToken) {
-                    // 使用現有的 token client 請求新 token
-                    if(googleDriveTokenClient) {
-                        googleDriveTokenClient.callback = async (resp) => {
-                            if(resp.error === undefined) {
-                                window.gapi.client.setToken(resp);
-                                settings.googleDriveAccessToken = resp.access_token;
-                                settings.googleDriveTokenExpiry = Date.now() + (resp.expires_in * 1000);
-                                saveSettings();
-                            }
-                        };
-                        googleDriveTokenClient.requestAccessToken({prompt: ''});
-                    }
+                const refreshedToken = await refreshGoogleDriveToken();
+                if(refreshedToken) {
+                    return refreshedToken;
                 }
             }
+            
+            // 如果刷新失敗或沒有 refresh token，嘗試從 gapi.client 獲取
+            const existingToken = window.gapi?.client?.getToken();
+            if(existingToken && existingToken.access_token) {
+                // 檢查 gapi token 是否有效
+                const gapiExpiry = existingToken.expires_at || (existingToken.expires_in ? Date.now() + existingToken.expires_in * 1000 : null);
+                if(!gapiExpiry || Date.now() < gapiExpiry - expiryBuffer) {
+                    return existingToken.access_token;
+                }
+            }
+            
+            // 如果都沒有，返回保存的 token（可能已過期，但讓調用者處理錯誤）
+            return settings.googleDriveAccessToken;
         }
         
-        // 從 gapi.client 獲取 token
+        // Token 仍然有效，先從 gapi.client 獲取
         const gapiToken = window.gapi?.client?.getToken();
         if(gapiToken && gapiToken.access_token) {
             return gapiToken.access_token;
         }
         
+        // 如果 gapi 沒有 token，返回保存的 token
         return settings.googleDriveAccessToken;
     }
     
@@ -4614,7 +4658,7 @@
         };
     }
     
-    async function uploadToGoogleDrive(jsonStr, filename) {
+    async function uploadToGoogleDrive(jsonStr, filename, retryCount = 0) {
         const accessToken = await getGoogleDriveAccessToken();
         if(!accessToken) {
             throw new Error('無法獲取有效的訪問令牌，請重新授權');
@@ -4651,7 +4695,17 @@
         });
         
         if(!response.ok) {
-            const error = await response.json();
+            // 如果是 401 未授權錯誤且還有 refresh token，嘗試刷新並重試
+            if(response.status === 401 && settings.googleDriveRefreshToken && retryCount === 0) {
+                console.log('Token 無效，嘗試刷新...');
+                const refreshedToken = await refreshGoogleDriveToken();
+                if(refreshedToken) {
+                    // 刷新成功，重試一次
+                    return uploadToGoogleDrive(jsonStr, filename, 1);
+                }
+            }
+            
+            const error = await response.json().catch(() => ({ error: { message: '上傳失敗' } }));
             throw new Error(error.error?.message || '上傳失敗');
         }
         
@@ -4662,7 +4716,7 @@
         return file;
     }
     
-    async function findGoogleDriveFile(filename) {
+    async function findGoogleDriveFile(filename, retryCount = 0) {
         const accessToken = await getGoogleDriveAccessToken();
         if(!accessToken) return null;
         
@@ -4680,13 +4734,23 @@
                 const data = await response.json();
                 return data.files && data.files.length > 0 ? data.files[0] : null;
             }
+            
+            // 如果是 401 未授權錯誤且還有 refresh token，嘗試刷新並重試
+            if(response.status === 401 && settings.googleDriveRefreshToken && retryCount === 0) {
+                console.log('Token 無效，嘗試刷新...');
+                const refreshedToken = await refreshGoogleDriveToken();
+                if(refreshedToken) {
+                    // 刷新成功，重試一次
+                    return findGoogleDriveFile(filename, 1);
+                }
+            }
         } catch(err) {
             console.error('查找文件失敗:', err);
         }
         return null;
     }
     
-    async function listGoogleDriveBackups() {
+    async function listGoogleDriveBackups(retryCount = 0) {
         const accessToken = await getGoogleDriveAccessToken();
         if(!accessToken) {
             alert('無法獲取訪問令牌，請重新授權');
@@ -4704,6 +4768,15 @@
             );
             
             if(!response.ok) {
+                // 如果是 401 未授權錯誤且還有 refresh token，嘗試刷新並重試
+                if(response.status === 401 && settings.googleDriveRefreshToken && retryCount === 0) {
+                    console.log('Token 無效，嘗試刷新...');
+                    const refreshedToken = await refreshGoogleDriveToken();
+                    if(refreshedToken) {
+                        // 刷新成功，重試一次
+                        return listGoogleDriveBackups(1);
+                    }
+                }
                 throw new Error('獲取備份列表失敗');
             }
             
@@ -4752,7 +4825,7 @@
         }
     }
     
-    async function restoreFromGoogleDrive(fileId, filename) {
+    async function restoreFromGoogleDrive(fileId, filename, retryCount = 0) {
         if(!confirm(`確定要還原備份「${filename}」嗎？這將覆蓋現有的所有資料。`)) return;
         
         const accessToken = await getGoogleDriveAccessToken();
@@ -4772,6 +4845,15 @@
             );
             
             if(!response.ok) {
+                // 如果是 401 未授權錯誤且還有 refresh token，嘗試刷新並重試
+                if(response.status === 401 && settings.googleDriveRefreshToken && retryCount === 0) {
+                    console.log('Token 無效，嘗試刷新...');
+                    const refreshedToken = await refreshGoogleDriveToken();
+                    if(refreshedToken) {
+                        // 刷新成功，重試一次
+                        return restoreFromGoogleDrive(fileId, filename, 1);
+                    }
+                }
                 throw new Error('下載備份失敗');
             }
             
@@ -4783,21 +4865,21 @@
                 localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(data.users));
                 Object.keys(data.usersData).forEach(userId => {
                     const userData = data.usersData[userId];
-                    localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
-                    localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
-                    if(userData.journal !== undefined) {
-                        localStorage.setItem(`${STORAGE_KEY_JOURNAL}_${userId}`, JSON.stringify(userData.journal || []));
-                    }
-                    if(userData.fixedTransfers !== undefined) {
-                        localStorage.setItem(`${STORAGE_KEY_FIXED_TRANSFERS}_${userId}`, JSON.stringify(userData.fixedTransfers || []));
-                    }
-                });
+                                    localStorage.setItem(`${STORAGE_KEY_DATA}_${userId}`, JSON.stringify(userData.data || []));
+                                    localStorage.setItem(`${STORAGE_KEY_SETTINGS}_${userId}`, JSON.stringify(userData.settings || {}));
+                                    if(userData.journal !== undefined) {
+                                        localStorage.setItem(`${STORAGE_KEY_JOURNAL}_${userId}`, JSON.stringify(userData.journal || []));
+                                    }
+                                    if(userData.fixedTransfers !== undefined) {
+                                        localStorage.setItem(`${STORAGE_KEY_FIXED_TRANSFERS}_${userId}`, JSON.stringify(userData.fixedTransfers || []));
+                                    }
+                                });
                 alert('還原成功！頁面將重新載入。');
-                setTimeout(() => location.reload(), 500);
-            } else {
+                                setTimeout(() => location.reload(), 500);
+                        } else {
                 alert('備份文件格式錯誤');
-            }
-        } catch(err) {
+                        }
+                } catch(err) {
             alert('還原失敗：' + err.message);
         }
     }
@@ -8933,11 +9015,11 @@
                         }
                     };
                 } else {
-                    detailItem.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${transfer.title}</div>
-                            <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${displayAmount.toLocaleString()}</div>
-                        </div>
+                detailItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; width: 100%; box-sizing: border-box; gap: 8px;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${transfer.title}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap;">$${displayAmount.toLocaleString()}</div>
+                    </div>
                         <div style="display: flex; align-items: center; gap: 6px; width: 100%; flex-wrap: wrap;">
                             ${fromAccountTagHTML}
                             <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 12px; margin: 0 2px;"></i>
@@ -9197,11 +9279,11 @@
             // 支出：向帳戶餘額中加上金額（因為支出是減少餘額的）
             const account = accounts.find(acc => String(acc.id) === String(record.accountId));
             if(account) {
-                // 正常恢復金額
-                const amount = parseFloat(record.amount) || 0;
-                account.balance = parseFloat(account.balance) || 0;
-                account.balance += amount;
-                console.log('刪除支出 - 帳戶:', account.name, '餘額:', account.balance, '金額:', amount);
+                    // 正常恢復金額
+                    const amount = parseFloat(record.amount) || 0;
+                    account.balance = parseFloat(account.balance) || 0;
+                    account.balance += amount;
+                    console.log('刪除支出 - 帳戶:', account.name, '餘額:', account.balance, '金額:', amount);
             } else {
                 console.error('找不到支出帳戶:', record.accountId, '所有帳戶ID:', accounts.map(a => a.id));
             }
@@ -10497,7 +10579,7 @@
     
     // 計算固定轉帳的顯示金額（現在只使用固定金額，不再自動計算）
     function getFixedTransferDisplayAmount(transfer, targetDate = null) {
-        return transfer.amount || 0;
+            return transfer.amount || 0;
     }
     
     function renderFixedTransferList() {
@@ -10519,7 +10601,7 @@
             item.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="editFixedTransfer('${transfer.id}')">
                     <div style="width: 20px; height: 20px; border-radius: 50%; background: ${transfer.tagColor};"></div>
-                    <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
+                        <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">${transfer.title}</div>
                 </div>
                 <button onclick="event.stopPropagation(); deleteFixedTransfer('${transfer.id}')" style="padding: 8px 12px; background: var(--color-down); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;">刪除</button>
             `;
@@ -12006,16 +12088,16 @@
         
         // 使用固定金額（不再自動計算）
         const transferAmount = transfer.amount || 0;
+            
+            if(transferAmount === 0) {
+                console.warn(`固定轉帳執行失敗：金額為0`, transfer);
+                return false;
+            }
         
-        if(transferAmount === 0) {
-            console.warn(`固定轉帳執行失敗：金額為0`, transfer);
-            return false;
-        }
-        
-        // 檢查餘額是否足夠（只檢查匯出方）
-        if(fromAccount.balance < transferAmount) {
-            console.warn(`固定轉帳執行失敗：${fromAccount.name} 餘額不足`, transfer);
-            return false;
+            // 檢查餘額是否足夠（只檢查匯出方）
+            if(fromAccount.balance < transferAmount) {
+                console.warn(`固定轉帳執行失敗：${fromAccount.name} 餘額不足`, transfer);
+                return false;
         }
         
         // 更新帳戶餘額
